@@ -1,0 +1,5 @@
+# AgriConnect - Root Docker Compose Entrypoint
+# Delegates configuration to the docker/ subdirectory
+
+include:
+  - path: docker/docker-compose.yml

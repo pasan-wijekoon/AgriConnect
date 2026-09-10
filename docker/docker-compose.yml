@@ -1,0 +1,103 @@
+name: agriconnect
+
+services:
+  # ----------------------------------------------------------------------------
+  # PostgreSQL Database Service
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: agriconnect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agriconnect}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-agriconnect}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - agriconnect-network
+
+  # ----------------------------------------------------------------------------
+  # Agentic AI Service (Python FastAPI + LangGraph)
+  # ----------------------------------------------------------------------------
+  agentic-ai:
+    build:
+      context: ..
+      dockerfile: docker/agentic-ai/Dockerfile
+    container_name: agriconnect-agentic-ai
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-gemini-1.5-flash}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MAPS_API_BASE_URL: ${MAPS_API_BASE_URL:-https://api.openrouteservice.org}
+      MAPS_API_KEY: ${MAPS_API_KEY:-}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-dev-secret-key-12345}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5000,http://localhost:5173}
+    ports:
+      - "${AGENTIC_AI_PORT:-8000}:8000"
+    networks:
+      - agriconnect-network
+
+  # ----------------------------------------------------------------------------
+  # Backend API Service (ASP.NET Core .NET 10)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    container_name: agriconnect-backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__Default: ${ConnectionStrings__Default:-Host=postgres;Port=5432;Database=agriconnect;Username=postgres;Password=postgres}
+      AgenticAi__BaseUrl: http://agentic-ai:8000
+      AgenticAi__ApiKey: ${INTERNAL_API_SECRET:-dev-secret-key-12345}
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      agentic-ai:
+        condition: service_started
+    networks:
+      - agriconnect-network
+
+  # ----------------------------------------------------------------------------
+  # Web Dashboard Frontend (React 19 + TypeScript + Vite + Nginx)
+  # ----------------------------------------------------------------------------
+  web:
+    build:
+      context: ..
+      dockerfile: docker/web/Dockerfile
+    container_name: agriconnect-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - agriconnect-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  agriconnect-network:
+    driver: bridge

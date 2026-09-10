@@ -1,0 +1,25 @@
+name: agriconnect-dev
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  agentic-ai:
+    environment:
+      ENVIRONMENT: development
+      LOG_LEVEL: DEBUG
+    volumes:
+      - ../agentic-ai/src:/app/src
+    command: ["uv", "run", "uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  backend:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/web/Dockerfile
+    environment:
+      NODE_ENV: development
