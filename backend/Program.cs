@@ -1,7 +1,14 @@
+using AgriConnect.Api.Config;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// PostgreSQL via EF Core.
+builder.Services.AddDbContext<AgriConnectDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 
 // Swashbuckle (classic Swagger) 
