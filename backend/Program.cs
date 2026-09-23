@@ -1,5 +1,8 @@
+using System.Text;
 using AgriConnect.Api.Config;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +13,28 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AgriConnectDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
+// JWT bearer authentication.
+var jwt = builder.Configuration.GetSection("Jwt");
+var jwtSecret = jwt["SecretKey"]
+    ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt["Issuer"],
+            ValidateAudience = true,
+            ValidAudience = jwt["Audience"],
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateLifetime = true,
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Swashbuckle (classic Swagger) 
 builder.Services.AddEndpointsApiExplorer();
@@ -73,5 +98,15 @@ if (args.Contains("--seed-only"))
     return;
 }
 
-app.MapControllers();      
+app.UseAuthentication();
+
+// TODO: Replace FakeClaimsPrincipal with real AuthController once Component A's User model is wired up.
+if (builder.Environment.IsDevelopment())
+{
+    app.UseFakeClaimsPrincipal();
+}
+
+app.UseAuthorization();
+
+app.MapControllers();
 app.Run();
