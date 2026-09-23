@@ -6,10 +6,13 @@ namespace AgriConnect.Api.Config;
 /// <summary>
 /// EF Core context for AgriConnect.
 ///
-/// Currently holds Component D (Market Price Analytics &amp; Reporting) only.
-/// Other components add their own DbSets and configuration here as they land —
-/// keep each component's configuration in its own private method below so the
+/// Components add their own DbSets and configuration here as they land.
+/// Keep each component's configuration in its own private method below so the
 /// file stays mergeable when several people extend it at once.
+///
+/// Current coverage:
+///   - Shared reference tables : Crop, Region, User
+///   - Component D             : Market Price Analytics &amp; Reporting (FR15–FR18)
 /// </summary>
 public class AgriConnectDbContext : DbContext
 {
@@ -17,6 +20,11 @@ public class AgriConnectDbContext : DbContext
         : base(options)
     {
     }
+
+    // ---- Shared Reference Tables -------------------------------------------
+    public DbSet<Crop> Crops => Set<Crop>();
+    public DbSet<Region> Regions => Set<Region>();
+    public DbSet<User> Users => Set<User>();
 
     // ---- Component D — Market Price Analytics & Reporting -------------------
     public DbSet<PriceTrendSnapshot> PriceTrendSnapshots => Set<PriceTrendSnapshot>();
@@ -27,7 +35,52 @@ public class AgriConnectDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        ConfigureSharedTables(modelBuilder);
         ConfigureComponentD(modelBuilder);
+    }
+
+    /// <summary>
+    /// Shared reference tables — Crop, Region, User.
+    /// Unique indexes are enforced so that the seeder can use upsert-style logic
+    /// (check by name / email before inserting) without risking duplicates.
+    /// </summary>
+    private static void ConfigureSharedTables(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Crop>(entity =>
+        {
+            entity.ToTable("Crop");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.Name)
+                  .IsUnique()
+                  .HasDatabaseName("IX_Crop_Name");
+        });
+
+        modelBuilder.Entity<Region>(entity =>
+        {
+            entity.ToTable("Region");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.Name)
+                  .IsUnique()
+                  .HasDatabaseName("IX_Region_Name");
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("User", t =>
+                t.HasCheckConstraint(
+                    "CK_User_Role",
+                    "\"Role\" IN ('Farmer','Buyer','Officer','Administrator')"));
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
+
+            entity.HasIndex(e => e.Email)
+                  .IsUnique()
+                  .HasDatabaseName("IX_User_Email");
+        });
     }
 
     /// <summary>
@@ -35,11 +88,10 @@ public class AgriConnectDbContext : DbContext
     /// EF defaults.
     ///
     /// Note on foreign keys: CropId, RegionId, ListingId and RequestedBy reference
-    /// tables owned by other components (Crop/Region/Listing from Component A,
-    /// User from shared auth) which do not exist yet. They are mapped here as
-    /// indexed Guid columns without FK constraints so this migration applies
-    /// standalone. A follow-up migration adds the real constraints once those
-    /// tables land — see the development map, Phase 1.
+    /// the Crop, Region, and User tables above. They are currently stored as plain
+    /// indexed Guid columns without EF navigation properties or FK constraints, so
+    /// the Component D migration can be applied independently. A follow-up migration
+    /// will add real FK constraints once Component A (Listings) lands.
     /// </summary>
     private static void ConfigureComponentD(ModelBuilder modelBuilder)
     {

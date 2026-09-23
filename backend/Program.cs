@@ -26,6 +26,15 @@ if (app.Environment.IsDevelopment())
 
 if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only"))
 {
+    // ---- Shared Reference Tables — seed crops, regions, and dev users ----
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        var sharedResult = await SharedReferenceSeeder.SeedAsync(db, logger);
+        Console.WriteLine($"[Shared] Seeded: {sharedResult.CropsAdded} crops, {sharedResult.RegionsAdded} regions, {sharedResult.UsersAdded} users.");
+    }
+
     // ---- Component D — Seed price history & reference fixtures ----
     using (var scope = app.Services.CreateScope())
     {
