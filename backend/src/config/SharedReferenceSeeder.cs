@@ -8,9 +8,8 @@ namespace AgriConnect.Api.Config;
 /// Seeds the shared reference tables (Crop, Region, User) with the canonical
 /// development fixtures.
 ///
-/// GUIDs are taken from <see cref="AnalyticsFixtures"/> so that Component D
-/// price-trend and supply-event records — which already use those IDs as
-/// foreign-key values — resolve correctly once FK constraints are added.
+/// GUIDs are fixed so every developer's database gets the same IDs. Other seeders
+/// should still look rows up by name rather than depend on these values.
 ///
 /// Safe to call multiple times; existing records are never duplicated (upsert
 /// by name / email).
@@ -19,10 +18,19 @@ public static class SharedReferenceSeeder
 {
     public record SeedResult(int CropsAdded, int RegionsAdded, int UsersAdded);
 
+    private static readonly Guid CarrotId = Guid.Parse("3f2a0001-0000-0000-0000-000000000001");
+    private static readonly Guid TomatoId = Guid.Parse("3f2a0002-0000-0000-0000-000000000002");
+    private static readonly Guid CabbageId = Guid.Parse("3f2a0006-0000-0000-0000-000000000006");
+    private static readonly Guid NuwaraEliyaId = Guid.Parse("8b1c0001-0000-0000-0000-000000000001");
+    private static readonly Guid DambullaId = Guid.Parse("8b1c0002-0000-0000-0000-000000000002");
+    private static readonly Guid AdminUserId = Guid.Parse("a1111111-0000-0000-0000-000000000001");
+    private static readonly Guid OfficerUserId = Guid.Parse("a2222222-0000-0000-0000-000000000001");
+    private static readonly Guid FarmerUserId = Guid.Parse("f1111111-0000-0000-0000-000000000001");
+
     /// <summary>
     /// Inserts Crops, Regions, and seed Users that do not already exist.
-    /// Must be called <em>before</em> <see cref="DataSeeder.SeedAsync"/> so
-    /// that the Component D fixtures can reference the correct IDs.
+    /// Must run <em>before</em> <see cref="AnalyticsFixtures.Seed"/>, which looks
+    /// crops and regions up by name.
     /// </summary>
     public static async Task<SeedResult> SeedAsync(
         AgriConnectDbContext context,
@@ -37,16 +45,11 @@ public static class SharedReferenceSeeder
             .ToListAsync())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        // The three crops requested in the spec. Additional crops from AnalyticsFixtures
-        // are listed as commented entries so they can be enabled when Component A lands.
         var candidateCrops = new List<Crop>
         {
-            new() { Id = AnalyticsFixtures.CropCarrot.Id,     Name = "Carrot",  CreatedAt = DateTimeOffset.UtcNow },
-            new() { Id = AnalyticsFixtures.CropTomato.Id,     Name = "Tomato",  CreatedAt = DateTimeOffset.UtcNow },
-            // Cabbage is a spec requirement; its GUID is defined here because the
-            // AnalyticsFixtures reference set does not currently include it.
-            new() { Id = Guid.Parse("3f2a0006-0000-0000-0000-000000000006"),
-                    Name = "Cabbage", CreatedAt = DateTimeOffset.UtcNow },
+            new() { Id = CarrotId,  Name = "Carrot",  CreatedAt = DateTimeOffset.UtcNow },
+            new() { Id = TomatoId,  Name = "Tomato",  CreatedAt = DateTimeOffset.UtcNow },
+            new() { Id = CabbageId, Name = "Cabbage", CreatedAt = DateTimeOffset.UtcNow },
         };
 
         var newCrops = candidateCrops
@@ -69,8 +72,8 @@ public static class SharedReferenceSeeder
 
         var candidateRegions = new List<Region>
         {
-            new() { Id = AnalyticsFixtures.RegionNuwaraEliya.Id, Name = "Nuwara Eliya", CreatedAt = DateTimeOffset.UtcNow },
-            new() { Id = AnalyticsFixtures.RegionDambulla.Id,    Name = "Dambulla",     CreatedAt = DateTimeOffset.UtcNow },
+            new() { Id = NuwaraEliyaId, Name = "Nuwara Eliya", CreatedAt = DateTimeOffset.UtcNow },
+            new() { Id = DambullaId,    Name = "Dambulla",     CreatedAt = DateTimeOffset.UtcNow },
         };
 
         var newRegions = candidateRegions
@@ -95,21 +98,21 @@ public static class SharedReferenceSeeder
         {
             new()
             {
-                Id        = AnalyticsFixtures.AdminUserId,
+                Id        = AdminUserId,
                 Email     = "admin@agriconnect.lk",
                 Role      = "Administrator",
                 CreatedAt = DateTimeOffset.UtcNow
             },
             new()
             {
-                Id        = AnalyticsFixtures.OfficerUserId,
+                Id        = OfficerUserId,
                 Email     = "officer@agriconnect.lk",
                 Role      = "Officer",
                 CreatedAt = DateTimeOffset.UtcNow
             },
             new()
             {
-                Id        = AnalyticsFixtures.FarmerUserId,
+                Id        = FarmerUserId,
                 Email     = "farmer@agriconnect.lk",
                 Role      = "Farmer",
                 CreatedAt = DateTimeOffset.UtcNow

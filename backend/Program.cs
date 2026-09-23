@@ -60,13 +60,12 @@ if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains(
         Console.WriteLine($"[Shared] Seeded: {sharedResult.CropsAdded} crops, {sharedResult.RegionsAdded} regions, {sharedResult.UsersAdded} users.");
     }
 
-    // ---- Component D — Seed price history & reference fixtures ----
+    // ---- Component D — demo price history, anomaly flags and supply events ----
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        var result = await DataSeeder.SeedAsync(db, logger);
-        Console.WriteLine($"[Component D] Seeded: {result.SnapshotsAdded} snapshots, {result.AnomalyFlagsAdded} anomalies, {result.SupplyEventsAdded} supply events, {result.ReportExportsAdded} report exports.");
+        var result = AnalyticsFixtures.Seed(db);
+        Console.WriteLine($"[Component D] Seeded: {result.SnapshotsAdded} snapshots, {result.AnomalyFlagsAdded} anomalies, {result.SupplyEventsAdded} supply events.");
     }
 }
 

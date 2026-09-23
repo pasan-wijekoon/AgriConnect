@@ -3,442 +3,175 @@ using AgriConnect.Api.Models;
 namespace AgriConnect.Api.Config;
 
 /// <summary>
-/// Reference data models and deterministic fixtures for Component D (Market Price Analytics &amp; Reporting).
-/// 
-/// Since Crop, Region, Listing, and User tables are owned by other components and may not
-/// yet exist in the shared database, these fixtures provide deterministic GUIDs, display
-/// metadata, and realistic historical fixtures for local development, demoing, and automated tests.
+/// Synthetic demo data for Component D: 16 weeks of price history, a review queue of
+/// anomaly flags, and supply events. Crops and regions are looked up by name, so
+/// <see cref="SharedReferenceSeeder"/> must run first.
+///
+/// Each table is only seeded when it is empty.
 /// </summary>
 public static class AnalyticsFixtures
 {
-    // =========================================================================
-    // 1. Reference Crops (Shared Reference Data / Component A)
-    // =========================================================================
+    public record SeedResult(int SnapshotsAdded, int AnomalyFlagsAdded, int SupplyEventsAdded);
 
-    public record CropReference(Guid Id, string Name, string Category);
+    private const int Weeks = 16;
 
-    public static readonly CropReference CropCarrot = new(
-        Guid.Parse("3f2a0001-0000-0000-0000-000000000001"),
-        "Carrot",
-        "Vegetable");
-
-    public static readonly CropReference CropTomato = new(
-        Guid.Parse("3f2a0002-0000-0000-0000-000000000002"),
-        "Tomato",
-        "Vegetable");
-
-    public static readonly CropReference CropPotato = new(
-        Guid.Parse("3f2a0003-0000-0000-0000-000000000003"),
-        "Potato",
-        "Vegetable");
-
-    public static readonly CropReference CropGreenChilli = new(
-        Guid.Parse("3f2a0004-0000-0000-0000-000000000004"),
-        "Green Chilli",
-        "Spice & Vegetable");
-
-    public static readonly CropReference CropRedOnion = new(
-        Guid.Parse("3f2a0005-0000-0000-0000-000000000005"),
-        "Red Onion",
-        "Vegetable");
-
-    public static readonly IReadOnlyList<CropReference> Crops =
-    [
-        CropCarrot,
-        CropTomato,
-        CropPotato,
-        CropGreenChilli,
-        CropRedOnion
-    ];
-
-    public static readonly IReadOnlyDictionary<Guid, CropReference> CropsById =
-        Crops.ToDictionary(c => c.Id);
-
-    // =========================================================================
-    // 2. Reference Regions (Shared Reference Data)
-    // =========================================================================
-
-    public record RegionReference(Guid Id, string Name, string Description);
-
-    public static readonly RegionReference RegionNuwaraEliya = new(
-        Guid.Parse("8b1c0001-0000-0000-0000-000000000001"),
-        "Nuwara Eliya",
-        "Highland vegetable cultivation hub");
-
-    public static readonly RegionReference RegionDambulla = new(
-        Guid.Parse("8b1c0002-0000-0000-0000-000000000002"),
-        "Dambulla",
-        "Central dedicated economic centre and distribution hub");
-
-    public static readonly RegionReference RegionJaffna = new(
-        Guid.Parse("8b1c0003-0000-0000-0000-000000000003"),
-        "Jaffna",
-        "Northern agricultural centre, specialty red onion & chilli");
-
-    public static readonly RegionReference RegionBadulla = new(
-        Guid.Parse("8b1c0004-0000-0000-0000-000000000004"),
-        "Badulla",
-        "Uva province vegetable and potato farming basin");
-
-    public static readonly IReadOnlyList<RegionReference> Regions =
-    [
-        RegionNuwaraEliya,
-        RegionDambulla,
-        RegionJaffna,
-        RegionBadulla
-    ];
-
-    public static readonly IReadOnlyDictionary<Guid, RegionReference> RegionsById =
-        Regions.ToDictionary(r => r.Id);
-
-    // =========================================================================
-    // 3. Reference Users (Shared Auth)
-    // =========================================================================
-
-    public static readonly Guid AdminUserId = Guid.Parse("a1111111-0000-0000-0000-000000000001");
-    public static readonly Guid OfficerUserId = Guid.Parse("a2222222-0000-0000-0000-000000000001");
-    public static readonly Guid FarmerUserId = Guid.Parse("f1111111-0000-0000-0000-000000000001");
-
-    // =========================================================================
-    // 4. Synthetic Listings (Component A contract mock)
-    // =========================================================================
-
-    public record SyntheticListing(
-        Guid Id,
-        Guid FarmerId,
-        Guid CropId,
-        Guid RegionId,
-        decimal Price,
-        decimal? AiSuggestedPriceMin,
-        decimal? AiSuggestedPriceMax,
-        string ClaimedGrade,
-        string Status,
-        DateTimeOffset CreatedAt);
-
-    public static readonly IReadOnlyList<SyntheticListing> Listings =
-    [
-        new(
-            Guid.Parse("10000000-0000-0000-0000-000000000001"),
-            FarmerUserId,
-            CropCarrot.Id,
-            RegionNuwaraEliya.Id,
-            Price: 320.00m,
-            AiSuggestedPriceMin: 220.00m,
-            AiSuggestedPriceMax: 250.00m,
-            ClaimedGrade: "A",
-            Status: "Published",
-            CreatedAt: DateTimeOffset.UtcNow.AddDays(-2)),
-        new(
-            Guid.Parse("10000000-0000-0000-0000-000000000002"),
-            FarmerUserId,
-            CropTomato.Id,
-            RegionDambulla.Id,
-            Price: 110.00m,
-            AiSuggestedPriceMin: 150.00m,
-            AiSuggestedPriceMax: 170.00m,
-            ClaimedGrade: "B",
-            Status: "Published",
-            CreatedAt: DateTimeOffset.UtcNow.AddDays(-4)),
-        new(
-            Guid.Parse("10000000-0000-0000-0000-000000000003"),
-            FarmerUserId,
-            CropPotato.Id,
-            RegionBadulla.Id,
-            Price: 420.00m,
-            AiSuggestedPriceMin: 280.00m,
-            AiSuggestedPriceMax: 300.00m,
-            ClaimedGrade: "A",
-            Status: "Published",
-            CreatedAt: DateTimeOffset.UtcNow.AddDays(-10)),
-        new(
-            Guid.Parse("10000000-0000-0000-0000-000000000004"),
-            FarmerUserId,
-            CropGreenChilli.Id,
-            RegionJaffna.Id,
-            Price: 980.00m,
-            AiSuggestedPriceMin: 650.00m,
-            AiSuggestedPriceMax: 720.00m,
-            ClaimedGrade: "A",
-            Status: "Published",
-            CreatedAt: DateTimeOffset.UtcNow.AddDays(-15)),
-        new(
-            Guid.Parse("10000000-0000-0000-0000-000000000005"),
-            FarmerUserId,
-            CropRedOnion.Id,
-            RegionJaffna.Id,
-            Price: 420.00m,
-            AiSuggestedPriceMin: 340.00m,
-            AiSuggestedPriceMax: 360.00m,
-            ClaimedGrade: "B",
-            Status: "Published",
-            CreatedAt: DateTimeOffset.UtcNow.AddDays(-20)),
-        new(
-            Guid.Parse("10000000-0000-0000-0000-000000000006"),
-            FarmerUserId,
-            CropTomato.Id,
-            RegionNuwaraEliya.Id,
-            Price: 130.00m,
-            AiSuggestedPriceMin: 170.00m,
-            AiSuggestedPriceMax: 190.00m,
-            ClaimedGrade: "C",
-            Status: "Published",
-            CreatedAt: DateTimeOffset.UtcNow.AddDays(-25))
-    ];
-
-    // =========================================================================
-    // 5. Price Trend Snapshots Generation (16 Weeks across 4 crops × 3 regions)
-    // =========================================================================
-
-    /// <summary>
-    /// Generates 16 weeks of realistic historical snapshots per crop and region.
-    /// Anchor week starts at the current week's Monday and steps backward 16 weeks.
-    /// </summary>
-    public static List<PriceTrendSnapshot> GetHistoricalSnapshots()
+    // The avg-price band (LKR/kg) for each crop; weekly min/max are kept inside it too.
+    private static readonly Dictionary<string, (decimal Low, decimal High)> PriceBands = new()
     {
-        var snapshots = new List<PriceTrendSnapshot>();
+        ["Carrot"] = (150m, 220m),
+        ["Tomato"] = (80m, 140m),
+        ["Cabbage"] = (60m, 100m),
+    };
 
-        // Align anchor to the most recent Monday
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        int daysSinceMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-        var currentMonday = today.AddDays(-daysSinceMonday);
+    private static readonly string[] RegionNames = ["Nuwara Eliya", "Dambulla"];
 
-        // Define crops and regions to generate combinations for (4 crops × 3 regions = 12 series)
-        var combinations = new (CropReference crop, RegionReference region, decimal basePrice, decimal volatility)[]
+    // Each supply event also bends its price series over the last 3 weeks (Shock, as a
+    // fraction of the half-band), so the chart and the events list tell the same story.
+    private static readonly (string Crop, string Region, SupplyEventType Type, SupplyEventSeverity Severity, double Shock, int DaysAgo, string Notes)[] SupplyEvents =
+    [
+        ("Tomato", "Dambulla", SupplyEventType.Shortage, SupplyEventSeverity.High, 0.40, 2,
+            "Supply 52% below the 8-week baseline for 3 consecutive weeks; heavy rain disrupted harvests."),
+        ("Carrot", "Nuwara Eliya", SupplyEventType.Shortage, SupplyEventSeverity.Medium, 0.22, 5,
+            "Supply 28% below baseline for 2 consecutive weeks."),
+        ("Cabbage", "Nuwara Eliya", SupplyEventType.Oversupply, SupplyEventSeverity.Medium, -0.35, 4,
+            "Supply 41% above baseline for 3 consecutive weeks; peak harvest overlapping across growers."),
+        ("Cabbage", "Dambulla", SupplyEventType.Oversupply, SupplyEventSeverity.Low, -0.15, 9,
+            "Supply 17% above baseline for 2 consecutive weeks."),
+    ];
+
+    // Seven above the AI-suggested price, one well below it.
+    private static readonly (decimal Deviation, AnomalyStatus Status, int DaysAgo)[] AnomalyFlags =
+    [
+        (52.70m, AnomalyStatus.Open, 1),
+        (-30.00m, AnomalyStatus.Open, 2),
+        (38.50m, AnomalyStatus.Open, 3),
+        (64.10m, AnomalyStatus.Open, 5),
+        (26.40m, AnomalyStatus.Open, 6),
+        (44.20m, AnomalyStatus.Reviewed, 9),
+        (31.80m, AnomalyStatus.Reviewed, 12),
+        (58.90m, AnomalyStatus.Dismissed, 16),
+    ];
+
+    public static SeedResult Seed(AgriConnectDbContext db)
+    {
+        var cropIds = LoadIdsByName(db.Crops.Select(c => new { c.Name, c.Id }).ToList()
+            .ToDictionary(c => c.Name, c => c.Id), PriceBands.Keys, "Crop");
+        var regionIds = LoadIdsByName(db.Regions.Select(r => new { r.Name, r.Id }).ToList()
+            .ToDictionary(r => r.Name, r => r.Id), RegionNames, "Region");
+
+        var now = DateTimeOffset.UtcNow;
+        int snapshots = 0, flags = 0, events = 0;
+
+        if (!db.PriceTrendSnapshots.Any())
         {
-            // Carrot (Nuwara Eliya: production source, slightly lower prices)
-            (CropCarrot, RegionNuwaraEliya, 195.00m, 12.00m),
-            // Carrot (Dambulla: wholesale transit hub)
-            (CropCarrot, RegionDambulla, 235.00m, 15.00m),
-            // Carrot (Badulla: alternative cool highland)
-            (CropCarrot, RegionBadulla, 210.00m, 14.00m),
+            var rows = BuildSnapshots(cropIds, regionIds, DateOnly.FromDateTime(now.UtcDateTime));
+            db.PriceTrendSnapshots.AddRange(rows);
+            snapshots = rows.Count;
+        }
 
-            // Tomato (Dambulla: high seasonal volatility)
-            (CropTomato, RegionDambulla, 185.00m, 35.00m),
-            // Tomato (Nuwara Eliya)
-            (CropTomato, RegionNuwaraEliya, 220.00m, 30.00m),
-            // Tomato (Badulla)
-            (CropTomato, RegionBadulla, 195.00m, 28.00m),
-
-            // Potato (Badulla/Welimada: primary potato belt)
-            (CropPotato, RegionBadulla, 260.00m, 18.00m),
-            // Potato (Nuwara Eliya: premium highland potato)
-            (CropPotato, RegionNuwaraEliya, 290.00m, 20.00m),
-            // Potato (Dambulla: distribution hub)
-            (CropPotato, RegionDambulla, 310.00m, 22.00m),
-
-            // Green Chilli (Jaffna: major chilli harvest)
-            (CropGreenChilli, RegionJaffna, 540.00m, 65.00m),
-            // Green Chilli (Dambulla: wholesale price)
-            (CropGreenChilli, RegionDambulla, 620.00m, 75.00m),
-            // Green Chilli (Nuwara Eliya)
-            (CropGreenChilli, RegionNuwaraEliya, 680.00m, 80.00m),
-        };
-
-        const int weeksBack = 16;
-
-        foreach (var (crop, region, basePrice, volatility) in combinations)
+        if (!db.PriceAnomalyFlags.Any())
         {
-            for (int w = weeksBack - 1; w >= 0; w--)
+            db.PriceAnomalyFlags.AddRange(AnomalyFlags.Select(a => new PriceAnomalyFlag
             {
-                var period = currentMonday.AddDays(-7 * w);
+                Id = Guid.NewGuid(),
+                ListingId = Guid.NewGuid(),
+                DeviationPercent = a.Deviation,
+                FlaggedAt = now.AddDays(-a.DaysAgo),
+                Status = a.Status,
+            }));
+            flags = AnomalyFlags.Length;
+        }
 
-                // Deterministic seasonal wave based on week number and crop
-                double phase = (weeksBack - w) * 0.45 + crop.Name.Length;
-                decimal seasonalDelta = (decimal)Math.Sin(phase) * volatility;
-                decimal trendDelta = ((weeksBack - w) - 8) * 1.50m; // Mild inflation/supply shift
+        if (!db.ShortageOversupplyEvents.Any())
+        {
+            db.ShortageOversupplyEvents.AddRange(SupplyEvents.Select(e => new ShortageOversupplyEvent
+            {
+                Id = Guid.NewGuid(),
+                CropId = cropIds[e.Crop],
+                RegionId = regionIds[e.Region],
+                Type = e.Type,
+                Severity = e.Severity,
+                DetectedAt = now.AddDays(-e.DaysAgo),
+                Notes = e.Notes,
+            }));
+            events = SupplyEvents.Length;
+        }
 
-                decimal avg = Math.Round(basePrice + seasonalDelta + trendDelta, 2);
-                if (avg < 50.00m) avg = 50.00m;
+        db.SaveChanges();
+        return new SeedResult(snapshots, flags, events);
+    }
 
-                decimal minSpread = Math.Round(avg * 0.12m, 2);
-                decimal maxSpread = Math.Round(avg * 0.15m, 2);
+    private static List<PriceTrendSnapshot> BuildSnapshots(
+        Dictionary<string, Guid> cropIds, Dictionary<string, Guid> regionIds, DateOnly today)
+    {
+        // Fixed seed: every developer gets the same chart, so the demo is reproducible.
+        var random = new Random(42);
+        var thisMonday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+        var rows = new List<PriceTrendSnapshot>();
+        var cropIndex = 0;
 
-                decimal min = Math.Round(avg - minSpread, 2);
-                decimal max = Math.Round(avg + maxSpread, 2);
+        foreach (var (crop, (low, high)) in PriceBands)
+        {
+            var mid = (low + high) / 2;
+            var half = (high - low) / 2;
+            cropIndex++;
 
-                int sampleCount = 12 + ((weeksBack - w) * 3) % 25;
+            foreach (var region in RegionNames)
+            {
+                // Dambulla is the wholesale hub, so it trades a little above the growing region.
+                var regionOffset = region == "Dambulla" ? 0.10 : -0.10;
+                var shock = SupplyEvents.FirstOrDefault(e => e.Crop == crop && e.Region == region).Shock;
+                var walk = 0.0;
 
-                // Deterministic ID derived from crop, region, and period
-                string idSeed = $"{crop.Id:N}-{region.Id:N}-{period:yyyyMMdd}";
-                var id = CreateDeterministicGuid(idSeed);
-
-                snapshots.Add(new PriceTrendSnapshot
+                for (var w = Weeks - 1; w >= 0; w--)
                 {
-                    Id = id,
-                    CropId = crop.Id,
-                    RegionId = region.Id,
-                    Period = period,
-                    AvgPrice = avg,
-                    MinPrice = min,
-                    MaxPrice = max,
-                    SampleCount = sampleCount
-                });
+                    var step = Weeks - 1 - w;
+                    var seasonal = 0.30 * Math.Sin(2 * Math.PI * step / Weeks + cropIndex * 1.7);
+                    walk = walk * 0.7 + (random.NextDouble() - 0.5) * 0.16;
+                    var shockNow = w < 3 ? shock * (3 - w) / 3.0 : 0.0;
+
+                    var avg = Clamp(mid + half * (decimal)(regionOffset + seasonal + walk + shockNow), low, high);
+                    var spread = avg * (decimal)(0.06 + random.NextDouble() * 0.04);
+
+                    // Fewer listings reach market in a shortage, more in a glut.
+                    var samples = shockNow switch
+                    {
+                        > 0 => random.Next(4, 10),
+                        < 0 => random.Next(30, 46),
+                        _ => random.Next(10, 31),
+                    };
+
+                    rows.Add(new PriceTrendSnapshot
+                    {
+                        Id = Guid.NewGuid(),
+                        CropId = cropIds[crop],
+                        RegionId = regionIds[region],
+                        Period = thisMonday.AddDays(-7 * w),
+                        AvgPrice = Math.Round(avg, 2),
+                        MinPrice = Math.Round(Math.Max(low, avg - spread), 2),
+                        MaxPrice = Math.Round(Math.Min(high, avg + spread), 2),
+                        SampleCount = samples,
+                    });
+                }
             }
         }
 
-        return snapshots;
+        return rows;
     }
 
-    // =========================================================================
-    // 6. Sample Price Anomaly Flags (FR16)
-    // =========================================================================
-
-    public static List<PriceAnomalyFlag> GetSampleAnomalyFlags()
+    private static Dictionary<string, Guid> LoadIdsByName(
+        Dictionary<string, Guid> existing, IEnumerable<string> required, string table)
     {
-        return
-        [
-            new PriceAnomalyFlag
-            {
-                Id = Guid.Parse("e0000001-0000-0000-0000-000000000001"),
-                ListingId = Listings[0].Id, // Carrot Nuwara Eliya @ 320 vs midpoint 235 (+36.17%)
-                DeviationPercent = 36.17m,
-                FlaggedAt = DateTimeOffset.UtcNow.AddDays(-2),
-                Status = AnomalyStatus.Open
-            },
-            new PriceAnomalyFlag
-            {
-                Id = Guid.Parse("e0000002-0000-0000-0000-000000000002"),
-                ListingId = Listings[1].Id, // Tomato Dambulla @ 110 vs midpoint 160 (-31.25%)
-                DeviationPercent = -31.25m,
-                FlaggedAt = DateTimeOffset.UtcNow.AddDays(-4),
-                Status = AnomalyStatus.Open
-            },
-            new PriceAnomalyFlag
-            {
-                Id = Guid.Parse("e0000003-0000-0000-0000-000000000003"),
-                ListingId = Listings[2].Id, // Potato Badulla @ 420 vs midpoint 290 (+44.83%)
-                DeviationPercent = 44.83m,
-                FlaggedAt = DateTimeOffset.UtcNow.AddDays(-10),
-                Status = AnomalyStatus.Reviewed
-            },
-            new PriceAnomalyFlag
-            {
-                Id = Guid.Parse("e0000004-0000-0000-0000-000000000004"),
-                ListingId = Listings[3].Id, // Green Chilli Jaffna @ 980 vs midpoint 685 (+43.07%)
-                DeviationPercent = 43.07m,
-                FlaggedAt = DateTimeOffset.UtcNow.AddDays(-15),
-                Status = AnomalyStatus.Reviewed
-            },
-            new PriceAnomalyFlag
-            {
-                Id = Guid.Parse("e0000005-0000-0000-0000-000000000005"),
-                ListingId = Listings[4].Id, // Red Onion Jaffna @ 420 vs midpoint 350 (+20.00%)
-                DeviationPercent = 20.00m,
-                FlaggedAt = DateTimeOffset.UtcNow.AddDays(-20),
-                Status = AnomalyStatus.Dismissed
-            },
-            new PriceAnomalyFlag
-            {
-                Id = Guid.Parse("e0000006-0000-0000-0000-000000000006"),
-                ListingId = Listings[5].Id, // Tomato Nuwara Eliya @ 130 vs midpoint 180 (-27.78%)
-                DeviationPercent = -27.78m,
-                FlaggedAt = DateTimeOffset.UtcNow.AddDays(-25),
-                Status = AnomalyStatus.Dismissed
-            }
-        ];
+        var missing = required.Where(n => !existing.ContainsKey(n)).ToList();
+        if (missing.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"{table} rows missing: {string.Join(", ", missing)}. Run SharedReferenceSeeder first.");
+        }
+
+        return existing;
     }
 
-    // =========================================================================
-    // 7. Sample Shortage & Oversupply Events (FR17)
-    // =========================================================================
-
-    public static List<ShortageOversupplyEvent> GetSampleSupplyEvents()
-    {
-        return
-        [
-            new ShortageOversupplyEvent
-            {
-                Id = Guid.Parse("c0000001-0000-0000-0000-000000000001"),
-                CropId = CropTomato.Id,
-                RegionId = RegionDambulla.Id,
-                Type = SupplyEventType.Shortage,
-                Severity = SupplyEventSeverity.High,
-                DetectedAt = DateTimeOffset.UtcNow.AddDays(-3),
-                Notes = "Heavy monsoonal rains in Matale/Dambulla border dropped incoming supply by 48% below the 4-week rolling baseline. Wholesale prices spiked accordingly."
-            },
-            new ShortageOversupplyEvent
-            {
-                Id = Guid.Parse("c0000002-0000-0000-0000-000000000002"),
-                CropId = CropCarrot.Id,
-                RegionId = RegionNuwaraEliya.Id,
-                Type = SupplyEventType.Oversupply,
-                Severity = SupplyEventSeverity.Medium,
-                DetectedAt = DateTimeOffset.UtcNow.AddDays(-7),
-                Notes = "Simultaneous peak harvesting across Kandapola and Nuwara Eliya produced a 34% volume surplus above normal regional intake."
-            },
-            new ShortageOversupplyEvent
-            {
-                Id = Guid.Parse("c0000003-0000-0000-0000-000000000003"),
-                CropId = CropGreenChilli.Id,
-                RegionId = RegionJaffna.Id,
-                Type = SupplyEventType.Shortage,
-                Severity = SupplyEventSeverity.Medium,
-                DetectedAt = DateTimeOffset.UtcNow.AddDays(-12),
-                Notes = "Prolonged dry spell in northern cultivation sectors caused a 28% drop in published listings over 3 consecutive periods."
-            },
-            new ShortageOversupplyEvent
-            {
-                Id = Guid.Parse("c0000004-0000-0000-0000-000000000004"),
-                CropId = CropPotato.Id,
-                RegionId = RegionBadulla.Id,
-                Type = SupplyEventType.Oversupply,
-                Severity = SupplyEventSeverity.Low,
-                DetectedAt = DateTimeOffset.UtcNow.AddDays(-18),
-                Notes = "Welimada seasonal harvest delivered 15% above forecast; local cold storage facilities are operating near maximum capacity."
-            }
-        ];
-    }
-
-    // =========================================================================
-    // 8. Sample Report Exports (FR18)
-    // =========================================================================
-
-    public static List<ReportExport> GetSampleReportExports()
-    {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        return
-        [
-            new ReportExport
-            {
-                Id = Guid.Parse("d0000001-0000-0000-0000-000000000001"),
-                RequestedBy = AdminUserId,
-                Type = "PriceTrends",
-                DateRangeStart = today.AddDays(-90),
-                DateRangeEnd = today,
-                GeneratedAt = DateTimeOffset.UtcNow.AddDays(-2),
-                FileUrl = "/exports/price-trends-2026-q3.csv"
-            },
-            new ReportExport
-            {
-                Id = Guid.Parse("d0000002-0000-0000-0000-000000000002"),
-                RequestedBy = AdminUserId,
-                Type = "PriceAnomalies",
-                DateRangeStart = today.AddDays(-30),
-                DateRangeEnd = today,
-                GeneratedAt = DateTimeOffset.UtcNow.AddDays(-5),
-                FileUrl = "/exports/anomalies-2026-sep.csv"
-            },
-            new ReportExport
-            {
-                Id = Guid.Parse("d0000003-0000-0000-0000-000000000003"),
-                RequestedBy = AdminUserId,
-                Type = "SupplyEvents",
-                DateRangeStart = today.AddDays(-60),
-                DateRangeEnd = today,
-                GeneratedAt = DateTimeOffset.UtcNow.AddDays(-10),
-                FileUrl = "/exports/supply-events-2026.csv"
-            }
-        ];
-    }
-
-    // =========================================================================
-    // Helper: Deterministic UUID generation from a seed string
-    // =========================================================================
-
-    private static Guid CreateDeterministicGuid(string input)
-    {
-        byte[] hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(input));
-        return new Guid(hash);
-    }
+    private static decimal Clamp(decimal value, decimal low, decimal high) =>
+        Math.Min(high, Math.Max(low, value));
 }
