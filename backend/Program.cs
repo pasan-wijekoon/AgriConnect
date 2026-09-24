@@ -1,5 +1,6 @@
 using System.Text;
 using AgriConnect.Api.Config;
+using AgriConnect.Api.Services.Analytics;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -35,6 +36,12 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// Component D — Market Price Analytics & Reporting.
+builder.Services.AddScoped<TrendAggregationService>();
+builder.Services.AddScoped<AnomalyDetectionService>();
+builder.Services.AddScoped<ShortageDetectionService>();
+builder.Services.AddScoped<AnomalyInvestigationService>();
 
 // Swashbuckle (classic Swagger) 
 builder.Services.AddEndpointsApiExplorer();
