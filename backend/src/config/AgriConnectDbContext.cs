@@ -157,6 +157,7 @@ public class AgriConnectDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.DeviationPercent).HasColumnType("numeric(5,2)");
+            entity.Property(e => e.ListingPrice).HasColumnType("numeric(12,2)");
 
             entity.Property(e => e.Status)
                   .HasConversion<string>()
@@ -170,6 +171,8 @@ public class AgriConnectDbContext : DbContext
                   .HasDatabaseName("IX_PriceAnomalyFlag_ListingId");
             entity.HasIndex(e => e.Status)
                   .HasDatabaseName("IX_PriceAnomalyFlag_Status");
+            entity.HasIndex(e => e.CropId)
+                  .HasDatabaseName("IX_PriceAnomalyFlag_CropId");
         });
 
         modelBuilder.Entity<ReportExport>(entity =>

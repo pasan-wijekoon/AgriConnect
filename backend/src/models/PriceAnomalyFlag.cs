@@ -16,6 +16,15 @@ public class PriceAnomalyFlag
     /// <summary>FK to Component A's Listing.</summary>
     public Guid ListingId { get; set; }
 
+    // Snapshot of the listing when it was flagged. The listing's price can change
+    // afterwards; the investigation must explain what was actually flagged.
+    public Guid CropId { get; set; }
+
+    public Guid RegionId { get; set; }
+
+    [Column(TypeName = "numeric(12,2)")]
+    public decimal ListingPrice { get; set; }
+
     /// <summary>
     /// Signed percentage distance from the midpoint of the AI-suggested range.
     /// Positive means the listing is priced above the suggestion, negative below.

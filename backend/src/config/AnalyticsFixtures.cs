@@ -39,17 +39,20 @@ public static class AnalyticsFixtures
             "Supply 17% above baseline for 2 consecutive weeks."),
     ];
 
-    // Seven above the AI-suggested price, one well below it.
-    private static readonly (decimal Deviation, AnomalyStatus Status, int DaysAgo)[] AnomalyFlags =
+    // Seven above the AI-suggested price, one well below it. Prices are chosen so the
+    // Open flags demo every investigation cause: >40% (data entry error), top-10% of the
+    // region (premium grade), below range (distressed sale), and a mid-market price
+    // against a low AI suggestion (market volatility).
+    private static readonly (decimal Deviation, AnomalyStatus Status, int DaysAgo, string Crop, string Region, decimal Price)[] AnomalyFlags =
     [
-        (52.70m, AnomalyStatus.Open, 1),
-        (-30.00m, AnomalyStatus.Open, 2),
-        (38.50m, AnomalyStatus.Open, 3),
-        (64.10m, AnomalyStatus.Open, 5),
-        (26.40m, AnomalyStatus.Open, 6),
-        (44.20m, AnomalyStatus.Reviewed, 9),
-        (31.80m, AnomalyStatus.Reviewed, 12),
-        (58.90m, AnomalyStatus.Dismissed, 16),
+        (52.70m, AnomalyStatus.Open, 1, "Tomato", "Dambulla", 168.00m),
+        (-30.00m, AnomalyStatus.Open, 2, "Cabbage", "Nuwara Eliya", 49.00m),
+        (38.50m, AnomalyStatus.Open, 3, "Carrot", "Dambulla", 262.00m),
+        (64.10m, AnomalyStatus.Open, 5, "Carrot", "Nuwara Eliya", 290.00m),
+        (26.40m, AnomalyStatus.Open, 6, "Carrot", "Nuwara Eliya", 185.00m),
+        (44.20m, AnomalyStatus.Reviewed, 9, "Tomato", "Nuwara Eliya", 150.00m),
+        (31.80m, AnomalyStatus.Reviewed, 12, "Cabbage", "Dambulla", 110.00m),
+        (58.90m, AnomalyStatus.Dismissed, 16, "Cabbage", "Dambulla", 135.00m),
     ];
 
     public static SeedResult Seed(AgriConnectDbContext db)
@@ -75,6 +78,9 @@ public static class AnalyticsFixtures
             {
                 Id = Guid.NewGuid(),
                 ListingId = Guid.NewGuid(),
+                CropId = cropIds[a.Crop],
+                RegionId = regionIds[a.Region],
+                ListingPrice = a.Price,
                 DeviationPercent = a.Deviation,
                 FlaggedAt = now.AddDays(-a.DaysAgo),
                 Status = a.Status,
