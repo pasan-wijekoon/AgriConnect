@@ -18,4 +18,5 @@ public static class Roles
     // are usable directly in attributes (string interpolation is not).
     public const string BuyerFarmerOfficer = Buyer + "," + Farmer + "," + Officer;
     public const string BuyerOfficer = Buyer + "," + Officer;
+    public const string BuyerFarmer = Buyer + "," + Farmer;
 }

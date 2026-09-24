@@ -71,6 +71,28 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     }
 
     /// <summary>
+    /// Read-only schedule lookup for an order (404 if none exists yet). Not in
+    /// the plan's original endpoint table — added so a UI can display current
+    /// schedule state without triggering ProposeAsync's side effects. Reuses
+    /// OrderService's ownership/visibility check first (same IDOR protection
+    /// as GetById, plan §6) before ever touching the schedule.
+    /// </summary>
+    [HttpGet("{id:guid}/schedule")]
+    [Authorize(Roles = Roles.BuyerFarmerOfficer)]
+    [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSchedule(Guid id, CancellationToken ct)
+    {
+        var orderVisibility = await orderService.GetByIdAsync(id, User.GetUserId(), User.GetRole(), ct);
+        if (!orderVisibility.Success)
+        {
+            return ToErrorResult(orderVisibility.Error, orderVisibility.ErrorMessage!);
+        }
+
+        var result = await schedulingService.GetByOrderIdAsync(id, ct);
+        return result.Success ? Ok(result.Value) : ToSchedulingErrorResult(result.Error, result.ErrorMessage!);
+    }
+
+    /// <summary>
     /// FR10 — propose a conflict-free pickup/delivery slot. "System (internal,
     /// triggered post-Approval) / Officer (manual re-trigger)" per plan §5.2; there
     /// is no internal-service-to-service caller in this codebase yet, so this is

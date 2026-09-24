@@ -49,6 +49,34 @@ builder.Services.AddHostedService<ReservationExpirySweepService>();
 builder.Services.AddScoped<ILogisticsSchedulingPort, StubLogisticsSchedulingPort>();
 builder.Services.AddScoped<SchedulingService>();
 
+// ---- Component B — Maps/Distance integration (FR21, plan §9) ----
+// Server-side only — the Maps API key never reaches a client (CLAUDE.md §19).
+builder.Services.AddHttpClient<IDistanceService, DistanceService>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["MapsApi:BaseUrl"] ?? "https://api.openrouteservice.org/");
+    var apiKey = config["MapsApi:ApiKey"];
+    if (!string.IsNullOrEmpty(apiKey))
+    {
+        client.DefaultRequestHeaders.Add("Authorization", apiKey);
+    }
+});
+builder.Services.AddScoped<CollectionCentreService>();
+
+// ---- CORS (needed for the React web client, plan §10) ----
+// No CORS policy existed at all until now — nothing else in the repo has
+// claimed it. ALLOWED_ORIGINS is already provisioned in docker/.env.example;
+// the local-dev default covers the Vite dev server's default port (5173) plus
+// the ports docker-compose.yml maps the web/backend services to.
+const string WebClientCorsPolicy = "WebClient";
+var allowedOrigins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localhost:5173,http://localhost:3000,http://localhost:5000")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(WebClientCorsPolicy, policy =>
+        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod());
+});
+
 // Swashbuckle (classic Swagger)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -62,6 +90,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(WebClientCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 

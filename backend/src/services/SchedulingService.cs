@@ -179,6 +179,58 @@ public class SchedulingService(
         return SchedulingOperationResult<ScheduleResponse>.Ok(ToResponse(schedule, proposal.ConflictChecked));
     }
 
+    /// <summary>
+    /// Read-only lookup of an order's current schedule, if one exists. Added so
+    /// a UI can display schedule state (Design.md §31/§34) without needing to
+    /// trigger ProposeAsync's side effects just to see what's already there.
+    /// </summary>
+    public async Task<SchedulingOperationResult<ScheduleResponse>> GetByOrderIdAsync(
+        Guid orderId, CancellationToken ct = default)
+    {
+        var order = await db.Orders
+            .Include(o => o.PickupSchedule)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+
+        if (order is null)
+        {
+            return SchedulingOperationResult<ScheduleResponse>.Fail(
+                SchedulingOperationError.NotFound, "Order not found.");
+        }
+
+        if (order.PickupSchedule is null)
+        {
+            return SchedulingOperationResult<ScheduleResponse>.Fail(
+                SchedulingOperationError.NotFound, "Order has no schedule yet.");
+        }
+
+        // ConflictChecked isn't a persisted field — it's the scheduling agent's
+        // informational flag from the moment of proposal (plan §8.2), not part
+        // of PickupSchedule's own columns (plan §4.1). Reporting `true` here
+        // reflects that this endpoint returns the schedule as it currently
+        // stands (already validated by SchedulingService at propose time),
+        // not a claim about a specific past agent response.
+        return SchedulingOperationResult<ScheduleResponse>.Ok(ToResponse(order.PickupSchedule, conflictChecked: true));
+    }
+
+    /// <summary>
+    /// All schedules (any status) at a centre, ordered by slot start. Backs the
+    /// Officer scheduling calendar (Design.md §33 — "centre bookings calendar
+    /// (Proposed/Confirmed/Cancelled), capacity indicator, conflict
+    /// highlighting"), which needs every booking at a centre, not one order's.
+    /// </summary>
+    public async Task<IReadOnlyList<ScheduleResponse>> ListByCentreAsync(
+        Guid centreId, CancellationToken ct = default)
+    {
+        var schedules = await db.PickupSchedules
+            .Where(p => p.CollectionCentreId == centreId)
+            .OrderBy(p => p.SlotStart)
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+        return schedules.Select(s => ToResponse(s, conflictChecked: true)).ToList();
+    }
+
     public async Task<SchedulingOperationResult<ScheduleResponse>> DecideAsync(
         Guid orderId, ScheduleDecision decision, CancellationToken ct = default)
     {

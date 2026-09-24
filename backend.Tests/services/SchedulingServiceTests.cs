@@ -276,6 +276,44 @@ public class SchedulingServiceTests
     }
 
     [Fact]
+    public async Task GetByOrderIdAsync_WithUnknownOrder_ReturnsNotFound()
+    {
+        await using var db = NewInMemoryDb();
+
+        var result = await NewService(db).GetByOrderIdAsync(Guid.NewGuid());
+
+        Assert.False(result.Success);
+        Assert.Equal(SchedulingOperationError.NotFound, result.Error);
+    }
+
+    [Fact]
+    public async Task GetByOrderIdAsync_WithNoScheduleYet_ReturnsNotFound()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, _) = await SeedApprovedOrderWithCentreAsync(db);
+
+        var result = await NewService(db).GetByOrderIdAsync(order.Id);
+
+        Assert.False(result.Success);
+        Assert.Equal(SchedulingOperationError.NotFound, result.Error);
+    }
+
+    [Fact]
+    public async Task GetByOrderIdAsync_AfterProposing_ReturnsTheSchedule()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        var service = NewService(db);
+        var proposed = await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()));
+
+        var result = await service.GetByOrderIdAsync(order.Id);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(proposed.Value!.Id, result.Value!.Id);
+        Assert.Equal(ScheduleStatus.Proposed, result.Value.Status);
+    }
+
+    [Fact]
     public async Task ProposeAsync_AfterConfirmed_CannotRePropose()
     {
         await using var db = NewInMemoryDb();
@@ -290,5 +328,37 @@ public class SchedulingServiceTests
         // Order is now Scheduled, not Approved, so this is rejected as InvalidRequest
         // (wrong order status) before it ever reaches the "already Confirmed" check.
         Assert.Equal(SchedulingOperationError.InvalidRequest, result.Error);
+    }
+
+    [Fact]
+    public async Task ListByCentreAsync_ReturnsOnlySchedulesAtThatCentre_OrderedBySlotStart()
+    {
+        await using var db = NewInMemoryDb();
+        var (order1, centre1) = await SeedApprovedOrderWithCentreAsync(db);
+        var (order2, _) = await SeedApprovedOrderWithCentreAsync(db); // second order, own centre we won't use
+        var (order3, centre3) = await SeedApprovedOrderWithCentreAsync(db); // schedule stays at its own centre
+        var service = NewService(db);
+
+        var laterAtCentre1 = await service.ProposeAsync(order1.Id, new CreateScheduleRequest(centre1.Id, FutureWindow(3)));
+        var earlierAtCentre1 = await service.ProposeAsync(order2.Id, new CreateScheduleRequest(centre1.Id, FutureWindow(1)));
+        await service.ProposeAsync(order3.Id, new CreateScheduleRequest(centre3.Id, FutureWindow(2)));
+
+        var results = await service.ListByCentreAsync(centre1.Id);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal(earlierAtCentre1.Value!.Id, results[0].Id); // earlier slot first
+        Assert.Equal(laterAtCentre1.Value!.Id, results[1].Id);
+        Assert.All(results, r => Assert.Equal(centre1.Id, r.CollectionCentreId));
+    }
+
+    [Fact]
+    public async Task ListByCentreAsync_WithNoSchedules_ReturnsEmpty()
+    {
+        await using var db = NewInMemoryDb();
+        var (_, centre) = await SeedApprovedOrderWithCentreAsync(db);
+
+        var results = await NewService(db).ListByCentreAsync(centre.Id);
+
+        Assert.Empty(results);
     }
 }

@@ -3,11 +3,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+from src.app.api.matching import router as matching_router
+
 app = FastAPI(
     title="AgriConnect Agentic AI Service",
     description="Agentic AI subsystem using LangChain and LangGraph for AgriConnect",
     version="0.1.0"
 )
+
+app.include_router(matching_router)
 
 # CORS configuration
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
