@@ -101,11 +101,25 @@ public class StockReservationService(AgriConnectDbContext db, IConfiguration con
         throw new InvalidOperationException("Reservation retry loop exited without a result.");
     }
 
-    private static bool IsSerializationFailure(Exception ex) =>
-        ex switch
+    /// <summary>
+    /// Walks the full InnerException chain rather than checking one specific
+    /// wrapper shape: EF Core's default execution strategy wraps a serialization
+    /// failure in an extra InvalidOperationException ("likely due to a transient
+    /// failure") when it's detected inside a manually-managed transaction (which
+    /// this method always runs in), on top of the DbUpdateException/PostgresException
+    /// nesting SaveChanges already produces. Checking only one or two levels deep
+    /// missed that case under real concurrent load.
+    /// </summary>
+    private static bool IsSerializationFailure(Exception ex)
+    {
+        for (var current = ex; current is not null; current = current.InnerException)
         {
-            PostgresException pg => pg.SqlState == PostgresErrorCodes.SerializationFailure,
-            DbUpdateException { InnerException: PostgresException pg } => pg.SqlState == PostgresErrorCodes.SerializationFailure,
-            _ => false
-        };
+            if (current is PostgresException pg && pg.SqlState == PostgresErrorCodes.SerializationFailure)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

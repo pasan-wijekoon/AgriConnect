@@ -42,6 +42,12 @@ builder.Services.AddScoped<IListingAvailabilityPort, FixtureListingAvailabilityP
 // ---- Component B — Order services (FR8/FR9/FR11) ----
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddHostedService<ReservationExpirySweepService>();
+
+// ---- Component B — Scheduling seam (FR10, plan §8) ----
+// Swap for a real HTTP client to Student 4's Logistics Scheduling Agent once it exists.
+builder.Services.AddScoped<ILogisticsSchedulingPort, StubLogisticsSchedulingPort>();
+builder.Services.AddScoped<SchedulingService>();
 
 // Swashbuckle (classic Swagger)
 builder.Services.AddEndpointsApiExplorer();
