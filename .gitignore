@@ -57,6 +57,13 @@ cmake-build-*/
 *.sublime-project
 
 # ==========================================
+# Local-only agent/planning files (never committed)
+# ==========================================
+/CLAUDE.md
+/PROGRESS.md
+/*_plan.md
+
+# ==========================================
 # Environment & Secrets
 # ==========================================
 .env
