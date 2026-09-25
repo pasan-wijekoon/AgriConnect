@@ -7,7 +7,9 @@ This document is a **two-way contract**:
 - **Part 1** — what Component D will expose, so Members 1–3 can build against it before it exists.
 - **Part 2** — what Component D needs from Components A, B, and C.
 
-> **Status:** schema is implemented and migrated. Endpoints are **specified but not yet built**. Shapes here are the commitment — if one has to change, it gets announced to the team rather than changed silently.
+> **Status:** all 8 endpoints are **implemented** and runnable from `backend/backend.http`. Shapes here are the commitment — if one has to change, it gets announced to the team rather than changed silently.
+>
+> **Testing in Development:** no token needed; requests run as a fake Officer. Send `X-Dev-Role: Administrator` for admin-only routes.
 
 ---
 
@@ -96,7 +98,7 @@ Listings priced significantly away from the AI-suggested fair range. **FR16** ·
 
 | Name | Type | Required | Notes |
 |---|---|---|---|
-| `status` | enum | no | `Open` (default), `Reviewed`, `Dismissed` |
+| `status` | enum | no | `Open`, `Reviewed`, `Dismissed`. Omit for all statuses |
 | `cropId` | Guid | no | |
 | `page` | int | no | 1-based, default 1 |
 | `size` | int | no | Default 20, max 100 |
@@ -109,6 +111,9 @@ Listings priced significantly away from the AI-suggested fair range. **FR16** ·
     {
       "id": "c4d5...",
       "listingId": "9a8b...",
+      "cropId": "3f2a...",
+      "regionId": "8b1c...",
+      "listingPrice": 260.00,
       "deviationPercent": 42.75,
       "flaggedAt": "2026-09-18T09:14:22+05:30",
       "status": "Open"
@@ -230,11 +235,12 @@ Generate a summary report. **FR18** · Roles: `Administrator` only
   "id": "b2c3...",
   "type": "PriceTrends",
   "generatedAt": "2026-09-20T11:02:44+05:30",
-  "fileUrl": "/api/reports/b2c3.../download"
+  "fileUrl": "/reports/5e7f....csv"
 }
 ```
 
-CSV is the initial format.
+CSV is the initial format. `fileUrl` is a direct download path served from `wwwroot/reports`.
+`Listings` and `Orders` return a header-only CSV until Components A and B land.
 
 ---
 

@@ -9,11 +9,20 @@ namespace AgriConnect.Api.Config;
 ///
 /// Requests that carry an Authorization header are left alone, so a real or deliberately
 /// invalid token still goes through normal JWT validation.
+///
+/// Send <c>X-Dev-Role: Administrator</c> (or another role) to act as that role instead.
 /// </summary>
 public class FakeClaimsPrincipalMiddleware
 {
     public const string DevUserId = "dev-officer-id";
     public const string DevRole = "Officer";
+    public const string DevRoleHeader = "X-Dev-Role";
+
+    // The admin user seeded by SharedReferenceSeeder. A GUID is required because reports
+    // record the requester in ReportExport.RequestedBy.
+    public const string DevAdminId = "a1111111-0000-0000-0000-000000000001";
+
+    private static readonly string[] Roles = ["Farmer", "Buyer", "Officer", "Administrator"];
     private const string AuthenticationType = "DevFake";
 
     private readonly RequestDelegate _next;
@@ -25,7 +34,7 @@ public class FakeClaimsPrincipalMiddleware
         _environment = environment;
     }
 
-    public Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
         // Re-checked here as well as at registration: this bypasses authentication,
         // so it must never activate outside Development even if registered by mistake.
@@ -33,20 +42,44 @@ public class FakeClaimsPrincipalMiddleware
             && context.User.Identity?.IsAuthenticated != true
             && !context.Request.Headers.ContainsKey("Authorization"))
         {
+            var requested = context.Request.Headers[DevRoleHeader].ToString();
+            var role = string.IsNullOrEmpty(requested)
+                ? DevRole
+                : Roles.FirstOrDefault(r => r.Equals(requested, StringComparison.OrdinalIgnoreCase));
+
+            if (role is null)
+            {
+                // Fail loudly: silently falling back to Officer would hide a typo as a 403.
+                await Results.Problem(
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "Invalid dev role",
+                        detail: $"{DevRoleHeader} must be one of: {string.Join(", ", Roles)}.",
+                        instance: context.Request.Path)
+                    .ExecuteAsync(context);
+                return;
+            }
+
+            var userId = role switch
+            {
+                "Administrator" => DevAdminId,
+                "Officer" => DevUserId,
+                _ => $"dev-{role.ToLowerInvariant()}-id",
+            };
+
             var identity = new ClaimsIdentity(
                 [
-                    new Claim("sub", DevUserId),
+                    new Claim("sub", userId),
                     // JwtBearer maps "sub" to NameIdentifier on real tokens; mirror that so
                     // controllers read the user id the same way in both cases.
-                    new Claim(ClaimTypes.NameIdentifier, DevUserId),
-                    new Claim(ClaimTypes.Role, DevRole),
+                    new Claim(ClaimTypes.NameIdentifier, userId),
+                    new Claim(ClaimTypes.Role, role),
                 ],
                 AuthenticationType);
 
             context.User = new ClaimsPrincipal(identity);
         }
 
-        return _next(context);
+        await _next(context);
     }
 }
 

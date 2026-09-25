@@ -80,6 +80,19 @@ public class AnomalyDetectionService(AgriConnectDbContext db, IConfiguration con
             throw new ArgumentException($"'size' must be between 1 and {MaxPageSize}.");
         }
 
+        return await FilterFlags(status, cropId)
+            .OrderByDescending(f => f.FlaggedAt)
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
+    }
+
+    /// <summary>Total matching flags across all pages, for the review queue's pager.</summary>
+    public Task<int> CountFlagsAsync(string? status, Guid? cropId) =>
+        FilterFlags(status, cropId).CountAsync();
+
+    private IQueryable<PriceAnomalyFlag> FilterFlags(string? status, Guid? cropId)
+    {
         var query = db.PriceAnomalyFlags.AsNoTracking();
 
         if (status is not null)
@@ -92,11 +105,7 @@ public class AnomalyDetectionService(AgriConnectDbContext db, IConfiguration con
             query = query.Where(f => f.CropId == crop);
         }
 
-        return await query
-            .OrderByDescending(f => f.FlaggedAt)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
+        return query;
     }
 
     public Task<PriceAnomalyFlag?> GetFlagByIdAsync(Guid id) =>

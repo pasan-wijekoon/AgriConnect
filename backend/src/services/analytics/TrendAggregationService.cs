@@ -1,4 +1,5 @@
 using AgriConnect.Api.Config;
+using AgriConnect.Api.Dtos.Analytics;
 using AgriConnect.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -87,6 +88,68 @@ public class TrendAggregationService(AgriConnectDbContext db)
             .OrderBy(s => s.RegionId)
             .ThenBy(s => s.Period)
             .ToListAsync();
+    }
+
+    public static readonly IReadOnlyList<string> Buckets = ["week", "month"];
+
+    /// <summary>
+    /// Merges snapshot rows into one point per period (Monday-start week, or the 1st of the
+    /// month), combining regions. Averages are weighted by sample count; empty periods are
+    /// never produced because only periods that have rows appear.
+    /// </summary>
+    public static List<PriceTrendPointDto> BuildPoints(IEnumerable<PriceTrendSnapshot> rows, string bucket)
+    {
+        var monthly = bucket.Equals("month", StringComparison.OrdinalIgnoreCase);
+        if (!monthly && !bucket.Equals("week", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException($"Unknown bucket '{bucket}'. Expected one of: {string.Join(", ", Buckets)}.");
+        }
+
+        return rows
+            .Where(s => s.SampleCount > 0)
+            .GroupBy(s => monthly ? new DateOnly(s.Period.Year, s.Period.Month, 1) : WeekStart(s.Period))
+            .OrderBy(g => g.Key)
+            .Select(g =>
+            {
+                var samples = g.Sum(s => s.SampleCount);
+                return new PriceTrendPointDto
+                {
+                    Period = g.Key,
+                    AvgPrice = Math.Round(g.Sum(s => s.AvgPrice * s.SampleCount) / samples, 2),
+                    MinPrice = g.Min(s => s.MinPrice),
+                    MaxPrice = g.Max(s => s.MaxPrice),
+                    SampleCount = samples,
+                };
+            })
+            .ToList();
+    }
+
+    /// <summary>Re-aggregates every crop × region combination over all stored history.</summary>
+    public async Task<SnapshotRefreshResultDto> RefreshAllAsync()
+    {
+        var range = await db.PriceTrendSnapshots
+            .GroupBy(_ => 1)
+            .Select(g => new { From = g.Min(s => s.Period), To = g.Max(s => s.Period) })
+            .FirstOrDefaultAsync();
+        if (range is null)
+        {
+            return new SnapshotRefreshResultDto();
+        }
+
+        var cropIds = await db.Crops.Select(c => c.Id).ToListAsync();
+        var regionIds = await db.Regions.Select(r => r.Id).ToListAsync();
+
+        var upserted = 0;
+        foreach (var cropId in cropIds)
+        {
+            foreach (var regionId in regionIds)
+            {
+                upserted += await AggregateAsync(cropId, regionId, range.From, range.To);
+            }
+        }
+
+        var periods = await db.PriceTrendSnapshots.Select(s => s.Period).Distinct().CountAsync();
+        return new SnapshotRefreshResultDto { PeriodsProcessed = periods, SnapshotsUpserted = upserted };
     }
 
     public static DateOnly WeekStart(DateOnly date) =>

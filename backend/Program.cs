@@ -1,14 +1,22 @@
 using System.Text;
 using AgriConnect.Api.Config;
 using AgriConnect.Api.Services.Analytics;
+using AgriConnect.Api.Services.Reports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+// Validation error keys use the JSON property names (dateRangeEnd, not DateRangeEnd).
+builder.Services.AddControllers(options =>
+    options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()));
+
+// Every error response is RFC 7807 ProblemDetails.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 // PostgreSQL via EF Core.
 builder.Services.AddDbContext<AgriConnectDbContext>(options =>
@@ -42,12 +50,17 @@ builder.Services.AddScoped<TrendAggregationService>();
 builder.Services.AddScoped<AnomalyDetectionService>();
 builder.Services.AddScoped<ShortageDetectionService>();
 builder.Services.AddScoped<AnomalyInvestigationService>();
+builder.Services.AddScoped<ReportExportService>();
 
 // Swashbuckle (classic Swagger) 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+// Gives empty 401/403/404 responses a ProblemDetails body too.
+app.UseStatusCodePages();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -103,6 +116,9 @@ if (args.Contains("--seed-only"))
     Console.WriteLine("Seeding completed. Exiting (--seed-only flag specified).");
     return;
 }
+
+// Serves generated reports from wwwroot/reports.
+app.UseStaticFiles();
 
 app.UseAuthentication();
 

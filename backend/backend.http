@@ -1,2 +1,86 @@
-@backend_HostAddress = http://localhost:9000
+# AgriConnect API — runnable from VS Code (REST Client) or Visual Studio.
+#
+# In Development no token is needed: requests run as a fake Officer.
+# Add "X-Dev-Role: Administrator" to act as an admin (see FakeClaimsPrincipal.cs).
+# Run "1b. List anomalies" and "7. Export" first; later requests reuse their ids.
 
+@backend_HostAddress = http://localhost:5000
+
+# Seeded by SharedReferenceSeeder (same on every machine).
+@tomato = 3f2a0002-0000-0000-0000-000000000002
+@carrot = 3f2a0001-0000-0000-0000-000000000001
+@dambulla = 8b1c0002-0000-0000-0000-000000000002
+
+###############################################################################
+# Component D — Analytics (Officer, Administrator)
+###############################################################################
+
+### 1. Price trends — one region, weekly
+GET {{backend_HostAddress}}/api/analytics/price-trends?cropId={{tomato}}&regionId={{dambulla}}&from=2026-01-01&to=2026-12-31&bucket=week
+
+### 1a. Price trends — all regions combined, monthly
+GET {{backend_HostAddress}}/api/analytics/price-trends?cropId={{carrot}}&from=2026-01-01&to=2026-12-31&bucket=month
+
+### 1b. List anomalies — open review queue
+# @name anomalies
+GET {{backend_HostAddress}}/api/analytics/anomalies?status=Open&page=1&size=20
+
+### 2. List anomalies — filtered by crop, all statuses
+GET {{backend_HostAddress}}/api/analytics/anomalies?cropId={{carrot}}
+
+### 3. Investigate the first flag from 1b
+GET {{backend_HostAddress}}/api/analytics/anomalies/{{anomalies.response.body.$.items[0].listingId}}/investigate
+
+### 4. Mark the first flag from 1b as reviewed
+PATCH {{backend_HostAddress}}/api/analytics/anomalies/{{anomalies.response.body.$.items[0].id}}
+Content-Type: application/json
+
+{
+  "status": "Reviewed"
+}
+
+### 5. Shortage / oversupply events
+GET {{backend_HostAddress}}/api/analytics/shortages?type=Shortage&severity=High
+
+### 6. Refresh trend snapshots (Administrator only)
+POST {{backend_HostAddress}}/api/analytics/snapshots/refresh
+X-Dev-Role: Administrator
+
+###############################################################################
+# Component D — Reports (Administrator only)
+###############################################################################
+
+### 7. Export a price-trends report
+# @name export
+POST {{backend_HostAddress}}/api/reports/export
+X-Dev-Role: Administrator
+Content-Type: application/json
+
+{
+  "type": "PriceTrends",
+  "dateRangeStart": "2026-06-01",
+  "dateRangeEnd": "2026-09-30"
+}
+
+### 8. Get the report created by 7
+GET {{backend_HostAddress}}/api/reports/{{export.response.body.$.id}}
+X-Dev-Role: Administrator
+
+### 8a. Download the CSV created by 7
+GET {{backend_HostAddress}}{{export.response.body.$.fileUrl}}
+
+###############################################################################
+# Error cases — each returns RFC 7807 ProblemDetails
+###############################################################################
+
+### 400 — 'to' before 'from'
+GET {{backend_HostAddress}}/api/analytics/price-trends?cropId={{tomato}}&from=2026-09-01&to=2026-06-01
+
+### 400 — page size over 100
+GET {{backend_HostAddress}}/api/analytics/anomalies?size=101
+
+### 403 — Officer calling an Administrator-only route
+POST {{backend_HostAddress}}/api/analytics/snapshots/refresh
+
+### 404 — unknown listing
+GET {{backend_HostAddress}}/api/analytics/anomalies/00000000-0000-0000-0000-000000000000/investigate
