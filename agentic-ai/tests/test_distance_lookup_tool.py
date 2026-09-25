@@ -13,19 +13,27 @@ def test_haversine_distance_km_kandy_to_colombo_is_roughly_correct():
     assert 85 <= distance <= 105
 
 
-def test_get_distance_without_api_key_falls_back_to_haversine_directly():
-    tool = DistanceLookupTool(api_key="")
+def test_get_distance_without_api_key_still_calls_the_live_api():
+    # OSRM's public demo server needs no key at all — unlike the previous
+    # OpenRouteService integration, an empty api_key must not skip the live
+    # call outright.
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert "Authorization" not in request.headers
+        return httpx.Response(200, json={"code": "Ok", "distances": [[42500.0]], "durations": [[1800.0]]})
 
-    result = tool.get_distance(7.2906, 80.6337, 6.9271, 79.8612)
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    tool = DistanceLookupTool(client=client, api_key="")
 
-    assert result.degraded is True
-    assert result.eta_minutes is None
-    assert 85 <= result.distance_km <= 105
+    result = tool.get_distance(7.29, 80.63, 6.93, 79.86)
+
+    assert result.degraded is False
+    assert result.distance_km == 42.5
 
 
 def test_get_distance_with_successful_api_response_is_not_degraded():
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json={"distances": [[42.5]], "durations": [[1800.0]]})
+        assert request.headers["Authorization"] == "test-key"
+        return httpx.Response(200, json={"code": "Ok", "distances": [[42500.0]], "durations": [[1800.0]]})
 
     client = httpx.Client(transport=httpx.MockTransport(handler))
     tool = DistanceLookupTool(client=client, api_key="test-key")

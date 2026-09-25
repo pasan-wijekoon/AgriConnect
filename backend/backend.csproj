@@ -4,6 +4,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Lets `dotnet user-secrets set "MapsApi:ApiKey" "..."` store the real
+         OpenRouteService key outside the repo (Development environment only,
+         auto-loaded by WebApplication.CreateBuilder — see appsettings.json's
+         MapsApi:ApiKey, which stays an empty placeholder). -->
+    <UserSecretsId>agriconnect-backend-orders-component</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

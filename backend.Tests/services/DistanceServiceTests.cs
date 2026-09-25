@@ -28,12 +28,11 @@ internal class ThrowingHttpMessageHandler : HttpMessageHandler
 }
 
 /// <summary>
-/// Tests DistanceService against a fake HttpMessageHandler rather than the real
-/// OpenRouteService API, since no live MAPS_API_KEY is provisioned in this dev
-/// environment (docker/.env.example ships it empty). This still exercises the
-/// real code path: request construction, response parsing, retry count, and the
-/// haversine fallback with the Degraded flag — the part plan §9 actually requires
-/// to be correct, independent of whether a live key is ever configured.
+/// Tests DistanceService against a fake HttpMessageHandler rather than a real
+/// OSRM instance, so these stay fast/deterministic/offline. This still
+/// exercises the real code path: request construction, response parsing
+/// (OSRM's Table API — meters/seconds, a top-level "code" field), retry
+/// count, and the haversine fallback with the Degraded flag.
 /// </summary>
 public class DistanceServiceTests
 {
@@ -53,14 +52,15 @@ public class DistanceServiceTests
     {
         var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent("""{"distances":[[42.5]],"durations":[[1800.0]]}""", Encoding.UTF8, "application/json")
+            Content = new StringContent(
+                """{"code":"Ok","distances":[[42500.0]],"durations":[[1800.0]]}""", Encoding.UTF8, "application/json")
         });
         var service = new DistanceService(NewClient(handler), NoRetryDelayConfig());
 
         var result = await service.GetDistanceAsync(7.29m, 80.63m, 6.93m, 79.86m);
 
         Assert.False(result.Degraded);
-        Assert.Equal(42.5m, result.DistanceKm);
+        Assert.Equal(42.5m, result.DistanceKm); // 42500m -> 42.5km
         Assert.Equal(30.0, result.EtaMinutes); // 1800s / 60
         Assert.Equal(1, handler.CallCount);
     }
@@ -98,7 +98,7 @@ public class DistanceServiceTests
     {
         var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent("""{"distances":[]}""", Encoding.UTF8, "application/json")
+            Content = new StringContent("""{"code":"Ok","distances":[]}""", Encoding.UTF8, "application/json")
         });
         var service = new DistanceService(NewClient(handler), NoRetryDelayConfig());
 
@@ -111,6 +111,23 @@ public class DistanceServiceTests
     public async Task GetDistanceAsync_WhenApiReturnsErrorStatus_FallsBackToHaversine()
     {
         var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        var service = new DistanceService(NewClient(handler), NoRetryDelayConfig());
+
+        var result = await service.GetDistanceAsync(7.29m, 80.63m, 6.93m, 79.86m);
+
+        Assert.True(result.Degraded);
+    }
+
+    [Fact]
+    public async Task GetDistanceAsync_WhenOsrmReturnsNonOkCodeWith200Status_FallsBackToHaversine()
+    {
+        // OSRM can respond 200 OK with a non-"Ok" body code (e.g. no route found
+        // between the two points) — a failure mode an HTTP-status-only check
+        // would miss entirely.
+        var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"code":"NoRoute"}""", Encoding.UTF8, "application/json")
+        });
         var service = new DistanceService(NewClient(handler), NoRetryDelayConfig());
 
         var result = await service.GetDistanceAsync(7.29m, 80.63m, 6.93m, 79.86m);

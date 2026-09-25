@@ -67,11 +67,19 @@ builder.Services.AddHttpClient<IBuyerFarmerMatchingPort, HttpBuyerFarmerMatching
 builder.Services.AddScoped<SchedulingService>();
 
 // ---- Component B — Maps/Distance integration (FR21, plan §9) ----
-// Server-side only — the Maps API key never reaches a client (CLAUDE.md §19).
+// Server-side only — no Maps API credential ever reaches a client (CLAUDE.md
+// §19). Default targets OSRM's free public demo server, which needs no API
+// key at all; MapsApi:ApiKey stays wired for a self-hosted OSRM instance or a
+// different provider, but is simply unused (no header added) when empty.
 builder.Services.AddHttpClient<IDistanceService, DistanceService>((sp, client) =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    client.BaseAddress = new Uri(config["MapsApi:BaseUrl"] ?? "https://api.openrouteservice.org/");
+    client.BaseAddress = new Uri(config["MapsApi:BaseUrl"] ?? "https://router.project-osrm.org/");
+    // OSRM's public demo server's nginx front-end returns 403 Forbidden for
+    // requests with no User-Agent header — which is HttpClient's default (curl
+    // and browsers always send one, .NET does not). Found by comparing a
+    // working curl request against a failing HttpClient one byte-for-byte.
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("AgriConnect-Backend/1.0");
     var apiKey = config["MapsApi:ApiKey"];
     if (!string.IsNullOrEmpty(apiKey))
     {
