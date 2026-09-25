@@ -57,7 +57,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] OrderStatusUpdateRequest request, CancellationToken ct)
     {
-        var result = await orderService.UpdateStatusAsync(id, request.Status, ct);
+        var result = await orderService.UpdateStatusAsync(id, request.Status, User.GetUserId(), ct);
         return result.Success ? Ok(result.Value) : ToErrorResult(result.Error, result.ErrorMessage!);
     }
 
@@ -66,7 +66,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] OrderCancelRequest? request, CancellationToken ct)
     {
-        var result = await orderService.CancelAsync(id, User.GetUserId(), User.GetRole(), ct);
+        var result = await orderService.CancelAsync(id, User.GetUserId(), User.GetRole(), request?.Reason, ct);
         return result.Success ? Ok(result.Value) : ToErrorResult(result.Error, result.ErrorMessage!);
     }
 
@@ -105,7 +105,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status202Accepted)]
     public async Task<IActionResult> ProposeSchedule(Guid id, [FromBody] CreateScheduleRequest request, CancellationToken ct)
     {
-        var result = await schedulingService.ProposeAsync(id, request, ct);
+        var result = await schedulingService.ProposeAsync(id, request, User.GetUserId(), ct);
         if (!result.Success)
         {
             return ToSchedulingErrorResult(result.Error, result.ErrorMessage!);
@@ -127,7 +127,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DecideSchedule(Guid id, [FromBody] ScheduleDecisionRequest request, CancellationToken ct)
     {
-        var result = await schedulingService.DecideAsync(id, request.Decision, ct);
+        var result = await schedulingService.DecideAsync(id, request.Decision, User.GetUserId(), ct);
         return result.Success ? Ok(result.Value) : ToSchedulingErrorResult(result.Error, result.ErrorMessage!);
     }
 

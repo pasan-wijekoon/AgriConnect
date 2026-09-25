@@ -38,10 +38,13 @@ public class SchedulingOperationResult<T>
 public class SchedulingService(
     AgriConnectDbContext db,
     IListingAvailabilityPort listingPort,
-    ILogisticsSchedulingPort schedulingPort)
+    ILogisticsSchedulingPort schedulingPort,
+    IBuyerFarmerMatchingPort matchingPort,
+    AuditLogService auditLog,
+    NotificationService notifications)
 {
     public async Task<SchedulingOperationResult<ScheduleResponse>> ProposeAsync(
-        Guid orderId, CreateScheduleRequest request, CancellationToken ct = default)
+        Guid orderId, CreateScheduleRequest request, Guid actorId, CancellationToken ct = default)
     {
         var order = await db.Orders
             .Include(o => o.PickupSchedule)
@@ -72,11 +75,6 @@ public class SchedulingService(
         var centreId = request.CollectionCentreId;
         if (centreId is null)
         {
-            // No centreId supplied: fall back to the first centre in the listing's
-            // own region. This is a stand-in for the Buyer-Farmer Matching Agent
-            // (plan §8.1 step 1, Phase 8, not yet built) — the real agent will pick
-            // a matched centre by distance/confidence; this fallback just needs a
-            // valid, region-appropriate centre so Phase 6 isn't blocked on Phase 8.
             var listing = await listingPort.GetAvailabilityAsync(order.ListingId, ct);
             if (listing is null)
             {
@@ -84,19 +82,61 @@ public class SchedulingService(
                     SchedulingOperationError.NotFound, "Listing not found.");
             }
 
-            var fallbackCentre = await db.CollectionCentres
+            var regionCentres = await db.CollectionCentres
                 .Where(c => c.RegionId == listing.RegionId)
-                .OrderBy(c => c.Id)
-                .FirstOrDefaultAsync(ct);
+                .ToListAsync(ct);
 
-            if (fallbackCentre is null)
+            if (regionCentres.Count == 0)
             {
                 return SchedulingOperationResult<ScheduleResponse>.Fail(
                     SchedulingOperationError.InvalidRequest,
                     "No collection centre available in the listing's region; specify collectionCentreId explicitly.");
             }
 
-            centreId = fallbackCentre.Id;
+            Guid? matchedCentreId = null;
+
+            // The Buyer-Farmer Matching Agent (plan §8.1/Phase 8) is only tried
+            // when the caller supplies buyer coordinates — nothing in this
+            // codebase stores a real buyer location yet (no shared User/Address
+            // model, plan §16 open question #1), so there is currently no way to
+            // source them automatically. When omitted, or when the agent call
+            // itself doesn't succeed, this falls back to the original
+            // first-centre-in-region selection exactly as before.
+            if (request.BuyerLocation is { } buyerLocation)
+            {
+                var candidates = new List<MatchCandidateCentre>(regionCentres.Count);
+                foreach (var c in regionCentres)
+                {
+                    var confirmedCount = await db.PickupSchedules.CountAsync(
+                        p => p.CollectionCentreId == c.Id && p.Status == ScheduleStatus.Confirmed, ct);
+                    candidates.Add(new MatchCandidateCentre(c.Id, c.Name, c.Latitude, c.Longitude, c.Capacity, confirmedCount));
+                }
+
+                var match = await matchingPort.MatchAsync(
+                    orderId, buyerLocation.Lat, buyerLocation.Lng, order.ListingId, order.Quantity, candidates, ct);
+
+                if (match is not null)
+                {
+                    if (match.MatchedCentreId is null)
+                    {
+                        // A real, meaningful "no match" from the agent — distinct
+                        // from the agent being unreachable — is not silently
+                        // papered over with the region fallback.
+                        return SchedulingOperationResult<ScheduleResponse>.Fail(
+                            SchedulingOperationError.Conflict,
+                            $"The Buyer-Farmer Matching Agent found no collection centre with capacity for this order ({match.Notes}); specify collectionCentreId explicitly.");
+                    }
+
+                    matchedCentreId = match.MatchedCentreId;
+                    auditLog.Log(actorId, "BuyerFarmerMatch", "Order", orderId,
+                        new { match.MatchedCentreId, match.MatchConfidence, match.Notes, match.Degraded });
+                }
+                // match is null: the agent call itself didn't succeed — fall
+                // through to the region-based fallback below, same as if no
+                // buyer location had been supplied at all.
+            }
+
+            centreId = matchedCentreId ?? regionCentres.OrderBy(c => c.Id).First().Id;
         }
 
         var centre = await db.CollectionCentres.FirstOrDefaultAsync(c => c.Id == centreId, ct);
@@ -174,9 +214,26 @@ public class SchedulingService(
             db.PickupSchedules.Add(schedule);
         }
 
+        auditLog.Log(actorId, "SchedulePropose", "PickupSchedule", schedule.Id,
+            new { schedule.CollectionCentreId, schedule.SlotStart, schedule.SlotEnd });
+        await NotifyOrderStakeholdersAsync(order, "A pickup/delivery schedule has been proposed for your order.", ct);
+
         await db.SaveChangesAsync(ct);
 
         return SchedulingOperationResult<ScheduleResponse>.Ok(ToResponse(schedule, proposal.ConflictChecked));
+    }
+
+    /// <summary>Same posture as OrderService's identically-named helper: best-effort,
+    /// never blocks the scheduling operation it accompanies.</summary>
+    private async Task NotifyOrderStakeholdersAsync(Order order, string message, CancellationToken ct)
+    {
+        notifications.Notify(order.BuyerId, "ScheduleUpdate", message);
+
+        var listing = await listingPort.GetAvailabilityAsync(order.ListingId, ct);
+        if (listing is not null)
+        {
+            notifications.Notify(listing.FarmerId, "ScheduleUpdate", message);
+        }
     }
 
     /// <summary>
@@ -232,7 +289,7 @@ public class SchedulingService(
     }
 
     public async Task<SchedulingOperationResult<ScheduleResponse>> DecideAsync(
-        Guid orderId, ScheduleDecision decision, CancellationToken ct = default)
+        Guid orderId, ScheduleDecision decision, Guid actorId, CancellationToken ct = default)
     {
         var order = await db.Orders
             .Include(o => o.PickupSchedule)
@@ -262,6 +319,17 @@ public class SchedulingService(
             // Order deliberately stays Approved (plan §8.1) — rejecting a proposal
             // does not cancel the order, it just clears the way to propose again.
         }
+
+        // "ApprovedBy" (FR19/plan §8.4) is this audit entry's ActorId — there is no
+        // AgentWorkflow.ApprovedBy column (Phase 6 decision: no AgentWorkflow table
+        // was built), so the audit trail is the record of who decided.
+        auditLog.Log(actorId, "ScheduleDecision", "PickupSchedule", schedule.Id, new { Decision = decision });
+        await NotifyOrderStakeholdersAsync(
+            order,
+            decision == ScheduleDecision.Approve
+                ? "Your pickup/delivery schedule was confirmed."
+                : "Your proposed pickup/delivery schedule was rejected.",
+            ct);
 
         try
         {

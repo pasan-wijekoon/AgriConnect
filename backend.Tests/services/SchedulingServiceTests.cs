@@ -19,6 +19,7 @@ public class SchedulingServiceTests
     private static readonly Guid RegionId = Guid.NewGuid();
     private static readonly Guid ListingId = Guid.NewGuid();
     private static readonly Guid FarmerId = Guid.NewGuid();
+    private static readonly Guid ActorId = Guid.NewGuid();
 
     private static AgriConnectDbContext NewInMemoryDb() =>
         new(new DbContextOptionsBuilder<AgriConnectDbContext>()
@@ -29,8 +30,11 @@ public class SchedulingServiceTests
         new FakeListingAvailabilityPort().Add(new ListingAvailability(ListingId, FarmerId, RegionId, "Published", 100m));
 
     private static SchedulingService NewService(
-        AgriConnectDbContext db, ILogisticsSchedulingPort? port = null, IListingAvailabilityPort? listingPort = null) =>
-        new(db, listingPort ?? DefaultListingPort(), port ?? new StubbingLogisticsSchedulingPort());
+        AgriConnectDbContext db, ILogisticsSchedulingPort? port = null, IListingAvailabilityPort? listingPort = null,
+        IBuyerFarmerMatchingPort? matchingPort = null) =>
+        new(db, listingPort ?? DefaultListingPort(), port ?? new StubbingLogisticsSchedulingPort(),
+            matchingPort ?? new FakeBuyerFarmerMatchingPort(result: null),
+            new AuditLogService(db), new NotificationService(db));
 
     private static async Task<(Order Order, CollectionCentre Centre)> SeedApprovedOrderWithCentreAsync(
         AgriConnectDbContext db, int capacity = 2)
@@ -71,7 +75,7 @@ public class SchedulingServiceTests
     public async Task ProposeAsync_WithUnknownOrder_ReturnsNotFound()
     {
         await using var db = NewInMemoryDb();
-        var result = await NewService(db).ProposeAsync(Guid.NewGuid(), new CreateScheduleRequest(null, null));
+        var result = await NewService(db).ProposeAsync(Guid.NewGuid(), new CreateScheduleRequest(null, null), ActorId);
 
         Assert.False(result.Success);
         Assert.Equal(SchedulingOperationError.NotFound, result.Error);
@@ -90,7 +94,7 @@ public class SchedulingServiceTests
         await db.SaveChangesAsync();
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()));
+            order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
 
         Assert.False(result.Success);
         Assert.Equal(SchedulingOperationError.InvalidRequest, result.Error);
@@ -103,7 +107,7 @@ public class SchedulingServiceTests
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()));
+            order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
 
         Assert.True(result.Success, result.ErrorMessage);
         Assert.Equal(ScheduleStatus.Proposed, result.Value!.Status);
@@ -118,10 +122,98 @@ public class SchedulingServiceTests
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(null, FutureWindow()));
+            order.Id, new CreateScheduleRequest(null, FutureWindow()), ActorId);
 
         Assert.True(result.Success, result.ErrorMessage);
         Assert.Equal(centre.Id, result.Value!.CollectionCentreId);
+    }
+
+    // ---- Buyer-Farmer Matching Agent integration (Phase 13) ----
+
+    [Fact]
+    public async Task ProposeAsync_WithBuyerLocation_UsesTheAgentsMatchedCentre_NotTheRegionFallback()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, fallbackCentre) = await SeedApprovedOrderWithCentreAsync(db);
+        // A second centre in the same region — the agent picks this one, proving
+        // the result isn't just coincidentally the region-fallback's own choice.
+        var matchedCentre = new CollectionCentre
+        {
+            Id = Guid.NewGuid(), Name = "Agent-Matched Centre", Latitude = 0, Longitude = 0,
+            Capacity = 2, RegionId = RegionId
+        };
+        db.CollectionCentres.Add(matchedCentre);
+        await db.SaveChangesAsync();
+
+        var matchingPort = new FakeBuyerFarmerMatchingPort(
+            new MatchResult(matchedCentre.Id, MatchConfidence: 0.9, Notes: "Closest with capacity.",
+                CandidatesConsidered: 2, Degraded: false));
+
+        var result = await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id,
+            new CreateScheduleRequest(null, FutureWindow(), new BuyerLocationDto(7.29m, 80.63m)),
+            ActorId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(matchedCentre.Id, result.Value!.CollectionCentreId);
+        Assert.NotEqual(fallbackCentre.Id, result.Value.CollectionCentreId);
+
+        var auditEntry = await db.AuditLogs.SingleAsync(a => a.Action == "BuyerFarmerMatch");
+        Assert.Equal(ActorId, auditEntry.ActorId);
+        Assert.Equal(order.Id, auditEntry.EntityId);
+    }
+
+    [Fact]
+    public async Task ProposeAsync_WithBuyerLocation_AgentFindsNoCapacity_ReturnsConflict()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, _) = await SeedApprovedOrderWithCentreAsync(db);
+        var matchingPort = new FakeBuyerFarmerMatchingPort(
+            new MatchResult(MatchedCentreId: null, MatchConfidence: 0.0,
+                Notes: "No candidate collection centre currently has capacity for this order.",
+                CandidatesConsidered: 1, Degraded: false));
+
+        var result = await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id,
+            new CreateScheduleRequest(null, FutureWindow(), new BuyerLocationDto(7.29m, 80.63m)),
+            ActorId);
+
+        Assert.False(result.Success);
+        Assert.Equal(SchedulingOperationError.Conflict, result.Error);
+    }
+
+    [Fact]
+    public async Task ProposeAsync_WithBuyerLocation_AgentCallFails_FallsBackToRegionMatchedCentre()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, fallbackCentre) = await SeedApprovedOrderWithCentreAsync(db);
+        // null MatchResult simulates the agent being unreachable/timing out,
+        // distinct from a real "no capacity" MatchResult with a null centre id.
+        var matchingPort = new FakeBuyerFarmerMatchingPort(result: null);
+
+        var result = await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id,
+            new CreateScheduleRequest(null, FutureWindow(), new BuyerLocationDto(7.29m, 80.63m)),
+            ActorId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(fallbackCentre.Id, result.Value!.CollectionCentreId);
+        Assert.DoesNotContain(await db.AuditLogs.ToListAsync(), a => a.Action == "BuyerFarmerMatch");
+    }
+
+    [Fact]
+    public async Task ProposeAsync_WithoutBuyerLocation_NeverCallsTheMatchingAgent()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        var matchingPort = new FakeBuyerFarmerMatchingPort(result: null);
+
+        var result = await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id, new CreateScheduleRequest(null, FutureWindow()), ActorId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(centre.Id, result.Value!.CollectionCentreId);
+        Assert.Null(matchingPort.LastOrderIdPassedIn);
     }
 
     [Fact]
@@ -131,7 +223,7 @@ public class SchedulingServiceTests
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(centre.Id, null));
+            order.Id, new CreateScheduleRequest(centre.Id, null), ActorId);
 
         Assert.True(result.Success, result.ErrorMessage);
         Assert.True(result.Value!.SlotStart > DateTimeOffset.UtcNow);
@@ -146,7 +238,7 @@ public class SchedulingServiceTests
         var past = DateTimeOffset.UtcNow.AddDays(-1);
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(centre.Id, new ScheduleWindowDto(past, past.AddHours(1))));
+            order.Id, new CreateScheduleRequest(centre.Id, new ScheduleWindowDto(past, past.AddHours(1))), ActorId);
 
         Assert.False(result.Success);
         Assert.Equal(SchedulingOperationError.InvalidRequest, result.Error);
@@ -160,7 +252,7 @@ public class SchedulingServiceTests
         var start = DateTimeOffset.UtcNow.AddDays(1);
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(centre.Id, new ScheduleWindowDto(start, start.AddHours(-1))));
+            order.Id, new CreateScheduleRequest(centre.Id, new ScheduleWindowDto(start, start.AddHours(-1))), ActorId);
 
         Assert.False(result.Success);
         Assert.Equal(SchedulingOperationError.InvalidRequest, result.Error);
@@ -173,7 +265,7 @@ public class SchedulingServiceTests
         var (order, _) = await SeedApprovedOrderWithCentreAsync(db);
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(Guid.NewGuid(), FutureWindow()));
+            order.Id, new CreateScheduleRequest(Guid.NewGuid(), FutureWindow()), ActorId);
 
         Assert.False(result.Success);
         Assert.Equal(SchedulingOperationError.NotFound, result.Error);
@@ -211,7 +303,7 @@ public class SchedulingServiceTests
         await db.SaveChangesAsync();
 
         var result = await NewService(db).ProposeAsync(
-            order.Id, new CreateScheduleRequest(centre.Id, window));
+            order.Id, new CreateScheduleRequest(centre.Id, window), ActorId);
 
         Assert.False(result.Success);
         Assert.Equal(SchedulingOperationError.Conflict, result.Error);
@@ -223,8 +315,8 @@ public class SchedulingServiceTests
         await using var db = NewInMemoryDb();
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
 
-        var first = await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow(1)));
-        var second = await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow(2)));
+        var first = await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow(1)), ActorId);
+        var second = await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow(2)), ActorId);
 
         Assert.True(first.Success);
         Assert.True(second.Success, second.ErrorMessage);
@@ -237,10 +329,10 @@ public class SchedulingServiceTests
     {
         await using var db = NewInMemoryDb();
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
-        var proposed = await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()));
+        var proposed = await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
         Assert.True(proposed.Success);
 
-        var result = await NewService(db).DecideAsync(order.Id, ScheduleDecision.Approve);
+        var result = await NewService(db).DecideAsync(order.Id, ScheduleDecision.Approve, ActorId);
 
         Assert.True(result.Success, result.ErrorMessage);
         Assert.Equal(ScheduleStatus.Confirmed, result.Value!.Status);
@@ -253,9 +345,9 @@ public class SchedulingServiceTests
     {
         await using var db = NewInMemoryDb();
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
-        await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()));
+        await NewService(db).ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
 
-        var result = await NewService(db).DecideAsync(order.Id, ScheduleDecision.Reject);
+        var result = await NewService(db).DecideAsync(order.Id, ScheduleDecision.Reject, ActorId);
 
         Assert.True(result.Success, result.ErrorMessage);
         Assert.Equal(ScheduleStatus.Cancelled, result.Value!.Status);
@@ -269,7 +361,7 @@ public class SchedulingServiceTests
         await using var db = NewInMemoryDb();
         var (order, _) = await SeedApprovedOrderWithCentreAsync(db);
 
-        var result = await NewService(db).DecideAsync(order.Id, ScheduleDecision.Approve);
+        var result = await NewService(db).DecideAsync(order.Id, ScheduleDecision.Approve, ActorId);
 
         Assert.False(result.Success);
         Assert.Equal(SchedulingOperationError.InvalidRequest, result.Error);
@@ -304,7 +396,7 @@ public class SchedulingServiceTests
         await using var db = NewInMemoryDb();
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
         var service = NewService(db);
-        var proposed = await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()));
+        var proposed = await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
 
         var result = await service.GetByOrderIdAsync(order.Id);
 
@@ -319,10 +411,10 @@ public class SchedulingServiceTests
         await using var db = NewInMemoryDb();
         var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
         var service = NewService(db);
-        await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()));
-        await service.DecideAsync(order.Id, ScheduleDecision.Approve);
+        await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
+        await service.DecideAsync(order.Id, ScheduleDecision.Approve, ActorId);
 
-        var result = await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow(2)));
+        var result = await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow(2)), ActorId);
 
         Assert.False(result.Success);
         // Order is now Scheduled, not Approved, so this is rejected as InvalidRequest
@@ -339,9 +431,9 @@ public class SchedulingServiceTests
         var (order3, centre3) = await SeedApprovedOrderWithCentreAsync(db); // schedule stays at its own centre
         var service = NewService(db);
 
-        var laterAtCentre1 = await service.ProposeAsync(order1.Id, new CreateScheduleRequest(centre1.Id, FutureWindow(3)));
-        var earlierAtCentre1 = await service.ProposeAsync(order2.Id, new CreateScheduleRequest(centre1.Id, FutureWindow(1)));
-        await service.ProposeAsync(order3.Id, new CreateScheduleRequest(centre3.Id, FutureWindow(2)));
+        var laterAtCentre1 = await service.ProposeAsync(order1.Id, new CreateScheduleRequest(centre1.Id, FutureWindow(3)), ActorId);
+        var earlierAtCentre1 = await service.ProposeAsync(order2.Id, new CreateScheduleRequest(centre1.Id, FutureWindow(1)), ActorId);
+        await service.ProposeAsync(order3.Id, new CreateScheduleRequest(centre3.Id, FutureWindow(2)), ActorId);
 
         var results = await service.ListByCentreAsync(centre1.Id);
 
@@ -360,5 +452,46 @@ public class SchedulingServiceTests
         var results = await NewService(db).ListByCentreAsync(centre.Id);
 
         Assert.Empty(results);
+    }
+
+    // ---- Audit & Notifications (FR20/FR22, plan §12/Phase 11) ----
+
+    [Fact]
+    public async Task ProposeAsync_WritesAuditLogAndNotifiesBuyerAndFarmer()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+
+        var result = await NewService(db).ProposeAsync(
+            order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
+        Assert.True(result.Success);
+
+        var entry = await db.AuditLogs.SingleAsync();
+        Assert.Equal(ActorId, entry.ActorId);
+        Assert.Equal("SchedulePropose", entry.Action);
+        Assert.Equal(result.Value!.Id, entry.EntityId);
+
+        var notifiedUsers = (await db.Notifications.ToListAsync()).Select(n => n.UserId).ToList();
+        Assert.Contains(order.BuyerId, notifiedUsers);
+        Assert.Contains(FarmerId, notifiedUsers);
+    }
+
+    [Fact]
+    public async Task DecideAsync_WritesAuditLogWithActorAndDecision()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        var service = NewService(db);
+        await service.ProposeAsync(order.Id, new CreateScheduleRequest(centre.Id, FutureWindow()), ActorId);
+
+        var result = await service.DecideAsync(order.Id, ScheduleDecision.Approve, ActorId);
+        Assert.True(result.Success);
+
+        // Propose already wrote its own "SchedulePropose" entry, so filter by
+        // action rather than asserting SingleAsync.
+        var entry = await db.AuditLogs.SingleAsync(a => a.Action == "ScheduleDecision");
+        Assert.Equal(ActorId, entry.ActorId);
+        Assert.Equal("ScheduleDecision", entry.Action);
+        Assert.Contains("Approve", entry.Details);
     }
 }

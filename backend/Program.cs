@@ -35,6 +35,11 @@ switch (authMode)
 }
 builder.Services.AddAuthorization();
 
+// ---- Shared / Cross-Cutting — Audit & Notifications (FR20/FR22, plan §12) ----
+// Not owned by any single component; Component B is the first to need them.
+builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddScoped<NotificationService>();
+
 // ---- Component B — Listing availability seam (plan §3) ----
 // Swap for a real Component-A-backed implementation once the Listing table lands.
 builder.Services.AddScoped<IListingAvailabilityPort, FixtureListingAvailabilityPort>();
@@ -47,6 +52,18 @@ builder.Services.AddHostedService<ReservationExpirySweepService>();
 // ---- Component B — Scheduling seam (FR10, plan §8) ----
 // Swap for a real HTTP client to Student 4's Logistics Scheduling Agent once it exists.
 builder.Services.AddScoped<ILogisticsSchedulingPort, StubLogisticsSchedulingPort>();
+
+// ---- Component B — Buyer-Farmer Matching Agent (FR10, plan §8.1) ----
+// Unlike ILogisticsSchedulingPort above, this agent already exists and is
+// independently tested (agentic-ai/, Phase 8) — this is a real HTTP client, not
+// a stub. AgenticAi:BaseUrl/ApiKey are already wired through docker-compose.yml
+// for the containerized setup; the local-dev default targets the agent's own
+// `uvicorn` default port (agentic-ai/src/app/main.py).
+builder.Services.AddHttpClient<IBuyerFarmerMatchingPort, HttpBuyerFarmerMatchingPort>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/");
+});
 builder.Services.AddScoped<SchedulingService>();
 
 // ---- Component B — Maps/Distance integration (FR21, plan §9) ----
@@ -136,3 +153,8 @@ if (args.Contains("--seed-only"))
 
 app.MapControllers();
 app.Run();
+
+// Exposes the top-level-statements Program class (implicitly `internal`) to
+// backend.Tests' WebApplicationFactory<Program>-based integration tests
+// (Phase 12, plan §13's "API/integration" row).
+public partial class Program;

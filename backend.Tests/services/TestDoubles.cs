@@ -17,6 +17,24 @@ internal class FakeListingAvailabilityPort : IListingAvailabilityPort
         Task.FromResult(_listings.GetValueOrDefault(listingId));
 }
 
+/// <summary>Configurable stand-in for the real HTTP-backed matching agent
+/// client — returns whatever <see cref="Result"/> is set (including null, for
+/// "the agent call itself didn't succeed") without making any real HTTP call.</summary>
+internal class FakeBuyerFarmerMatchingPort(MatchResult? result) : IBuyerFarmerMatchingPort
+{
+    public Guid? LastOrderIdPassedIn { get; private set; }
+    public IReadOnlyList<MatchCandidateCentre>? LastCandidatesPassedIn { get; private set; }
+
+    public Task<MatchResult?> MatchAsync(
+        Guid orderId, decimal buyerLat, decimal buyerLng, Guid listingId, decimal requestedQuantity,
+        IReadOnlyList<MatchCandidateCentre> candidateCentres, CancellationToken cancellationToken = default)
+    {
+        LastOrderIdPassedIn = orderId;
+        LastCandidatesPassedIn = candidateCentres;
+        return Task.FromResult(result);
+    }
+}
+
 internal class FakeStockReservationService : IStockReservationService
 {
     private readonly bool _succeeds;

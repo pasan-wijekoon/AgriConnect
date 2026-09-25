@@ -51,7 +51,7 @@ public class ReservationExpirySweepServiceTests
         var (order, _) = AddOrderWithReservation(db, OrderStatus.Pending, DateTimeOffset.UtcNow.AddMinutes(-1));
         await db.SaveChangesAsync();
 
-        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db);
+        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db, new AuditLogService(db), new NotificationService(db));
 
         Assert.Equal(1, cancelledCount);
         var reloaded = await db.Orders.FirstAsync(o => o.Id == order.Id);
@@ -65,7 +65,7 @@ public class ReservationExpirySweepServiceTests
         var (order, _) = AddOrderWithReservation(db, OrderStatus.Pending, DateTimeOffset.UtcNow.AddMinutes(30));
         await db.SaveChangesAsync();
 
-        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db);
+        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db, new AuditLogService(db), new NotificationService(db));
 
         Assert.Equal(0, cancelledCount);
         var reloaded = await db.Orders.FirstAsync(o => o.Id == order.Id);
@@ -83,7 +83,7 @@ public class ReservationExpirySweepServiceTests
         var (order, _) = AddOrderWithReservation(db, status, DateTimeOffset.UtcNow.AddMinutes(-1));
         await db.SaveChangesAsync();
 
-        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db);
+        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db, new AuditLogService(db), new NotificationService(db));
 
         Assert.Equal(0, cancelledCount);
         var reloaded = await db.Orders.FirstAsync(o => o.Id == order.Id);
@@ -99,7 +99,7 @@ public class ReservationExpirySweepServiceTests
         AddOrderWithReservation(db, OrderStatus.Pending, DateTimeOffset.UtcNow.AddMinutes(10)); // not expired
         await db.SaveChangesAsync();
 
-        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db);
+        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db, new AuditLogService(db), new NotificationService(db));
 
         Assert.Equal(2, cancelledCount);
         Assert.Equal(1, await db.Orders.CountAsync(o => o.Status == OrderStatus.Pending));
@@ -113,10 +113,29 @@ public class ReservationExpirySweepServiceTests
         AddOrderWithReservation(db, OrderStatus.Pending, DateTimeOffset.UtcNow.AddMinutes(-1));
         await db.SaveChangesAsync();
 
-        var firstRun = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db);
-        var secondRun = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db);
+        var firstRun = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db, new AuditLogService(db), new NotificationService(db));
+        var secondRun = await ReservationExpirySweepService.SweepExpiredReservationsAsync(db, new AuditLogService(db), new NotificationService(db));
 
         Assert.Equal(1, firstRun);
         Assert.Equal(0, secondRun);
+    }
+
+    [Fact]
+    public async Task SweepExpiredReservationsAsync_WritesAuditLogAgainstSystemActor_AndNotifiesBuyer()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, _) = AddOrderWithReservation(db, OrderStatus.Pending, DateTimeOffset.UtcNow.AddMinutes(-1));
+        await db.SaveChangesAsync();
+
+        await ReservationExpirySweepService.SweepExpiredReservationsAsync(
+            db, new AuditLogService(db), new NotificationService(db));
+
+        var entry = await db.AuditLogs.SingleAsync();
+        Assert.Equal(AuditLogService.SystemActorId, entry.ActorId);
+        Assert.Equal("OrderCancelled", entry.Action);
+        Assert.Equal(order.Id, entry.EntityId);
+
+        var notification = await db.Notifications.SingleAsync();
+        Assert.Equal(order.BuyerId, notification.UserId);
     }
 }

@@ -32,7 +32,9 @@ public class ReservationExpirySweepService(
             {
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-                var cancelledCount = await SweepExpiredReservationsAsync(db, stoppingToken);
+                var auditLog = scope.ServiceProvider.GetRequiredService<AuditLogService>();
+                var notifications = scope.ServiceProvider.GetRequiredService<NotificationService>();
+                var cancelledCount = await SweepExpiredReservationsAsync(db, auditLog, notifications, stoppingToken);
                 if (cancelledCount > 0)
                 {
                     logger.LogInformation(
@@ -63,7 +65,10 @@ public class ReservationExpirySweepService(
     /// a background timer or standing up a scope factory.
     /// </summary>
     public static async Task<int> SweepExpiredReservationsAsync(
-        AgriConnectDbContext db, CancellationToken cancellationToken = default)
+        AgriConnectDbContext db,
+        AuditLogService auditLog,
+        NotificationService notifications,
+        CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -78,6 +83,17 @@ public class ReservationExpirySweepService(
         {
             order.Status = OrderStatus.Cancelled;
             order.UpdatedAt = now;
+
+            // FR20/plan §12 explicitly calls out expiry as "exactly the kind of
+            // event an audit trail exists for" — no human actor triggered this,
+            // so it's logged against AuditLogService.SystemActorId. Only the
+            // buyer is notified (not the farmer, unlike the manual-cancel path)
+            // to keep this background process from taking on a second lookup
+            // dependency (IListingAvailabilityPort) just for this one case.
+            auditLog.Log(AuditLogService.SystemActorId, "OrderCancelled", "Order", order.Id,
+                new { Role = "System", Reason = "Reservation expired" });
+            notifications.Notify(order.BuyerId, "OrderStatusChanged",
+                "Your order was cancelled because its stock reservation expired.");
         }
 
         if (expiredOrders.Count > 0)

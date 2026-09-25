@@ -194,7 +194,8 @@ public class StockReservationServiceConcurrencyTests
         // query already filters on ExpiresAt > now — the sweep isn't what frees the
         // stock, it's what stops the abandoned Order from sitting in Pending forever.
         await using var sweepDb = NewContext();
-        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(sweepDb);
+        var cancelledCount = await ReservationExpirySweepService.SweepExpiredReservationsAsync(
+            sweepDb, new AuditLogService(sweepDb), new NotificationService(sweepDb));
         Assert.True(cancelledCount >= 1);
 
         await using var verifyOrderDb = NewContext();

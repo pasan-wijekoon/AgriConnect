@@ -24,10 +24,19 @@ public class AgriConnectDbContext : DbContext
     public DbSet<PickupSchedule> PickupSchedules => Set<PickupSchedule>();
     public DbSet<CollectionCentre> CollectionCentres => Set<CollectionCentre>();
 
+    // ---- Shared / Cross-Cutting — Audit & Notifications (DFD §6.3) -----------
+    // Not owned by any single component; Component B is the first to need them
+    // (plan §12), so this is the minimal shared shape, built and announced here
+    // rather than folded into "Component B". Other components should reuse these
+    // tables rather than building their own — see PROGRESS.md's Phase 11 entry.
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         ConfigureComponentB(modelBuilder);
+        ConfigureShared(modelBuilder);
     }
 
     /// <summary>
@@ -157,6 +166,44 @@ public class AgriConnectDbContext : DbContext
             entity.Property(e => e.Longitude).HasColumnType("numeric(9,6)");
 
             entity.HasIndex(e => e.RegionId).HasDatabaseName("IX_CollectionCentre_RegionId");
+        });
+    }
+
+    /// <summary>
+    /// Shared/cross-cutting schema (DFD §6.3), not owned by any one component.
+    /// No CHECK constraint on Action/Type/EntityType: other components will write
+    /// their own values into these shared tables, so enumerating only Component
+    /// B's values here would incorrectly reject their writes.
+    /// </summary>
+    private static void ConfigureShared(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.ToTable("AuditLog");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Action).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.EntityType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Details).HasColumnType("jsonb");
+            entity.Property(e => e.Timestamp).IsRequired();
+
+            entity.HasIndex(e => e.ActorId).HasDatabaseName("IX_AuditLog_ActorId");
+            entity.HasIndex(e => e.EntityId).HasDatabaseName("IX_AuditLog_EntityId");
+            entity.HasIndex(e => e.Timestamp).HasDatabaseName("IX_AuditLog_Timestamp");
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.ToTable("Notification");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Type).HasMaxLength(30).IsRequired();
+            entity.Property(e => e.Message).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            entity.HasIndex(e => e.UserId).HasDatabaseName("IX_Notification_UserId");
         });
     }
 }

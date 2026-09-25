@@ -37,7 +37,9 @@ public class OrderOperationResult<T>
 public class OrderService(
     AgriConnectDbContext db,
     IListingAvailabilityPort listingPort,
-    IStockReservationService reservationService)
+    IStockReservationService reservationService,
+    AuditLogService auditLog,
+    NotificationService notifications)
 {
     // Explicit allow-list (plan §5.3/CLAUDE.md §16) — anything not listed here is
     // rejected with 400, never silently accepted.
@@ -96,6 +98,17 @@ public class OrderService(
             return OrderOperationResult<OrderResponse>.Fail(
                 OrderOperationError.Conflict, reservation.FailureReason ?? "Insufficient stock.");
         }
+
+        // A separate SaveChangesAsync from StockReservationService's own commit
+        // (plan §12/CLAUDE.md §28: deliberately not touching that service's
+        // serializable-transaction code, which has hard-won concurrency-bug
+        // fixes and load tests behind it, just to make this write atomic with
+        // it — see PROGRESS.md Decisions).
+        auditLog.Log(buyerId, "OrderCreated", "Order", order.Id,
+            new { order.ListingId, order.Quantity, order.DeliveryPreference });
+        notifications.Notify(buyerId, "OrderPlaced",
+            $"Your order for {order.Quantity} has been placed and is awaiting approval.");
+        await db.SaveChangesAsync(ct);
 
         return OrderOperationResult<OrderResponse>.Ok(ToResponse(order, reservation.Reservation));
     }
@@ -169,7 +182,7 @@ public class OrderService(
     }
 
     public async Task<OrderOperationResult<OrderResponse>> UpdateStatusAsync(
-        Guid orderId, OrderStatus newStatus, CancellationToken ct = default)
+        Guid orderId, OrderStatus newStatus, Guid actorId, CancellationToken ct = default)
     {
         var order = await db.Orders.Include(o => o.StockReservation).FirstOrDefaultAsync(o => o.Id == orderId, ct);
         if (order is null)
@@ -177,6 +190,7 @@ public class OrderService(
             return OrderOperationResult<OrderResponse>.Fail(OrderOperationError.NotFound, "Order not found.");
         }
 
+        var previousStatus = order.Status;
         if (!AllowedTransitions.Contains((order.Status, newStatus)))
         {
             return OrderOperationResult<OrderResponse>.Fail(
@@ -186,13 +200,18 @@ public class OrderService(
 
         order.Status = newStatus;
         order.UpdatedAt = DateTimeOffset.UtcNow;
+
+        auditLog.Log(actorId, "OrderStatusChanged", "Order", order.Id,
+            new { From = previousStatus, To = newStatus });
+        await NotifyOrderStakeholdersAsync(order, $"Your order status changed to {newStatus}.", ct);
+
         await db.SaveChangesAsync(ct);
 
         return OrderOperationResult<OrderResponse>.Ok(ToResponse(order, order.StockReservation));
     }
 
     public async Task<OrderOperationResult<OrderResponse>> CancelAsync(
-        Guid orderId, Guid currentUserId, string role, CancellationToken ct = default)
+        Guid orderId, Guid currentUserId, string role, string? reason, CancellationToken ct = default)
     {
         var order = await db.Orders.Include(o => o.StockReservation).FirstOrDefaultAsync(o => o.Id == orderId, ct);
         if (order is null)
@@ -233,12 +252,35 @@ public class OrderService(
 
         order.Status = OrderStatus.Cancelled;
         order.UpdatedAt = DateTimeOffset.UtcNow;
+
+        // Reason is now actually persisted (was accepted-but-dropped before audit
+        // logging existed — see PROGRESS.md Known Issues/Decisions).
+        auditLog.Log(currentUserId, "OrderCancelled", "Order", order.Id, new { Role = role, Reason = reason });
+        await NotifyOrderStakeholdersAsync(order, "Your order was cancelled.", ct);
+
         await db.SaveChangesAsync(ct);
 
         // No separate reservation-release write is needed: the active-reservation
         // sum in StockReservationService already filters out Cancelled orders, so
         // the reservation stops counting the instant this commits (plan §7.2).
         return OrderOperationResult<OrderResponse>.Ok(ToResponse(order, order.StockReservation));
+    }
+
+    /// <summary>
+    /// Notifies the buyer, plus the farmer if the listing's ownership is known
+    /// (plan §12 — both track order status per FR11). The listing lookup is
+    /// best-effort: a notification not being sent should never block the order
+    /// operation it accompanies.
+    /// </summary>
+    private async Task NotifyOrderStakeholdersAsync(Order order, string message, CancellationToken ct)
+    {
+        notifications.Notify(order.BuyerId, "OrderStatusChanged", message);
+
+        var listing = await listingPort.GetAvailabilityAsync(order.ListingId, ct);
+        if (listing is not null)
+        {
+            notifications.Notify(listing.FarmerId, "OrderStatusChanged", message);
+        }
     }
 
     private async Task<bool> CanViewAsync(Order order, Guid currentUserId, string role, CancellationToken ct)

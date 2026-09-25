@@ -32,7 +32,8 @@ public class OrderServiceTests
 
     private static OrderService NewService(
         AgriConnectDbContext db, IListingAvailabilityPort? port = null, IStockReservationService? reservation = null) =>
-        new(db, port ?? DefaultListingPort(), reservation ?? new FakeStockReservationService(succeeds: true));
+        new(db, port ?? DefaultListingPort(), reservation ?? new FakeStockReservationService(succeeds: true),
+            new AuditLogService(db), new NotificationService(db));
 
     private static async Task<Order> SeedOrderAsync(AgriConnectDbContext db, OrderStatus status, Guid? buyerId = null)
     {
@@ -134,7 +135,7 @@ public class OrderServiceTests
         await using var db = NewInMemoryDb();
         var order = await SeedOrderAsync(db, from);
 
-        var result = await NewService(db).UpdateStatusAsync(order.Id, to);
+        var result = await NewService(db).UpdateStatusAsync(order.Id, to, OfficerId);
 
         Assert.Equal(shouldSucceed, result.Success);
         if (!shouldSucceed)
@@ -147,7 +148,7 @@ public class OrderServiceTests
     public async Task UpdateStatusAsync_WithUnknownOrderId_ReturnsNotFound()
     {
         await using var db = NewInMemoryDb();
-        var result = await NewService(db).UpdateStatusAsync(Guid.NewGuid(), OrderStatus.Approved);
+        var result = await NewService(db).UpdateStatusAsync(Guid.NewGuid(), OrderStatus.Approved, OfficerId);
 
         Assert.False(result.Success);
         Assert.Equal(OrderOperationError.NotFound, result.Error);
@@ -161,7 +162,7 @@ public class OrderServiceTests
         await using var db = NewInMemoryDb();
         var order = await SeedOrderAsync(db, OrderStatus.Pending);
 
-        var result = await NewService(db).CancelAsync(order.Id, BuyerId, Roles.Buyer);
+        var result = await NewService(db).CancelAsync(order.Id, BuyerId, Roles.Buyer, reason: null);
 
         Assert.True(result.Success);
         Assert.Equal(OrderStatus.Cancelled, result.Value!.Status);
@@ -173,7 +174,7 @@ public class OrderServiceTests
         await using var db = NewInMemoryDb();
         var order = await SeedOrderAsync(db, OrderStatus.Pending, buyerId: OtherBuyerId);
 
-        var result = await NewService(db).CancelAsync(order.Id, BuyerId, Roles.Buyer);
+        var result = await NewService(db).CancelAsync(order.Id, BuyerId, Roles.Buyer, reason: null);
 
         Assert.False(result.Success);
         Assert.Equal(OrderOperationError.NotFound, result.Error); // IDOR: 404, not 403
@@ -185,7 +186,7 @@ public class OrderServiceTests
         await using var db = NewInMemoryDb();
         var order = await SeedOrderAsync(db, OrderStatus.Scheduled);
 
-        var result = await NewService(db).CancelAsync(order.Id, BuyerId, Roles.Buyer);
+        var result = await NewService(db).CancelAsync(order.Id, BuyerId, Roles.Buyer, reason: null);
 
         Assert.False(result.Success);
         Assert.Equal(OrderOperationError.Conflict, result.Error);
@@ -197,7 +198,7 @@ public class OrderServiceTests
         await using var db = NewInMemoryDb();
         var order = await SeedOrderAsync(db, OrderStatus.Scheduled);
 
-        var result = await NewService(db).CancelAsync(order.Id, OfficerId, Roles.Officer);
+        var result = await NewService(db).CancelAsync(order.Id, OfficerId, Roles.Officer, reason: null);
 
         Assert.True(result.Success);
     }
@@ -208,7 +209,7 @@ public class OrderServiceTests
         await using var db = NewInMemoryDb();
         var order = await SeedOrderAsync(db, OrderStatus.Completed);
 
-        var result = await NewService(db).CancelAsync(order.Id, OfficerId, Roles.Officer);
+        var result = await NewService(db).CancelAsync(order.Id, OfficerId, Roles.Officer, reason: null);
 
         Assert.False(result.Success);
         Assert.Equal(OrderOperationError.Conflict, result.Error);
@@ -307,5 +308,62 @@ public class OrderServiceTests
         var result = await NewService(db).ListAsync(OfficerId, Roles.Officer, status: null, page: 1, size: 500);
 
         Assert.Equal(100, result.Size);
+    }
+
+    // ---- Audit & Notifications (FR20/FR22, plan §12/Phase 11) ----
+
+    [Fact]
+    public async Task PlaceOrderAsync_WritesAuditLogAndNotifiesBuyer()
+    {
+        await using var db = NewInMemoryDb();
+        var result = await NewService(db).PlaceOrderAsync(
+            BuyerId, new CreateOrderRequest(PublishedListingId, 10m, DeliveryPreference.Pickup));
+
+        Assert.True(result.Success);
+
+        var entry = await db.AuditLogs.SingleAsync();
+        Assert.Equal(BuyerId, entry.ActorId);
+        Assert.Equal("OrderCreated", entry.Action);
+        Assert.Equal("Order", entry.EntityType);
+        Assert.Equal(result.Value!.Id, entry.EntityId);
+
+        var notification = await db.Notifications.SingleAsync();
+        Assert.Equal(BuyerId, notification.UserId);
+        Assert.Equal("OrderPlaced", notification.Type);
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_WritesAuditLogWithActorAndNotifiesBuyerAndFarmer()
+    {
+        await using var db = NewInMemoryDb();
+        var order = await SeedOrderAsync(db, OrderStatus.Pending);
+
+        var result = await NewService(db).UpdateStatusAsync(order.Id, OrderStatus.Approved, OfficerId);
+        Assert.True(result.Success);
+
+        var entry = await db.AuditLogs.SingleAsync();
+        Assert.Equal(OfficerId, entry.ActorId);
+        Assert.Equal("OrderStatusChanged", entry.Action);
+        Assert.Contains("Approved", entry.Details);
+
+        // Buyer (order.BuyerId) and the listing's farmer (FarmerId, from
+        // DefaultListingPort) both track order status per FR11.
+        var notifiedUsers = (await db.Notifications.ToListAsync()).Select(n => n.UserId).ToList();
+        Assert.Contains(BuyerId, notifiedUsers);
+        Assert.Contains(FarmerId, notifiedUsers);
+    }
+
+    [Fact]
+    public async Task CancelAsync_PersistsReasonInAuditLogDetails()
+    {
+        await using var db = NewInMemoryDb();
+        var order = await SeedOrderAsync(db, OrderStatus.Pending);
+
+        var result = await NewService(db).CancelAsync(order.Id, BuyerId, Roles.Buyer, reason: "Changed my mind");
+        Assert.True(result.Success);
+
+        var entry = await db.AuditLogs.SingleAsync();
+        Assert.Equal("OrderCancelled", entry.Action);
+        Assert.Contains("Changed my mind", entry.Details);
     }
 }
