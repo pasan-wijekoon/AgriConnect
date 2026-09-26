@@ -34,3 +34,12 @@ agentic-ai = "src.app.main:main"
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
+
+# This is a service run with uvicorn, not a library: install dependencies only.
+# Without this, `uv sync` fails looking for src/agentic_ai/__init__.py.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
