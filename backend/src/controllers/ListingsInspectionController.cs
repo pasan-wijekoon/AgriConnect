@@ -65,4 +65,16 @@ public class ListingsInspectionController : ControllerBase
         var result = await _inspectionService.GetPendingListingsForInspectionAsync();
         return Ok(result);
     }
+
+    /// <summary>
+    /// Get farmer's own listings for mobile inspection status tracking (FR11, FR13).
+    /// </summary>
+    [HttpGet("my-listings")]
+    public async Task<ActionResult<List<ListingSummaryDto>>> GetMyListings([FromHeader(Name = "X-Farmer-Id")] Guid? headerFarmerId)
+    {
+        var farmerId = headerFarmerId ?? DbSeeder.FarmerKamalId;
+        var result = await _inspectionService.GetFarmerListingsAsync(farmerId);
+        return Ok(result);
+    }
 }
+

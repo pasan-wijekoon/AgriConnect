@@ -16,5 +16,6 @@ public interface IInspectionService
     Task<GradeDiscrepancyDto> ResolveDiscrepancyAsync(Guid flagId, ResolveDiscrepancyRequest request, Guid officerId);
     Task<ListingSummaryDto> PublishListingWithGateCheckAsync(Guid listingId, Guid officerId);
     Task<List<ListingSummaryDto>> GetPendingListingsForInspectionAsync();
+    Task<List<ListingSummaryDto>> GetFarmerListingsAsync(Guid farmerId);
     Task<QualityDashboardStatsDto> GetDashboardStatsAsync();
 }

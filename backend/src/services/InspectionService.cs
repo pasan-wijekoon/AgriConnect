@@ -717,6 +717,51 @@ public class InspectionService : IInspectionService
         }).ToList();
     }
 
+    public async Task<List<ListingSummaryDto>> GetFarmerListingsAsync(Guid farmerId)
+    {
+        var listings = await _context.Listings
+            .Where(l => l.FarmerId == farmerId)
+            .Include(l => l.Crop)
+            .Include(l => l.Farmer)
+            .Include(l => l.Region)
+            .Include(l => l.Photos)
+            .Include(l => l.Inspections)
+            .Include(l => l.GradeDiscrepancyFlags)
+            .OrderByDescending(l => l.CreatedAt)
+            .ToListAsync();
+
+        return listings.Select(l =>
+        {
+            var latestInspection = l.Inspections.OrderByDescending(i => i.InspectedAt).FirstOrDefault();
+            var hasUnresolvedDiscrepancy = l.GradeDiscrepancyFlags.Any(f => !f.ResolvedAt.HasValue);
+
+            return new ListingSummaryDto
+            {
+                Id = l.Id,
+                FarmerId = l.FarmerId,
+                FarmerName = l.Farmer?.FullName ?? "Unknown",
+                FarmerPhone = l.Farmer?.Phone ?? string.Empty,
+                CropId = l.CropId,
+                CropName = l.Crop?.Name ?? "Unknown",
+                Category = l.Crop?.Category ?? "Unknown",
+                RegionId = l.RegionId,
+                RegionName = l.Region?.Name ?? "Unknown",
+                Quantity = l.Quantity,
+                Unit = l.Unit,
+                ClaimedGrade = l.ClaimedGrade,
+                LatestConfirmedGrade = latestInspection?.ConfirmedGrade,
+                PickupWindowStart = l.PickupWindowStart,
+                PickupWindowEnd = l.PickupWindowEnd,
+                Status = l.Status,
+                MinPrice = l.MinPrice,
+                CreatedAt = l.CreatedAt,
+                InspectionCount = l.Inspections.Count,
+                HasUnresolvedDiscrepancy = hasUnresolvedDiscrepancy,
+                ListingPhotos = l.Photos.Select(p => p.Url).ToList()
+            };
+        }).ToList();
+    }
+
     public async Task<QualityDashboardStatsDto> GetDashboardStatsAsync()
     {
         var today = DateTime.UtcNow.Date;
