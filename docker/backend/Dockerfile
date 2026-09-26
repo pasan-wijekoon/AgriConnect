@@ -15,6 +15,9 @@ RUN dotnet publish backend.csproj -c Release -o /app/publish /p:UseAppHost=false
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# Ensure static file uploads folder exists and is writable by non-root user
+RUN mkdir -p /app/wwwroot/uploads && chown -R $APP_UID:$APP_UID /app/wwwroot
+
 # Non-root user for security
 USER $APP_UID
 

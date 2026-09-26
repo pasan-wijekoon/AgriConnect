@@ -1,0 +1,22 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "Default": "Host=localhost;Database=agriconnect;Username=postgres;Password=your-local-postgres-password"
+  },
+  "Jwt": {
+    "Key": "replace-with-a-locally-generated-random-secret-at-least-32-chars",
+    "Issuer": "AgriConnect",
+    "Audience": "AgriConnect",
+    "ExpiryHours": "12"
+  },
+  "AgenticAi": {
+    "BaseUrl": "http://localhost:8000/api",
+    "InternalApiSecret": "must-match-INTERNAL_API_SECRET-in-agentic-ai/.env"
+  }
+}

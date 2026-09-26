@@ -40,7 +40,7 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LLM_PROVIDER: ${LLM_PROVIDER:-mock}
-      DEFAULT_MODEL: ${DEFAULT_MODEL:-gemini-1.5-flash}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-gemini-3.8-flash}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MAPS_API_BASE_URL: ${MAPS_API_BASE_URL:-https://api.openrouteservice.org}
@@ -66,7 +66,8 @@ services:
       ASPNETCORE_URLS: http://+:5000
       ConnectionStrings__Default: ${ConnectionStrings__Default:-Host=postgres;Port=5432;Database=agriconnect;Username=postgres;Password=postgres}
       AgenticAi__BaseUrl: http://agentic-ai:8000
-      AgenticAi__ApiKey: ${INTERNAL_API_SECRET:-dev-secret-key-12345}
+      AgenticAi__InternalApiSecret: ${INTERNAL_API_SECRET:-dev-secret-key-12345}
+      Jwt__Key: ${JWT_KEY:-dev-only-signing-key-CHANGE-ME-before-any-shared-or-deployed-use-32chars+}
     ports:
       - "${BACKEND_PORT:-5000}:5000"
     depends_on:
