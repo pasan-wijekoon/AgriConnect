@@ -98,6 +98,29 @@ namespace backend.src.migrations
                         });
                 });
 
+            modelBuilder.Entity("AgriConnect.Api.Models.Crop", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Crop_Name");
+
+                    b.ToTable("Crop", (string)null);
+                });
+
             modelBuilder.Entity("AgriConnect.Api.Models.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -225,6 +248,191 @@ namespace backend.src.migrations
                         });
                 });
 
+            modelBuilder.Entity("AgriConnect.Api.Models.PriceAnomalyFlag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CropId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("DeviationPercent")
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTimeOffset>("FlaggedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("ListingPrice")
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("RegionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CropId")
+                        .HasDatabaseName("IX_PriceAnomalyFlag_CropId");
+
+                    b.HasIndex("ListingId")
+                        .HasDatabaseName("IX_PriceAnomalyFlag_ListingId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_PriceAnomalyFlag_Status");
+
+                    b.ToTable("PriceAnomalyFlag", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceAnomalyFlag_Status", "\"Status\" IN ('Open','Reviewed','Dismissed')");
+                        });
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.PriceTrendSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AvgPrice")
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("CropId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("MaxPrice")
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("MinPrice")
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateOnly>("Period")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("RegionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SampleCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CropId", "RegionId", "Period")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PriceTrendSnapshot_Crop_Region_Period");
+
+                    b.ToTable("PriceTrendSnapshot", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceTrendSnapshot_SampleCount", "\"SampleCount\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.Region", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Region_Name");
+
+                    b.ToTable("Region", (string)null);
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.ReportExport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("DateRangeEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("DateRangeStart")
+                        .HasColumnType("date");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RequestedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedBy")
+                        .HasDatabaseName("IX_ReportExport_RequestedBy");
+
+                    b.ToTable("ReportExport", (string)null);
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.ShortageOversupplyEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CropId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("DetectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("RegionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CropId", "RegionId")
+                        .HasDatabaseName("IX_ShortageOversupplyEvent_Crop_Region");
+
+                    b.ToTable("ShortageOversupplyEvent", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ShortageOversupplyEvent_Severity", "\"Severity\" IN ('Low','Medium','High')");
+
+                            t.HasCheckConstraint("CK_ShortageOversupplyEvent_Type", "\"Type\" IN ('Shortage','Oversupply')");
+                        });
+                });
+
             modelBuilder.Entity("AgriConnect.Api.Models.StockReservation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -258,6 +466,37 @@ namespace backend.src.migrations
                     b.ToTable("StockReservation", null, t =>
                         {
                             t.HasCheckConstraint("CK_StockReservation_ReservedQuantity", "\"ReservedQuantity\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_User_Email");
+
+                    b.ToTable("User", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_User_Role", "\"Role\" IN ('Farmer','Buyer','Officer','Administrator')");
                         });
                 });
 

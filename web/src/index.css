@@ -56,6 +56,88 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Component D — Market Price Analytics & Reporting's own token set, used only
+     within .analytics-scope (web/src/styles/analytics.css). Bare names (--brand,
+     --surface, etc.) rather than this file's --color-* prefix, so nothing here
+     collides with the tokens above — kept as its own block rather than renamed,
+     to match the values Component D's LineChart/App.css already reference. */
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-raised: #ffffff;
+  --text: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #6f6d68;
+  --grid: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --hover: rgba(11, 11, 11, 0.04);
+
+  --brand: #2e7d32;
+  --brand-strong: #1b5e20;
+  --brand-soft: #e6f2e6;
+  --on-brand: #ffffff;
+
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --band: rgba(42, 120, 214, 0.16);
+
+  /* Status: always paired with an icon or label, never colour alone. */
+  --good: #0ca30c;
+  --good-text: #006300;
+  --warning: #fab219;
+  --critical: #d03b3b;
+  --critical-text: #b3261e;
+
+  /* Diverging heatmap: oversupply (blue) <- neutral -> shortage (red); Low, Medium, High. */
+  --over-low: #86b6ef;
+  --over-medium: #3987e5;
+  --over-high: #1c5cab;
+  --short-low: #f19b9a;
+  --short-medium: #e34948;
+  --short-high: #a8302f;
+  --neutral-cell: #f0efec;
+  --cell-ink-low: #0b0b0b;
+  --cell-ink-medium: #0b0b0b;
+  --cell-ink-high: #ffffff;
+
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 8px 24px rgba(11, 11, 11, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #222220;
+    --text: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #a3a198;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --hover: rgba(255, 255, 255, 0.05);
+    --brand: #66bb6a;
+    --brand-strong: #81c784;
+    --brand-soft: #1e2e1f;
+    --on-brand: #0b0b0b;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --band: rgba(57, 135, 229, 0.22);
+    --good-text: #0ca30c;
+    --critical-text: #e66767;
+    --over-low: #184f95;
+    --over-medium: #256abf;
+    --over-high: #86b6ef;
+    --short-low: #8a2b2a;
+    --short-medium: #d03b3b;
+    --short-high: #f19b9a;
+    --neutral-cell: #383835;
+    --cell-ink-low: #ffffff;
+    --cell-ink-medium: #ffffff;
+    --cell-ink-high: #0b0b0b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
 }
 
 * {

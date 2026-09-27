@@ -10,7 +10,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
  * headers directly.
  */
 
-export type DevRole = 'Buyer' | 'Farmer' | 'Officer' | 'Admin'
+export type DevRole = 'Buyer' | 'Farmer' | 'Officer' | 'Administrator'
 
 export interface DevIdentity {
   role: DevRole

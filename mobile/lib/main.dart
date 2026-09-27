@@ -7,6 +7,8 @@ import 'screens/dev_identity_screen.dart';
 import 'screens/orders/nearest_centre_screen.dart';
 import 'screens/orders/order_tracking_screen.dart';
 import 'screens/orders/place_order_screen.dart';
+import 'screens/price_trends/price_trends_screen.dart';
+import 'services/price_trend_service.dart';
 import 'theme/app_colors.dart';
 
 void main() {
@@ -14,7 +16,12 @@ void main() {
 }
 
 class AgriConnectApp extends StatelessWidget {
-  const AgriConnectApp({super.key});
+  const AgriConnectApp({super.key, this.priceTrendService});
+
+  /// Injected in widget tests, so the Prices tab doesn't make a real HTTP
+  /// call; the real API client otherwise (mirrors PriceTrendsScreen's own
+  /// `service` param, threaded down from here).
+  final PriceTrendService? priceTrendService;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +33,7 @@ class AgriConnectApp extends StatelessWidget {
       child: MaterialApp(
         title: 'AgriConnect',
         theme: buildAppTheme(),
-        home: const RootShell(),
+        home: RootShell(priceTrendService: priceTrendService),
       ),
     );
   }
@@ -34,10 +41,14 @@ class AgriConnectApp extends StatelessWidget {
 
 /// Design.md §36's recommended mobile structure: a bottom nav with the
 /// Buyer/Farmer surfaces Component B owns (plan §11) — Place Order, My
-/// Orders (tracking, FR11), Centres (nearest-centre lookup, FR21), and a
+/// Orders (tracking, FR11), Centres (nearest-centre lookup, FR21), Price
+/// Trends (Component D's read-only farmer-facing view, merged in during
+/// integration — self-contained, owns its own PriceTrendProvider), and a
 /// dev-only identity switcher standing in for "Me" until real auth lands.
 class RootShell extends StatefulWidget {
-  const RootShell({super.key});
+  const RootShell({super.key, this.priceTrendService});
+
+  final PriceTrendService? priceTrendService;
 
   @override
   State<RootShell> createState() => _RootShellState();
@@ -46,11 +57,12 @@ class RootShell extends StatefulWidget {
 class _RootShellState extends State<RootShell> {
   int _index = 0;
 
-  static const _pages = [
-    PlaceOrderScreen(),
-    OrderTrackingScreen(),
-    NearestCentreScreen(),
-    DevIdentityScreen(),
+  late final _pages = [
+    const PlaceOrderScreen(),
+    const OrderTrackingScreen(),
+    const NearestCentreScreen(),
+    PriceTrendsScreen(service: widget.priceTrendService ?? PriceTrendService()),
+    const DevIdentityScreen(),
   ];
 
   @override
@@ -75,6 +87,10 @@ class _RootShellState extends State<RootShell> {
               icon: Icon(Icons.location_on_outlined),
               selectedIcon: Icon(Icons.location_on),
               label: 'Centres'),
+          NavigationDestination(
+              icon: Icon(Icons.trending_up_outlined),
+              selectedIcon: Icon(Icons.trending_up),
+              label: 'Prices'),
           NavigationDestination(
               icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person),

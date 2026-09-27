@@ -1,39 +1,74 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using AgriConnect.Api.Config;
 using AgriConnect.Api.Services;
-using Microsoft.AspNetCore.Authentication;
+using AgriConnect.Api.Services.Analytics;
+using AgriConnect.Api.Services.Reports;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Enums serialize/deserialize as their string names (e.g. "Pickup", not 0), matching
-// the enum-as-string convention already used for the DB layer (plan §0.2).
-builder.Services.AddControllers()
+// the enum-as-string convention already used for the DB layer (plan §0.2). Also
+// registers Component D's validation-error-key convention (dateRangeEnd, not
+// DateRangeEnd) on the same AddControllers() call.
+builder.Services.AddControllers(options =>
+        options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()))
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+// Every error response is RFC 7807 ProblemDetails.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 // PostgreSQL via EF Core.
 builder.Services.AddDbContext<AgriConnectDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
-// ---- Component B — Dev auth seam (plan §6) ----
-// No shared User/Auth/JWT implementation exists yet anywhere in the repo, so this
-// scheme reads X-Dev-Role/X-Dev-UserId headers into a ClaimsPrincipal. Switch
-// Auth:Mode to "Jwt" and register real bearer validation here once shared auth
-// lands — controllers never change, since they only read User.FindFirst(...).
-var authMode = builder.Configuration["Auth:Mode"] ?? "Dev";
-switch (authMode)
-{
-    case "Dev":
-        builder.Services
-            .AddAuthentication(DevAuthDefaults.Scheme)
-            .AddScheme<AuthenticationSchemeOptions, DevAuthenticationHandler>(DevAuthDefaults.Scheme, options => { });
-        break;
-    default:
-        throw new NotSupportedException(
-            $"Auth:Mode '{authMode}' is not supported yet. Only 'Dev' is implemented until shared JWT auth lands (plan §6).");
-}
+// ---- Authentication (integration decision, 2026-09-27) ----
+// Component B and Component D each independently built a dev-mode auth bypass
+// (DevAuthenticationHandler vs. FakeClaimsPrincipalMiddleware) plus, on Component D's
+// side, a real (but not yet wired to any login endpoint) JWT bearer scheme. Only one
+// auth mechanism can be active app-wide, so — per team decision — this integration
+// branch keeps Component D's JWT bearer + FakeClaimsPrincipalMiddleware as the single
+// auth path. FakeClaimsPrincipalMiddleware was extended (see FakeClaimsPrincipal.cs) to
+// also honour an optional X-Dev-UserId header, matching Component B's
+// DevAuthenticationHandler contract exactly, so Component B's existing IDOR tests
+// (which need two distinct Buyer/Farmer ids, not one fixed id per role) keep passing
+// unchanged. DevAuthenticationHandler.cs itself is left in the repo, unregistered —
+// superseded, not deleted, since it's not this branch's call to remove another
+// component's file outright (see PROGRESS.md).
+var jwt = builder.Configuration.GetSection("Jwt");
+var jwtSecret = jwt["SecretKey"]
+    ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt["Issuer"],
+            ValidateAudience = true,
+            ValidAudience = jwt["Audience"],
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateLifetime = true,
+        };
+    });
+
 builder.Services.AddAuthorization();
+
+// ---- Component D — Market Price Analytics & Reporting ----
+builder.Services.AddScoped<TrendAggregationService>();
+builder.Services.AddScoped<AnomalyDetectionService>();
+builder.Services.AddScoped<ShortageDetectionService>();
+builder.Services.AddScoped<AnomalyInvestigationService>();
+builder.Services.AddScoped<ReportExportService>();
 
 // ---- Shared / Cross-Cutting — Audit & Notifications (FR20/FR22, plan §12) ----
 // Not owned by any single component; Component B is the first to need them.
@@ -108,6 +143,10 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
+// Gives empty 401/403/404 responses a ProblemDetails body too.
+app.UseStatusCodePages();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -116,11 +155,39 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(WebClientCorsPolicy);
+
+// Serves generated reports from wwwroot/reports.
+app.UseStaticFiles();
+
 app.UseAuthentication();
+
+// TODO: Replace FakeClaimsPrincipal with real AuthController once Component A's User model is wired up.
+if (app.Environment.IsDevelopment())
+{
+    app.UseFakeClaimsPrincipal();
+}
+
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only"))
 {
+    // ---- Shared Reference Tables — seed crops, regions, and dev users ----
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        var sharedResult = await SharedReferenceSeeder.SeedAsync(db, logger);
+        Console.WriteLine($"[Shared] Seeded: {sharedResult.CropsAdded} crops, {sharedResult.RegionsAdded} regions, {sharedResult.UsersAdded} users.");
+    }
+
+    // ---- Component D — demo price history, anomaly flags and supply events ----
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+        var result = AnalyticsFixtures.Seed(db);
+        Console.WriteLine($"[Component D] Seeded: {result.SnapshotsAdded} snapshots, {result.AnomalyFlagsAdded} anomalies, {result.SupplyEventsAdded} supply events.");
+    }
+
     // ---- Component B — Seed collection centres & demo order fixtures ----
     using (var scope = app.Services.CreateScope())
     {
@@ -137,6 +204,7 @@ if (args.Contains("--verify-seed"))
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+
         var centreCount = await db.CollectionCentres.CountAsync();
         var orderCount = await db.Orders.CountAsync();
         var reservationCount = await db.StockReservations.CountAsync();
@@ -148,6 +216,18 @@ if (args.Contains("--verify-seed"))
 
         var sampleOrder = await db.Orders.FirstAsync();
         Console.WriteLine($"[VERIFY] Sample Order: Status={sampleOrder.Status}, Quantity={sampleOrder.Quantity}, DeliveryPreference={sampleOrder.DeliveryPreference}");
+
+        var snapshotCount = await db.PriceTrendSnapshots.CountAsync();
+        var anomalyCount = await db.PriceAnomalyFlags.CountAsync();
+        var eventCount = await db.ShortageOversupplyEvents.CountAsync();
+        var reportCount = await db.ReportExports.CountAsync();
+        Console.WriteLine($"[VERIFY] PriceTrendSnapshots: {snapshotCount}");
+        Console.WriteLine($"[VERIFY] PriceAnomalyFlags: {anomalyCount}");
+        Console.WriteLine($"[VERIFY] ShortageOversupplyEvents: {eventCount}");
+        Console.WriteLine($"[VERIFY] ReportExports: {reportCount}");
+
+        var sampleSnapshot = await db.PriceTrendSnapshots.FirstAsync();
+        Console.WriteLine($"[VERIFY] Sample Snapshot: Period={sampleSnapshot.Period}, AvgPrice={sampleSnapshot.AvgPrice}, MinPrice={sampleSnapshot.MinPrice}, MaxPrice={sampleSnapshot.MaxPrice}, SampleCount={sampleSnapshot.SampleCount}");
     }
     return;
 }

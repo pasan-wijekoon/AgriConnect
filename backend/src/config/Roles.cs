@@ -11,7 +11,10 @@ public static class Roles
     public const string Buyer = "Buyer";
     public const string Farmer = "Farmer";
     public const string Officer = "Officer";
-    public const string Admin = "Admin";
+    // "Administrator" (not "Admin"): matches the DFD/User model's role string and
+    // Component D's controllers ([Authorize(Roles = "Administrator")]) exactly, since
+    // ASP.NET Core role checks are plain string equality.
+    public const string Admin = "Administrator";
 
     // Compile-time-constant combinations for [Authorize(Roles = ...)] — string
     // concatenation of const operands is itself a constant expression, so these

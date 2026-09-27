@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from src.app.api.matching import router as matching_router
+from src.app.api.logistics import router as logistics_router
 
 app = FastAPI(
     title="AgriConnect Agentic AI Service",
@@ -22,6 +23,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(logistics_router)
 
 
 @app.get("/")
