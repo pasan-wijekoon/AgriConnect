@@ -50,8 +50,14 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddHostedService<ReservationExpirySweepService>();
 
 // ---- Component B — Scheduling seam (FR10, plan §8) ----
-// Swap for a real HTTP client to Student 4's Logistics Scheduling Agent once it exists.
-builder.Services.AddScoped<ILogisticsSchedulingPort, StubLogisticsSchedulingPort>();
+// Real HTTP client to Student 4's Logistics Scheduling Agent (agentic-ai/,
+// POST /agents/logistics/schedule). Falls back to StubLogisticsSchedulingPort's
+// behaviour whenever the agent is unavailable, so scheduling never depends on it.
+builder.Services.AddHttpClient<ILogisticsSchedulingPort, HttpLogisticsSchedulingPort>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/");
+});
 
 // ---- Component B — Buyer-Farmer Matching Agent (FR10, plan §8.1) ----
 // Unlike ILogisticsSchedulingPort above, this agent already exists and is

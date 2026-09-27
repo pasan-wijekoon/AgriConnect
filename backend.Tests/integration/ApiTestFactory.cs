@@ -77,6 +77,17 @@ public class ApiTestFactory : WebApplicationFactory<Program>
             }
 
             services.AddScoped<IDistanceService, FakeDistanceService>();
+
+            // The real port calls the Logistics Scheduling Agent over HTTP; a developer
+            // running it locally would otherwise change these tests' results.
+            var schedulingPortDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(ILogisticsSchedulingPort));
+            if (schedulingPortDescriptor is not null)
+            {
+                services.Remove(schedulingPortDescriptor);
+            }
+
+            services.AddScoped<ILogisticsSchedulingPort, StubLogisticsSchedulingPort>();
         });
     }
 
