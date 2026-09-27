@@ -13,11 +13,51 @@ namespace backend.src.controllers;
 public class ListingsInspectionController : ControllerBase
 {
     private readonly IInspectionService _inspectionService;
+    private readonly IAgentClientService _agentService;
 
-    public ListingsInspectionController(IInspectionService inspectionService)
+    public ListingsInspectionController(IInspectionService inspectionService, IAgentClientService agentService)
     {
         _inspectionService = inspectionService;
+        _agentService = agentService;
     }
+
+    /// <summary>
+    /// Agentic AI Quality & Compliance Evaluation Gate Check (FR5, FR14, FR19, FR20).
+    /// Executes the LangGraph + Gemini 3.8 Flash agent workflow with deterministic rules.
+    /// </summary>
+    [HttpPost("{id:guid}/evaluate-compliance")]
+    public async Task<ActionResult<AgentQualityValidationDto>> EvaluateCompliance(Guid id, [FromHeader(Name = "X-Officer-Id")] Guid? headerOfficerId)
+    {
+        try
+        {
+            var officerId = headerOfficerId ?? DbSeeder.DefaultOfficerId;
+            var result = await _agentService.EvaluateListingQualityAsync(id, officerId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An error occurred during agent quality evaluation.", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get the latest Agentic AI workflow record and audit details for a listing (FR20).
+    /// </summary>
+    [HttpGet("{id:guid}/agent-workflow")]
+    public async Task<ActionResult<AgentWorkflowResponseDto>> GetListingAgentWorkflow(Guid id)
+    {
+        var result = await _agentService.GetLatestWorkflowForListingAsync(id);
+        if (result == null)
+        {
+            return NotFound(new { message = "No agent workflow record found for this listing." });
+        }
+        return Ok(result);
+    }
+
 
     /// <summary>
     /// Full inspection history for a listing (FR13).

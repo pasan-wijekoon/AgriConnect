@@ -41,7 +41,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 // Register Domain Services
+builder.Services.AddHttpClient<IAgentClientService, AgentClientService>();
 builder.Services.AddScoped<IInspectionService, InspectionService>();
+
 
 // CORS policy for React Frontend
 builder.Services.AddCors(options =>

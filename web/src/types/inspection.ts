@@ -93,3 +93,30 @@ export interface PagedResult<T> {
   pageSize: number;
   totalPages: number;
 }
+
+
+export interface AgentQualityValidation {
+  passed: boolean;
+  failedChecks: string[];
+  flags: string[];
+  gradeConfidence: number;
+  assessedGrade: string;
+  reasoningSummary: string;
+  recommendedAction: string;
+  toolCallLog: Array<{ tool: string }>;
+  workflowId: string;
+}
+
+export interface AgentWorkflowRecord {
+  id: string;
+  triggerType: string;
+  triggerEntityId: string;
+  objectiveText: string;
+  planSteps: string;
+  toolCallLog: string;
+  validationResult?: string;
+  approvalStatus: string;
+  approvedByOfficerId?: string;
+  finalOutcome?: string;
+  createdAt: string;
+}

@@ -23,8 +23,10 @@ public class AppDbContext : DbContext
     public DbSet<GradeDiscrepancyFlag> GradeDiscrepancyFlags => Set<GradeDiscrepancyFlag>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<AgentWorkflow> AgentWorkflows => Set<AgentWorkflow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
+
     {
         base.OnModelCreating(modelBuilder);
 
@@ -192,7 +194,24 @@ public class AppDbContext : DbContext
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // AgentWorkflow
+        modelBuilder.Entity<AgentWorkflow>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TriggerType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ObjectiveText).IsRequired();
+            entity.Property(e => e.ApprovalStatus).HasMaxLength(30).IsRequired();
+            entity.HasIndex(e => e.TriggerEntityId);
+            entity.HasIndex(e => e.ApprovalStatus);
+
+            entity.HasOne(e => e.ApprovedByOfficer)
+                  .WithMany()
+                  .HasForeignKey(e => e.ApprovedByOfficerId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
     }
+
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

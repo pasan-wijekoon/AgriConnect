@@ -8,17 +8,21 @@ import {
   Eye,
   Lock,
   Unlock,
-  Check
+  Check,
+  Sparkles,
+  Bot
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { GradeBadge, Badge } from '../components/ui/Badge';
-import { ConfirmDialog } from '../components/ui/Modal';
+import { ConfirmDialog, Modal } from '../components/ui/Modal';
 import { Table } from '../components/ui/Table';
 import type { Column } from '../components/ui/Table';
 import { SearchFilterBar } from '../components/ui/SearchBar';
 import { Toast } from '../components/ui/Toast';
-import type { ListingSummary } from '../types/inspection';
+import { ApiService } from '../services/api';
+import type { ListingSummary, AgentQualityValidation } from '../types/inspection';
+
 
 export interface PublishGatePageProps {
   listings: ListingSummary[];
@@ -36,6 +40,27 @@ export const PublishGatePage: React.FC<PublishGatePageProps> = ({
   const [selectedListingToPublish, setSelectedListingToPublish] = useState<ListingSummary | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Agentic AI Quality & Compliance state
+  const [evaluatingListingId, setEvaluatingListingId] = useState<string | null>(null);
+  const [agentEvaluationResult, setAgentEvaluationResult] = useState<{ listing: ListingSummary; result: AgentQualityValidation } | null>(null);
+
+  const handleRunAiCompliance = async (listing: ListingSummary) => {
+    try {
+      setEvaluatingListingId(listing.id);
+      const res = await ApiService.evaluateListingCompliance(listing.id);
+      setAgentEvaluationResult({ listing, result: res });
+      setToastMsg({
+        type: res.passed ? 'success' : 'error',
+        text: `Gemini 3.8 Flash Agent evaluated ${listing.cropName}: Recommended Action is '${res.recommendedAction}' (Grade Confidence: ${(res.gradeConfidence * 100).toFixed(0)}%).`
+      });
+    } catch (err: any) {
+      setToastMsg({ type: 'error', text: err.message || 'Agent evaluation failed.' });
+    } finally {
+      setEvaluatingListingId(null);
+    }
+  };
+
 
   const filtered = listings.filter((l) =>
     l.cropName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -151,6 +176,16 @@ export const PublishGatePage: React.FC<PublishGatePageProps> = ({
 
         return (
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <Button
+              variant="outline"
+              size="sm"
+              isLoading={evaluatingListingId === row.id}
+              onClick={() => handleRunAiCompliance(row)}
+              icon={<Sparkles size={14} color="#8B5CF6" />}
+              style={{ borderColor: '#8B5CF6', color: '#6D28D9' }}
+            >
+              AI Gate Check
+            </Button>
             {!isPublished ? (
               <Button
                 variant={canPublish ? 'primary' : 'outline'}
@@ -162,6 +197,7 @@ export const PublishGatePage: React.FC<PublishGatePageProps> = ({
                 Approve & Publish
               </Button>
             ) : (
+
               <Button
                 variant="outline"
                 size="sm"
@@ -281,6 +317,112 @@ export const PublishGatePage: React.FC<PublishGatePageProps> = ({
           isLoading={isPublishing}
         />
       )}
+
+      {/* AI Compliance Evaluation Results Modal (Gemini 3.8 Flash) */}
+      {agentEvaluationResult && (
+        <Modal
+          isOpen={!!agentEvaluationResult}
+          onClose={() => setAgentEvaluationResult(null)}
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bot size={20} color="#8B5CF6" />
+              <span>AI Quality & Compliance Gate Report</span>
+            </div>
+          }
+          maxWidth="620px"
+          footer={
+            <Button variant="primary" onClick={() => setAgentEvaluationResult(null)}>
+              Dismiss Report
+            </Button>
+          }
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', padding: '12px', background: 'var(--bg-app)', borderRadius: 'var(--radius-sm)' }}>
+              <div>
+                <strong style={{ display: 'block', fontSize: '15px', color: 'var(--text-primary)' }}>
+                  {agentEvaluationResult.listing.cropName} ({agentEvaluationResult.listing.quantity}{agentEvaluationResult.listing.unit})
+                </strong>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Farmer: {agentEvaluationResult.listing.farmerName} • Engine: Google Gemini 3.8 Flash
+                </span>
+              </div>
+              <Badge variant={agentEvaluationResult.result.passed ? 'success' : 'error'}>
+                {agentEvaluationResult.result.passed ? 'Gate Cleared' : 'Gate Blocked'}
+              </Badge>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Assessed Grade</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {agentEvaluationResult.result.assessedGrade}
+                </div>
+              </div>
+              <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Grade Confidence</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#8B5CF6' }}>
+                  {(agentEvaluationResult.result.gradeConfidence * 100).toFixed(0)}%
+                </div>
+              </div>
+              <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Recommended Action</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {agentEvaluationResult.result.recommendedAction}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                AI Inspector Reasoning Summary:
+              </strong>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, padding: '12px', background: '#F8FAFC', borderRadius: 'var(--radius-sm)', border: '1px solid #E2E8F0' }}>
+                {agentEvaluationResult.result.reasoningSummary}
+              </div>
+            </div>
+
+            {agentEvaluationResult.result.flags.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <strong style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
+                  Advisory Flags:
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#D97706' }}>
+                  {agentEvaluationResult.result.flags.map((flag, idx) => (
+                    <li key={idx}>{flag}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {agentEvaluationResult.result.failedChecks.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <strong style={{ fontSize: '13px', color: '#DC2626', display: 'block', marginBottom: '6px' }}>
+                  Failed Gate Checks:
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#DC2626' }}>
+                  {agentEvaluationResult.result.failedChecks.map((fail, idx) => (
+                    <li key={idx}>{fail}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div>
+              <strong style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                Executed Guardrail Tools:
+              </strong>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {agentEvaluationResult.result.toolCallLog.map((tl, i) => (
+                  <span key={i} style={{ fontSize: '11px', background: '#EEF2FF', color: '#4338CA', padding: '2px 8px', borderRadius: '4px', fontFamily: 'monospace' }}>
+                    {tl.tool}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
+
   );
 };

@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+from app.config import settings
+from app.api.quality_routes import router as quality_router
+
 app = FastAPI(
     title="AgriConnect Agentic AI Service",
     description="Agentic AI subsystem using LangChain and LangGraph for AgriConnect",
@@ -10,14 +13,17 @@ app = FastAPI(
 )
 
 # CORS configuration
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+allowed_origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=allowed_origins if allowed_origins else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount Routers
+app.include_router(quality_router)
 
 
 @app.get("/")
@@ -25,13 +31,16 @@ def read_root():
     return {
         "service": "AgriConnect Agentic AI",
         "status": "online",
-        "provider": os.getenv("LLM_PROVIDER", "mock")
+        "provider": settings.llm_provider,
+        "default_model": settings.default_model,
+        "gemini_ready": bool(settings.gemini_api_key)
     }
 
 
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
 
 
 def main():
