@@ -185,6 +185,29 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// ---- Startup diagnostics: print DB connectivity + server status to the terminal ----
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+    try
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+        Console.WriteLine(canConnect
+            ? "[Startup] Database: CONNECTED (PostgreSQL reachable)"
+            : "[Startup] Database: NOT CONNECTED (PostgreSQL unreachable)");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Startup] Database: NOT CONNECTED — {ex.Message}");
+    }
+}
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var urls = string.Join(", ", app.Urls);
+    Console.WriteLine($"[Startup] Backend: RUNNING on {urls}");
+});
+
 app.UseExceptionHandler();
 // Gives empty 401/403/404 responses a ProblemDetails body too.
 app.UseStatusCodePages();
