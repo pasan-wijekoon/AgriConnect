@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import ValidationError
 
 from src.app.agents.logistics_scheduling_agent import (
+    LlmUnavailableError,
     LogisticsSchedulingAgent,
     NoSlotAvailableError,
     build_logistics_agent,
@@ -29,7 +30,7 @@ def get_logistics_agent() -> LogisticsSchedulingAgent:
     responses={
         409: {"description": "No free slot in the preferred window or the next 3 days"},
         422: {"description": "Invalid request"},
-        502: {"description": "A tool's data source failed, or the LLM returned an invalid proposal"},
+        502: {"description": "A tool or the LLM failed, or the LLM returned an invalid proposal"},
     },
 )
 def schedule(
@@ -44,6 +45,9 @@ def schedule(
     except ToolError as exc:
         logger.warning("Tool failure while scheduling order %s: %s", request.orderId, exc)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"Scheduling data unavailable: {exc}") from exc
+    except LlmUnavailableError as exc:
+        logger.error("LLM unavailable while scheduling order %s: %s", request.orderId, exc)
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail="The language model is unavailable.") from exc
     except ValidationError as exc:
         # The request was already valid, so this is the agent's own output failing its checks.
         logger.error("Rejected invalid proposal for order %s: %s", request.orderId, exc)

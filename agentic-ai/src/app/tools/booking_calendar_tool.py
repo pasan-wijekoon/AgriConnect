@@ -25,7 +25,7 @@ class BookingCalendarTool:
         self._settings = settings
 
     def run(self, centre_id: str, day: date) -> list[Booking]:
-        if self._settings.llm_provider == "mock":
+        if self._settings.use_mock_tools:
             return [
                 Booking(
                     slotStart=datetime.combine(day, start, CENTRE_TZ),

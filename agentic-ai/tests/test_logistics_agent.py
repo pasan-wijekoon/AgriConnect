@@ -16,6 +16,7 @@ from pydantic import ValidationError
 from src.app.agents.logistics_scheduling_agent import (
     MAX_DAYS_AHEAD,
     LogisticsSchedulingAgent,
+    LlmUnavailableError,
     NoSlotAvailableError,
     build_logistics_agent,
 )
@@ -221,6 +222,20 @@ def test_malformed_llm_output_raises_validation_error(mock_settings, reply):
         agent.schedule(request(at("08:00"), at("12:00")))
 
 
+class _BrokenLlm(FakeListChatModel):
+    def invoke(self, *args, **kwargs):
+        raise ConnectionError("404 model retired")
+
+
+def test_llm_call_failure_raises_llm_unavailable(mock_settings):
+    agent = LogisticsSchedulingAgent(
+        CentreCapacityTool(mock_settings), BookingCalendarTool(mock_settings), _BrokenLlm(responses=[""])
+    )
+
+    with pytest.raises(LlmUnavailableError, match="model retired"):
+        agent.schedule(request(at("08:00"), at("12:00")))
+
+
 # ---- Tools and configuration -----------------------------------------------------------------
 
 
@@ -252,6 +267,14 @@ def test_llm_provider_is_read_from_environment(monkeypatch):
         assert agent.schedule(request(at("08:00"), at("12:00")))["proposedSlotStart"] == at("08:00")
     finally:
         get_settings.cache_clear()
+
+
+@pytest.mark.parametrize(
+    ("provider", "tools_mode", "expected"),
+    [("mock", None, True), ("gemini", None, False), ("gemini", "mock", True), ("mock", "api", False)],
+)
+def test_tools_mode_defaults_to_llm_provider_and_can_be_overridden(provider, tools_mode, expected):
+    assert Settings(llm_provider=provider, tools_mode=tools_mode, _env_file=None).use_mock_tools is expected
 
 
 def test_real_provider_without_api_key_fails_fast():
@@ -316,6 +339,15 @@ def test_real_capacity_tool_reads_and_validates_api_response(monkeypatch):
     assert (capacity.maxDailySlots, capacity.slotDurationMinutes) == (6, 45)
 
 
+def test_openai_provider_uses_custom_base_url():
+    settings = Settings(llm_provider="openai", openai_api_key="test-key",
+                        openai_base_url="https://opencode.ai/zen/v1", _env_file=None)
+
+    llm = build_logistics_agent(settings)._llm
+
+    assert llm.openai_api_base == "https://opencode.ai/zen/v1"
+
+
 @pytest.mark.parametrize(
     ("provider", "key_field", "model_class"),
     [("gemini", "gemini_api_key", "ChatGoogleGenerativeAI"), ("openai", "openai_api_key", "ChatOpenAI")],
@@ -326,3 +358,17 @@ def test_real_provider_builds_its_chat_model(provider, key_field, model_class):
     agent = build_logistics_agent(settings)
 
     assert type(agent._llm).__name__ == model_class
+
+
+def test_endpoint_returns_502_when_llm_unavailable(mock_settings):
+    broken = LogisticsSchedulingAgent(
+        CentreCapacityTool(mock_settings), BookingCalendarTool(mock_settings), _BrokenLlm(responses=[""])
+    )
+    app.dependency_overrides[get_logistics_agent] = lambda: broken
+    try:
+        response = TestClient(app).post("/agents/logistics/schedule", json=request(at("08:00"), at("12:00")))
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "The language model is unavailable."

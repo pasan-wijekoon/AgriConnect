@@ -54,6 +54,10 @@ class NoSlotAvailableError(Exception):
         super().__init__("No free slot found. " + " ".join(day_notes))
 
 
+class LlmUnavailableError(Exception):
+    """The LLM call itself failed: network, quota, retired model, bad key."""
+
+
 class CapacityTool(Protocol):
     def run(self, centre_id: str) -> CentreCapacity: ...
 
@@ -123,7 +127,8 @@ class LogisticsSchedulingAgent:
 
     def schedule(self, payload: Mapping[str, Any] | ScheduleRequest) -> LogisticsScheduleOutput:
         """Propose a slot. Raises pydantic.ValidationError on invalid input or LLM output,
-        NoSlotAvailableError when nothing fits, and ToolError when a tool's source fails."""
+        NoSlotAvailableError when nothing fits, ToolError when a tool's source fails, and
+        LlmUnavailableError when the LLM cannot be reached."""
         request = payload if isinstance(payload, ScheduleRequest) else ScheduleRequest.model_validate(payload)
         logger.info("Scheduling order %s at centre %s", request.orderId, request.centreId)
 
@@ -214,10 +219,13 @@ class LogisticsSchedulingAgent:
                 "reasoning": self._deterministic_reasoning(state),
             }}
 
-        reply = self._llm.invoke([
-            SystemMessage(content=_LLM_INSTRUCTIONS),
-            HumanMessage(content=json.dumps(self._facts(state), indent=2)),
-        ])
+        try:
+            reply = self._llm.invoke([
+                SystemMessage(content=_LLM_INSTRUCTIONS),
+                HumanMessage(content=json.dumps(self._facts(state), indent=2)),
+            ])
+        except Exception as exc:
+            raise LlmUnavailableError(f"{type(exc).__name__}: {exc}") from exc
         # Malformed or incomplete JSON raises ValidationError here; the raw text goes nowhere else.
         parsed = ScheduleProposal.model_validate_json(_strip_code_fence(_message_text(reply)))
         return {"draft": parsed.model_dump()}

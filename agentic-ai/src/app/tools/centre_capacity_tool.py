@@ -15,7 +15,7 @@ class CentreCapacityTool:
         self._settings = settings
 
     def run(self, centre_id: str) -> CentreCapacity:
-        if self._settings.llm_provider == "mock":
+        if self._settings.use_mock_tools:
             return self.MOCK_CAPACITY
 
         # Owned by Component B; path to be confirmed with Student 2.

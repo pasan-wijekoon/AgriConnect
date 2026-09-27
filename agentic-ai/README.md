@@ -62,7 +62,12 @@ capacity, and takes the earliest gap that fits. The LLM, when enabled, only writ
 explanation — its reply must be valid JSON that repeats the chosen slot exactly, or it is
 rejected. Raw LLM text is never returned.
 
-**Tools** (`src/app/tools/`): `CentreCapacityTool` and `BookingCalendarTool`. In mock mode they
-return fixed data (8 × 60-minute slots per day, lunch booked 12:00–13:00); otherwise they call
-the ASP.NET Core API at `BACKEND_API_BASE_URL`. Those endpoints belong to Component B and do
-not exist yet.
+**Tools** (`src/app/tools/`): `CentreCapacityTool` and `BookingCalendarTool`. With
+`TOOLS_MODE=mock` they return fixed data (8 × 60-minute slots per day, lunch booked
+12:00–13:00); with `TOOLS_MODE=api` they call the ASP.NET Core API at `BACKEND_API_BASE_URL`.
+Unset, it follows `LLM_PROVIDER`. The API endpoints belong to Component B and do not exist
+yet, so use `TOOLS_MODE=mock` to try a real LLM today.
+
+**LLM providers:** `gemini` (key from https://aistudio.google.com/apikey, e.g.
+`DEFAULT_MODEL=gemini-3.8-flash`) or `openai`, which also works with any OpenAI-compatible
+gateway via `OPENAI_BASE_URL`.

@@ -25,4 +25,9 @@ def get_chat_model(settings: Settings) -> BaseChatModel | None:
         raise LlmConfigurationError("LLM_PROVIDER=openai but OPENAI_API_KEY is not set.")
     from langchain_openai import ChatOpenAI
 
-    return ChatOpenAI(model=settings.default_model, api_key=settings.openai_api_key, temperature=0)
+    return ChatOpenAI(
+        model=settings.default_model,
+        api_key=settings.openai_api_key,
+        base_url=settings.openai_base_url or None,
+        temperature=0,
+    )
