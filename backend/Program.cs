@@ -176,7 +176,24 @@ var allowedOrigins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localh
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(WebClientCorsPolicy, policy =>
-        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
+    {
+        policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            // flutter run -d chrome (web debug mode) picks a random localhost port
+            // every single launch, so a fixed allow-list can never keep up with it —
+            // reflect back any http(s)://localhost/127.0.0.1 origin instead,
+            // regardless of port. Safe only in Development: production still uses
+            // the explicit ALLOWED_ORIGINS list below.
+            policy.SetIsOriginAllowed(origin =>
+                Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                (uri.Host is "localhost" or "127.0.0.1"));
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins);
+        }
+    });
 });
 
 // Swashbuckle (classic Swagger)
