@@ -99,8 +99,14 @@ builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<NotificationService>();
 
 // ---- Component B — Listing availability seam (plan §3) ----
-// Swap for a real Component-A-backed implementation once the Listing table lands.
-builder.Services.AddScoped<IListingAvailabilityPort, FixtureListingAvailabilityPort>();
+// Real Component-A-backed implementation (2026-09-27) — the fixture stayed
+// wired here well after Component A's Listing table landed, meaning orders
+// could only ever be placed against Component B's own hardcoded demo listing
+// ids, never a real marketplace listing. Found during a full-system
+// integration audit. FixtureListingAvailabilityPort is kept in the repo for
+// backend.Tests (which still constructs it directly against fixture data),
+// but is no longer the runtime registration.
+builder.Services.AddScoped<IListingAvailabilityPort, DbListingAvailabilityPort>();
 
 // ---- Component B — Order services (FR8/FR9/FR11) ----
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();
@@ -233,7 +239,7 @@ if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains(
         var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         var result = await DataSeeder.SeedAsync(db, logger);
-        Console.WriteLine($"[Component B] Seeded: {result.CollectionCentresAdded} collection centres, {result.OrdersAdded} orders, {result.ReservationsAdded} reservations, {result.SchedulesAdded} schedules.");
+        Console.WriteLine($"[Component B] Seeded: {result.CollectionCentresAdded} collection centres, {result.ListingsAdded} listings, {result.OrdersAdded} orders, {result.ReservationsAdded} reservations, {result.SchedulesAdded} schedules.");
     }
 }
 

@@ -19,11 +19,17 @@ public static class OrderLogisticsFixtures
 
     public record RegionReference(Guid Id, string Name);
 
+    // These now point at Component A's real seeded Region rows (Kandy/Galle —
+    // matching the collection centre names below) rather than a fictional id,
+    // now that Listing.RegionId is a real, enforced FK (2026-09-27 integration
+    // audit fix — see PROGRESS.md). CollectionCentre.RegionId itself still has
+    // no FK constraint (plan §4.3), but keeping it consistent with a real
+    // region rather than a fictional one is strictly more correct.
     public static readonly RegionReference RegionCentral = new(
-        Guid.Parse("4f2b0001-0000-0000-0000-000000000001"), "Central Province");
+        Guid.Parse("b1000000-0000-0000-0000-000000000002"), "Kandy");
 
     public static readonly RegionReference RegionSouthern = new(
-        Guid.Parse("4f2b0002-0000-0000-0000-000000000002"), "Southern Province");
+        Guid.Parse("b1000000-0000-0000-0000-000000000003"), "Galle");
 
     public static readonly IReadOnlyList<RegionReference> Regions = [RegionCentral, RegionSouthern];
 
@@ -33,15 +39,89 @@ public static class OrderLogisticsFixtures
 
     public record ListingReference(Guid Id, string CropName, Guid FarmerId, Guid RegionId, decimal AvailableQuantity);
 
+    // Real Crop ids (Component A's seeded reference data) — Listing.CropId is a
+    // real, enforced FK.
+    public static readonly Guid CropCarrotsId = Guid.Parse("a1000000-0000-0000-0000-000000000005");
+    public static readonly Guid CropTomatoesId = Guid.Parse("a1000000-0000-0000-0000-000000000004");
+
+    // Real seeded Farmer ids (farmer@agriconnect.lk / farmer2@agriconnect.lk) —
+    // Listing.FarmerId is now a real, enforced FK (2026-09-27 integration audit
+    // fix). The old 4f2b2001.../4f2b2002... ids were never real User rows.
+    public static readonly Guid FarmerKamalId = Guid.Parse("f0000000-0000-0000-0000-000000000001");
+    public static readonly Guid FarmerSamanId = Guid.Parse("f0000000-0000-0000-0000-000000000002");
+
     public static readonly ListingReference ListingCarrots = new(
         Guid.Parse("4f2b1001-0000-0000-0000-000000000001"), "Carrots",
-        Guid.Parse("4f2b2001-0000-0000-0000-000000000001"), RegionCentral.Id, 500m);
+        FarmerKamalId, RegionCentral.Id, 500m);
 
     public static readonly ListingReference ListingTomatoes = new(
         Guid.Parse("4f2b1002-0000-0000-0000-000000000002"), "Tomatoes",
-        Guid.Parse("4f2b2002-0000-0000-0000-000000000002"), RegionSouthern.Id, 300m);
+        FarmerSamanId, RegionSouthern.Id, 300m);
 
     public static readonly IReadOnlyList<ListingReference> Listings = [ListingCarrots, ListingTomatoes];
+
+    /// <summary>
+    /// Builds the real <see cref="Listing"/> rows backing the two references
+    /// above, so <c>DbListingAvailabilityPort</c> — the real, DB-backed
+    /// implementation now wired in Program.cs — actually finds them.
+    /// Component A owns the Listing table/creation flow; this is Component B's
+    /// own demo data using it, the same way it already seeds demo Orders.
+    /// </summary>
+    public static List<Listing> GetDemoListings()
+    {
+        var now = DateTime.UtcNow;
+        return
+        [
+            new Listing
+            {
+                Id = ListingCarrots.Id,
+                FarmerId = ListingCarrots.FarmerId,
+                CropId = CropCarrotsId,
+                RegionId = ListingCarrots.RegionId,
+                Quantity = ListingCarrots.AvailableQuantity,
+                Unit = "kg",
+                ClaimedGrade = "Grade A",
+                PickupWindowStart = now.AddDays(1),
+                PickupWindowEnd = now.AddDays(3),
+                Status = ListingStatus.Published,
+                CreatedAt = now.AddDays(-7),
+                UpdatedAt = now.AddDays(-7),
+                Photos =
+                [
+                    new ListingPhoto
+                    {
+                        Id = Guid.Parse("4f2b1001-0000-0000-0000-0000000000f1"),
+                        Url = "https://images.unsplash.com/photo-1598170845058-32b9d6a5c317?w=500&auto=format&fit=crop",
+                        UploadedAt = now.AddDays(-7)
+                    }
+                ]
+            },
+            new Listing
+            {
+                Id = ListingTomatoes.Id,
+                FarmerId = ListingTomatoes.FarmerId,
+                CropId = CropTomatoesId,
+                RegionId = ListingTomatoes.RegionId,
+                Quantity = ListingTomatoes.AvailableQuantity,
+                Unit = "kg",
+                ClaimedGrade = "Grade A",
+                PickupWindowStart = now.AddDays(1),
+                PickupWindowEnd = now.AddDays(3),
+                Status = ListingStatus.Published,
+                CreatedAt = now.AddDays(-7),
+                UpdatedAt = now.AddDays(-7),
+                Photos =
+                [
+                    new ListingPhoto
+                    {
+                        Id = Guid.Parse("4f2b1002-0000-0000-0000-0000000000f2"),
+                        Url = "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&auto=format&fit=crop",
+                        UploadedAt = now.AddDays(-7)
+                    }
+                ]
+            }
+        ];
+    }
 
     // =========================================================================
     // 3. Reference Buyers (Shared Reference Data / Auth)

@@ -14,6 +14,7 @@ public static class DataSeeder
 {
     public record SeedResult(
         int CollectionCentresAdded,
+        int ListingsAdded,
         int OrdersAdded,
         int ReservationsAdded,
         int SchedulesAdded);
@@ -45,7 +46,27 @@ public static class DataSeeder
             logger?.LogInformation("[DataSeeder] Adding {Count} collection centres.", newCentres.Count);
         }
 
-        // 2. Seed demo Orders + StockReservations + PickupSchedules (Idempotent: matches on Id)
+        // 2. Seed the real demo Listing rows the fixture Orders below reference
+        //    (Idempotent: matches on Id). Added 2026-09-27 — DbListingAvailabilityPort
+        //    now reads the real Listing table, so these must actually exist there,
+        //    not just as in-memory ListingReference records.
+        var existingListingIds = (await context.Listings
+            .AsNoTracking()
+            .Select(l => l.Id)
+            .ToListAsync())
+            .ToHashSet();
+
+        var newListings = OrderLogisticsFixtures.GetDemoListings()
+            .Where(l => !existingListingIds.Contains(l.Id))
+            .ToList();
+
+        if (newListings.Count > 0)
+        {
+            await context.Listings.AddRangeAsync(newListings);
+            logger?.LogInformation("[DataSeeder] Adding {Count} demo listings.", newListings.Count);
+        }
+
+        // 3. Seed demo Orders + StockReservations + PickupSchedules (Idempotent: matches on Id)
         var demo = OrderLogisticsFixtures.GetDemoOrders();
 
         var existingOrderIds = (await context.Orders
@@ -91,7 +112,7 @@ public static class DataSeeder
             logger?.LogInformation("[DataSeeder] Adding {Count} demo pickup schedules.", newSchedules.Count);
         }
 
-        int totalNew = newCentres.Count + newOrders.Count + newReservations.Count + newSchedules.Count;
+        int totalNew = newCentres.Count + newListings.Count + newOrders.Count + newReservations.Count + newSchedules.Count;
         if (totalNew > 0)
         {
             await context.SaveChangesAsync();
@@ -104,6 +125,7 @@ public static class DataSeeder
 
         return new SeedResult(
             newCentres.Count,
+            newListings.Count,
             newOrders.Count,
             newReservations.Count,
             newSchedules.Count);

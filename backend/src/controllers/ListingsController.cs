@@ -1,3 +1,4 @@
+using AgriConnect.Api.Config;
 using AgriConnect.Api.Dtos;
 using AgriConnect.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -27,8 +28,12 @@ public class ListingsController : ControllerBase
     private string GetCurrentUserRole() => AuthService.GetUser(User)!.Value.Role;
 
     /// <summary>
-    /// POST /api/listings — Create a new produce listing (FR3)
+    /// POST /api/listings — Create a new produce listing (FR3). Farmer-only —
+    /// this endpoint had no role gate at all until a full-system integration
+    /// audit (2026-09-27) found a Buyer/Officer/Administrator could create a
+    /// listing attributed to themselves. See PROGRESS.md.
     /// </summary>
+    [Authorize(Roles = Roles.Farmer)]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateListingDto dto)
     {
@@ -49,15 +54,31 @@ public class ListingsController : ControllerBase
     }
 
     /// <summary>
-    /// GET /api/listings — Search, filter, sort, paginate listings (FR6)
+    /// GET /api/listings — Search, filter, sort, paginate listings (FR6).
+    /// Buyer/Farmer marketplace browse is forced to Published regardless of
+    /// what the caller requests — this endpoint previously applied no default
+    /// status filter at all, so a Buyer omitting ?status (or explicitly
+    /// requesting a non-Published one) saw PendingApproval/Withdrawn/Rejected
+    /// listings too. Found during a full-system integration audit
+    /// (2026-09-27), confirmed exploitable via a plain GET with no query
+    /// params. Officer/Administrator are unaffected — the Admin Dashboard's
+    /// review queue genuinely needs to see PendingApproval listings, and both
+    /// roles are already trusted to see the full catalogue. See PROGRESS.md.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> Search([FromQuery] ListingSearchQuery query)
     {
-        // Exclude the caller's own listings from marketplace results if they're a farmer
-        if (GetCurrentUserRole() == "Farmer")
+        var role = GetCurrentUserRole();
+
+        if (role == Roles.Farmer)
         {
+            // Exclude the caller's own listings from marketplace results.
             query.ExcludeFarmerId = GetCurrentUserId();
+        }
+
+        if (role == Roles.Buyer || role == Roles.Farmer)
+        {
+            query.Status = "Published";
         }
 
         var result = await _service.GetListings(query);

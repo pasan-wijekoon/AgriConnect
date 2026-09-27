@@ -49,10 +49,15 @@ public class AuthService
 
     public async Task<AuthResponseDto> Register(RegisterDto dto)
     {
-        // Validate role
-        var validRoles = new[] { "Farmer", "Buyer", "Administrator" };
+        // Validate role — self-registration is Farmer/Buyer only (FR1: "Officer
+        // and Administrator accounts shall be created only by an Administrator").
+        // This previously accepted "Administrator" too, letting anyone create a
+        // full admin account with no gate at all — found during a full-system
+        // integration audit (2026-09-27) and confirmed exploitable via a plain,
+        // unauthenticated POST to this endpoint. See PROGRESS.md.
+        var validRoles = new[] { Roles.Farmer, Roles.Buyer };
         if (!validRoles.Contains(dto.Role))
-            throw new ArgumentException("Invalid role. Must be Farmer, Buyer, or Admin.");
+            throw new ArgumentException("Invalid role. Self-registration is only available for Farmer or Buyer accounts.");
 
         // Check duplicate email
         if (await _db.Users.AnyAsync(u => u.Email == dto.Email))
