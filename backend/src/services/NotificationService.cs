@@ -14,13 +14,14 @@ namespace AgriConnect.Api.Services;
 /// </summary>
 public class NotificationService(AgriConnectDbContext db)
 {
-    public void Notify(Guid userId, string type, string message)
+    public void Notify(Guid userId, string type, string message, string? title = null)
     {
         db.Notifications.Add(new Notification
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             Type = type,
+            Title = title,
             Message = message,
             CreatedAt = DateTimeOffset.UtcNow
         });
@@ -57,5 +58,5 @@ public class NotificationService(AgriConnectDbContext db)
     }
 
     private static NotificationResponse ToResponse(Notification n) =>
-        new(n.Id, n.Type, n.Message, n.ReadAt, n.CreatedAt);
+        new(n.Id, n.Type, n.Title, n.Message, n.ReadAt, n.CreatedAt);
 }

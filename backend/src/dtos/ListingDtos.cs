@@ -18,7 +18,9 @@ public class CreateListingDto
     [MaxLength(10)]
     public string Unit { get; set; } = "kg";
 
-    [Required, MaxLength(5)]
+    // MaxLength 20, not 5: real grade values are "Grade A"/"Grade B"/"Grade C"/
+    // "Rejected" (Component C) — 5 was too short for any of them.
+    [Required, MaxLength(20)]
     public string ClaimedGrade { get; set; } = string.Empty;
 
     [Required]
@@ -49,7 +51,7 @@ public class UpdateListingDto
     [MaxLength(10)]
     public string? Unit { get; set; }
 
-    [MaxLength(5)]
+    [MaxLength(20)]
     public string? ClaimedGrade { get; set; }
 
     public DateTime? PickupWindowStart { get; set; }

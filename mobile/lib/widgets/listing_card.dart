@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/listing.dart';
+import '../models/listing_inspection_status.dart';
 
 class ListingCard extends StatelessWidget {
   final Listing listing;
   final VoidCallback onTap;
 
+  /// Component C — Quality Grading & Inspection (FR12–FR14). Optional: only
+  /// MyListingsScreen has this data (from a second, joined API call), so
+  /// every other existing caller of ListingCard is unaffected.
+  final ListingInspectionStatus? inspectionStatus;
+
   const ListingCard({
     super.key,
     required this.listing,
     required this.onTap,
+    this.inspectionStatus,
   });
 
   Color _getStatusColor(String status) {
@@ -159,6 +166,10 @@ class ListingCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (inspectionStatus != null) ...[
+                    const SizedBox(height: 8),
+                    _buildInspectionStatusRow(inspectionStatus!),
+                  ],
                   const Divider(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -220,6 +231,46 @@ class ListingCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInspectionStatusRow(ListingInspectionStatus status) {
+    final children = <Widget>[];
+
+    if (status.inspectionCount == 0) {
+      children.add(_statusChip('Not yet inspected', Colors.blueGrey, Icons.hourglass_empty));
+    } else if (status.latestConfirmedGrade != null) {
+      children.add(_statusChip(
+        'Confirmed: ${status.latestConfirmedGrade}',
+        Colors.teal,
+        Icons.verified_outlined,
+      ));
+    }
+
+    if (status.hasUnresolvedDiscrepancy) {
+      if (children.isNotEmpty) children.add(const SizedBox(width: 8));
+      children.add(_statusChip('Grade discrepancy flagged', Colors.deepOrange, Icons.warning_amber_rounded));
+    }
+
+    return Wrap(spacing: 8, runSpacing: 4, children: children);
+  }
+
+  Widget _statusChip(String label, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        ],
       ),
     );
   }

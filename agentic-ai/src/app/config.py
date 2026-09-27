@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     internal_api_secret: str = ""
     tool_timeout_seconds: float = 10.0
 
+    # Component C (Quality & Compliance Validation Agent) — this service's own
+    # CORS policy. main.py already reads ALLOWED_ORIGINS directly via os.getenv
+    # for its CORSMiddleware setup; this field exists only so Component C's own
+    # quality_routes.py/quality_compliance_agent.py (which read it off `settings`,
+    # not `get_settings()`) keep working unchanged.
+    allowed_origins: str = ""
+
     @property
     def use_mock_tools(self) -> bool:
         return (self.tools_mode or ("mock" if self.llm_provider == "mock" else "api")) == "mock"
@@ -34,3 +41,9 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+# Module-level singleton — Component C's files (quality_compliance_agent.py,
+# quality_routes.py) import `settings` directly rather than calling
+# get_settings(), matching their original convention on their own branch.
+settings = get_settings()

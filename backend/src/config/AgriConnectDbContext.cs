@@ -16,6 +16,7 @@ namespace AgriConnect.Api.Config;
 ///   - Shared reference tables : Crop, Region, User (real auth — Component A)
 ///   - Component D             : Market Price Analytics &amp; Reporting (FR15–FR18)
 ///   - Component A             : Produce Listings &amp; Price Discovery (FR1–FR4, FR6, FR7)
+///   - Component C             : Quality Grading &amp; Inspection (FR5, FR12–FR14)
 /// </summary>
 public class AgriConnectDbContext : DbContext
 {
@@ -55,6 +56,12 @@ public class AgriConnectDbContext : DbContext
     public DbSet<PriceSuggestion> PriceSuggestions => Set<PriceSuggestion>();
     public DbSet<TodayPriceCatalogItem> TodayPriceCatalogItems => Set<TodayPriceCatalogItem>();
 
+    // ---- Component C — Quality Grading & Inspection (FR12–FR14) --------------
+    public DbSet<Inspection> Inspections => Set<Inspection>();
+    public DbSet<InspectionPhoto> InspectionPhotos => Set<InspectionPhoto>();
+    public DbSet<GradeDiscrepancyFlag> GradeDiscrepancyFlags => Set<GradeDiscrepancyFlag>();
+    public DbSet<AgentWorkflow> AgentWorkflows => Set<AgentWorkflow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -63,6 +70,7 @@ public class AgriConnectDbContext : DbContext
         ConfigureSharedTables(modelBuilder);
         ConfigureComponentD(modelBuilder);
         ConfigureComponentA(modelBuilder);
+        ConfigureComponentC(modelBuilder);
         SeedComponentAReferenceData(modelBuilder);
     }
 
@@ -227,6 +235,7 @@ public class AgriConnectDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Type).HasMaxLength(30).IsRequired();
+            entity.Property(e => e.Title).HasMaxLength(150);
             entity.Property(e => e.Message).HasMaxLength(500).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
 
@@ -342,6 +351,106 @@ public class AgriConnectDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.DisplayOrder);
+        });
+    }
+
+    /// <summary>
+    /// Component C schema (Quality Grading &amp; Inspection, FR12–FR14, plus the
+    /// FR5 quality-gated publish workflow), folded in from their own separate
+    /// AppDbContext during integration (2026-09-27) the same way Component A's
+    /// AppDbContext was — see PROGRESS.md. Listing/User/Crop/Region are the
+    /// already-shared tables above; only the tables genuinely new to this
+    /// component (Inspection/InspectionPhoto/GradeDiscrepancyFlag/AgentWorkflow)
+    /// are configured here.
+    /// </summary>
+    private static void ConfigureComponentC(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Listing>(entity =>
+        {
+            entity.HasOne(e => e.Farmer)
+                  .WithMany()
+                  .HasForeignKey(e => e.FarmerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Inspection>(entity =>
+        {
+            entity.ToTable("Inspection");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ConfirmedGrade).HasMaxLength(20).IsRequired();
+
+            entity.HasIndex(e => e.ListingId).HasDatabaseName("IX_Inspection_ListingId");
+            entity.HasIndex(e => e.OfficerId).HasDatabaseName("IX_Inspection_OfficerId");
+
+            entity.HasOne(e => e.Listing)
+                  .WithMany(l => l.Inspections)
+                  .HasForeignKey(e => e.ListingId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Officer)
+                  .WithMany()
+                  .HasForeignKey(e => e.OfficerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<InspectionPhoto>(entity =>
+        {
+            entity.ToTable("InspectionPhoto");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Url).HasColumnType("text");
+
+            entity.HasOne(e => e.Inspection)
+                  .WithMany(i => i.Photos)
+                  .HasForeignKey(e => e.InspectionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GradeDiscrepancyFlag>(entity =>
+        {
+            entity.ToTable("GradeDiscrepancyFlag");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ClaimedGrade).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.ConfirmedGrade).HasMaxLength(20).IsRequired();
+            entity.HasIndex(e => e.ListingId).HasDatabaseName("IX_GradeDiscrepancyFlag_ListingId");
+
+            entity.HasOne(e => e.Listing)
+                  .WithMany(l => l.GradeDiscrepancyFlags)
+                  .HasForeignKey(e => e.ListingId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Inspection)
+                  .WithMany()
+                  .HasForeignKey(e => e.InspectionId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ResolvedByOfficer)
+                  .WithMany()
+                  .HasForeignKey(e => e.ResolvedByOfficerId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<AgentWorkflow>(entity =>
+        {
+            entity.ToTable("AgentWorkflow", t =>
+                t.HasCheckConstraint(
+                    "CK_AgentWorkflow_ApprovalStatus",
+                    "\"ApprovalStatus\" IN ('Pending','Approved','Rejected','RevisionRequested')"));
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TriggerType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ObjectiveText).IsRequired();
+            entity.Property(e => e.PlanSteps).HasColumnType("jsonb");
+            entity.Property(e => e.ToolCallLog).HasColumnType("jsonb");
+            entity.Property(e => e.ValidationResult).HasColumnType("jsonb");
+            entity.Property(e => e.ApprovalStatus).HasMaxLength(30).IsRequired();
+
+            entity.HasIndex(e => e.TriggerEntityId).HasDatabaseName("IX_AgentWorkflow_TriggerEntityId");
+            entity.HasIndex(e => e.ApprovalStatus).HasDatabaseName("IX_AgentWorkflow_ApprovalStatus");
+
+            entity.HasOne(e => e.ApprovedByOfficer)
+                  .WithMany()
+                  .HasForeignKey(e => e.ApprovedByOfficerId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
     }
 

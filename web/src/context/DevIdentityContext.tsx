@@ -20,9 +20,14 @@ export interface DevIdentity {
 
 const STORAGE_KEY = 'agriconnect.devIdentity'
 
+// The real seeded "Officer Demo" user (officer@agriconnect.lk) — not a
+// placeholder GUID. Component C's InspectionsController/InspectionService
+// looks up the acting officer as a real User row (FR13's audit-trail
+// requirement), so the default identity must resolve to a real seeded user,
+// unlike Order/Schedule's actorId which is only ever recorded, never looked up.
 const DEFAULT_IDENTITY: DevIdentity = {
   role: 'Officer',
-  userId: '11111111-1111-1111-1111-111111111111',
+  userId: 'f0000000-0000-0000-0000-000000000050',
 }
 
 function loadStoredIdentity(): DevIdentity {

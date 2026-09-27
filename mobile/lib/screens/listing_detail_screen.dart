@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/listing.dart';
+import '../models/listing_inspection_status.dart';
 import '../services/api_service.dart';
 
 class ListingDetailScreen extends StatefulWidget {
@@ -21,11 +22,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   Listing? _listing;
   bool _isLoading = true;
   bool _isRefreshingSuggestion = false;
+  // Component C — Quality Grading & Inspection (FR13): this listing's
+  // inspection history, shown below the specifications card.
+  List<ListingInspectionRecord> _inspections = [];
 
   @override
   void initState() {
     super.initState();
     _loadListing();
+    widget.apiService.getListingInspections(widget.listingId).then((inspections) {
+      if (mounted) setState(() => _inspections = inspections);
+    });
   }
 
   Future<void> _loadListing() async {
@@ -479,9 +486,62 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 24),
+
+                  // Component C — Quality Grading & Inspection (FR13)
+                  const Text('Inspection History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  if (_inspections.isEmpty)
+                    Text(
+                      'This listing has not been inspected by an officer yet.',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    )
+                  else
+                    ..._inspections.map(_buildInspectionRecordCard),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInspectionRecordCard(ListingInspectionRecord inspection) {
+    final dateFormat = DateFormat('MMM d, yyyy');
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      elevation: 0,
+      color: inspection.hasDiscrepancy ? Colors.orange.shade50 : Colors.grey.shade50,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: inspection.hasDiscrepancy ? Colors.orange.shade200 : Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Grade ${inspection.confirmedGrade}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(dateFormat.format(inspection.inspectedAt), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text('Inspected by ${inspection.officerName}', style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+            if (inspection.notes != null && inspection.notes!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(inspection.notes!, style: const TextStyle(fontSize: 13)),
+            ],
+            if (inspection.hasDiscrepancy) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Confirmed grade differs from the claimed grade.',
+                style: TextStyle(fontSize: 12, color: Colors.orange.shade800, fontWeight: FontWeight.w600),
+              ),
+            ],
           ],
         ),
       ),

@@ -84,7 +84,8 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(identity: DevIdentity, path: string, init?: RequestInit): Promise<T> {
+/** Exported so other dev-identity-authenticated API clients (e.g. qualityApi.ts) don't duplicate this. */
+export async function request<T>(identity: DevIdentity, path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {

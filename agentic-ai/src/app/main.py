@@ -11,6 +11,7 @@ load_dotenv()
 
 from src.app.api.matching import router as matching_router
 from src.app.api.logistics import router as logistics_router
+from src.app.api.quality_routes import router as quality_router
 
 app = FastAPI(
     title="AgriConnect Agentic AI Service",
@@ -26,6 +27,12 @@ app.include_router(matching_router)
 app.include_router(api_router, prefix="/api")
 app.include_router(api_router)
 
+app.include_router(logistics_router)
+
+# Component C — Quality & Compliance Validation Agent (FR5/FR12/FR14/FR19/FR20),
+# called by the backend's AgentClientService.
+app.include_router(quality_router)
+
 # CORS configuration — this service is internal-only (called by the .NET backend,
 # never directly by browsers), so it defaults to no cross-origin access at all.
 # Set ALLOWED_ORIGINS explicitly if a browser-based tool needs to hit it directly.
@@ -37,9 +44,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-app.include_router(logistics_router)
 
 
 @app.get("/")

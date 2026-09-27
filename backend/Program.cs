@@ -146,6 +146,18 @@ builder.Services.AddHttpClient<IDistanceService, DistanceService>((sp, client) =
 });
 builder.Services.AddScoped<CollectionCentreService>();
 
+// ---- Component C — Quality Grading & Inspection (FR12–FR14/FR5 publish gate) ----
+// AgentClientService calls the same agentic-ai FastAPI app as the Buyer-Farmer
+// Matching Agent above (agentic-ai/src/app/api/quality_routes.py, registered
+// alongside matching.py in main.py) — reuses AgenticAi:BaseUrl rather than a
+// separate config key, since it's one Python service with multiple routers.
+builder.Services.AddHttpClient<IAgentClientService, AgentClientService>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/");
+});
+builder.Services.AddScoped<IInspectionService, InspectionService>();
+
 // ---- CORS (needed for the React web client, plan §10) ----
 // ALLOWED_ORIGINS is already provisioned in docker/.env.example; the local-dev
 // default covers the Vite dev server's default port (5173) plus the ports

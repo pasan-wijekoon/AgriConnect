@@ -19,6 +19,12 @@ public class Notification
     /// <summary>Free-text notification type, e.g. "OrderPlaced", "ScheduleProposed".</summary>
     public string Type { get; set; } = "";
 
+    /// <summary>Optional short headline (Component C, Quality Grading & Inspection,
+    /// e.g. "Grade Discrepancy Flagged"). Nullable so existing Component B/D
+    /// notifications — which never set it — remain valid rows.</summary>
+    [System.ComponentModel.DataAnnotations.MaxLength(150)]
+    public string? Title { get; set; }
+
     public string Message { get; set; } = "";
 
     public DateTimeOffset? ReadAt { get; set; }

@@ -42,7 +42,15 @@ public class ListingService
             PickupWindowEnd = dto.PickupWindowEnd,
             MinPrice = dto.MinPrice,
             Description = dto.Description,
-            Status = "Published",
+            // A new listing starts PendingApproval, not Published — a real bug
+            // found manually testing Component C's integration (2026-09-27):
+            // this unconditionally set Published, meaning every new listing
+            // went straight to the buyer marketplace with zero quality review,
+            // regardless of any gate elsewhere. RejectListing/ApproveListing
+            // already assumed PendingApproval as the starting state (their own
+            // guard clauses check `!= "PendingApproval"`); this just makes
+            // CreateListing actually produce it. See PROGRESS.md.
+            Status = ListingStatus.PendingApproval,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -277,26 +285,9 @@ public class ListingService
         await _db.SaveChangesAsync();
     }
 
-    // ── Approve Listing (Admin) ───────────────────────────────
-    public async Task<ListingResponseDto> ApproveListing(Guid id)
-    {
-        var listing = await _db.Listings
-            .Include(l => l.Crop)
-            .Include(l => l.Region)
-            .Include(l => l.Photos)
-            .Include(l => l.PriceSuggestion)
-            .FirstOrDefaultAsync(l => l.Id == id)
-            ?? throw new KeyNotFoundException("Listing not found.");
-
-        if (listing.Status != "PendingApproval")
-            throw new InvalidOperationException($"Cannot approve a listing with status '{listing.Status}'.");
-
-        listing.Status = "Published";
-        listing.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-
-        return MapToDto(listing);
-    }
+    // ApproveListing (Admin, direct-to-Published with no quality check) was
+    // removed during Component C integration (2026-09-27) — see
+    // ListingsController.cs and PROGRESS.md, Decisions.
 
     // ── Reject Listing (Admin) ────────────────────────────────
     public async Task<ListingResponseDto> RejectListing(Guid id)

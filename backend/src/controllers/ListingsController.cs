@@ -148,27 +148,11 @@ public class ListingsController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// PATCH /api/listings/{id}/approve — Admin approves a listing (sets status to Published)
-    /// </summary>
-    [Authorize(Roles = "Administrator")]
-    [HttpPatch("{id}/approve")]
-    public async Task<IActionResult> Approve(Guid id)
-    {
-        try
-        {
-            var result = await _service.ApproveListing(id);
-            return Ok(result);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound(new { error = "Listing not found." });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-    }
+    // PATCH /api/listings/{id}/approve was removed during Component C integration
+    // (2026-09-27): it set Status = Published directly with no quality check at
+    // all, bypassing FR5's inspection gate entirely. The only path to Published
+    // now is POST /api/listings/{id}/publish (ListingsInspectionController),
+    // which requires a passed inspection first. See PROGRESS.md, Decisions.
 
     /// <summary>
     /// PATCH /api/listings/{id}/reject — Admin rejects a listing

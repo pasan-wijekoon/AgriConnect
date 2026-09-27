@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/listing.dart';
+import '../models/listing_inspection_status.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
@@ -15,6 +16,10 @@ class MyListingsScreen extends StatefulWidget {
 
 class _MyListingsScreenState extends State<MyListingsScreen> {
   List<Listing> _myListings = [];
+  // Component C — Quality Grading & Inspection (FR12–FR14): a farmer's own
+  // inspection/discrepancy status per listing, fetched separately and joined
+  // by listing id (see models/listing_inspection_status.dart for why).
+  Map<String, ListingInspectionStatus> _inspectionStatusByListingId = {};
   bool _isLoading = true;
   String? _statusFilter;
 
@@ -27,15 +32,21 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   Future<void> _loadMyListings() async {
     setState(() => _isLoading = true);
     try {
-      final res = await widget.apiService.getListings(
-        status: _statusFilter,
-        sortBy: 'date',
-        sortDir: 'desc',
-        pageSize: 50,
-      );
+      final results = await Future.wait([
+        widget.apiService.getListings(
+          status: _statusFilter,
+          sortBy: 'date',
+          sortDir: 'desc',
+          pageSize: 50,
+        ),
+        // Best-effort: if this fails, listings still render, just without
+        // inspection-status badges.
+        widget.apiService.getMyListingsInspectionStatus().catchError((_) => <String, ListingInspectionStatus>{}),
+      ]);
       if (mounted) {
         setState(() {
-          _myListings = res.items;
+          _myListings = (results[0] as PagedListings).items;
+          _inspectionStatusByListingId = results[1] as Map<String, ListingInspectionStatus>;
           _isLoading = false;
         });
       }
@@ -108,6 +119,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                             final listing = _myListings[index];
                             return ListingCard(
                               listing: listing,
+                              inspectionStatus: _inspectionStatusByListingId[listing.id],
                               onTap: () async {
                                 final refreshed = await Navigator.push(
                                   context,

@@ -23,7 +23,9 @@ public class Listing
     [Required, MaxLength(10)]
     public string Unit { get; set; } = "kg";
 
-    [Required, MaxLength(5)]
+    // MaxLength 20, not 5: real grade values are "Grade A"/"Grade B"/"Grade C"/"Rejected"
+    // (Component C, Quality Grading & Inspection) — 5 was too short for any of them.
+    [Required, MaxLength(20)]
     public string ClaimedGrade { get; set; } = string.Empty;
 
     public DateTime PickupWindowStart { get; set; }
@@ -45,4 +47,10 @@ public class Listing
     // Navigation properties
     public List<ListingPhoto> Photos { get; set; } = new();
     public PriceSuggestion? PriceSuggestion { get; set; }
+
+    // Component C (Quality Grading & Inspection) — inspection/discrepancy history
+    // and the farmer who owns the listing, needed by InspectionService's queries.
+    public User? Farmer { get; set; }
+    public ICollection<Inspection> Inspections { get; set; } = new List<Inspection>();
+    public ICollection<GradeDiscrepancyFlag> GradeDiscrepancyFlags { get; set; } = new List<GradeDiscrepancyFlag>();
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/listing.dart';
+import '../models/listing_inspection_status.dart';
 
 class ApiService {
   // Default URL depends on platform: Android emulator uses 10.0.2.2, otherwise localhost
@@ -113,6 +114,32 @@ class ApiService {
       return Listing.fromJson(data);
     }
     throw Exception('Failed to load listing: ${res.statusCode}');
+  }
+
+  // ── Component C — Quality Grading & Inspection (FR12–FR14) ────────
+  // Joined client-side against getListings()'s results by listing id — see
+  // models/listing_inspection_status.dart for why this isn't folded into the
+  // Listing model itself.
+  Future<Map<String, ListingInspectionStatus>> getMyListingsInspectionStatus() async {
+    final res = await http.get(Uri.parse('$baseUrl/listings/my-listings'), headers: _headers);
+    if (res.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(res.body);
+      final entries = data.map((item) {
+        final status = ListingInspectionStatus.fromJson(item as Map<String, dynamic>);
+        return MapEntry(status.listingId, status);
+      });
+      return Map.fromEntries(entries);
+    }
+    return {};
+  }
+
+  Future<List<ListingInspectionRecord>> getListingInspections(String listingId) async {
+    final res = await http.get(Uri.parse('$baseUrl/listings/$listingId/inspections'), headers: _headers);
+    if (res.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(res.body);
+      return data.map((item) => ListingInspectionRecord.fromJson(item as Map<String, dynamic>)).toList();
+    }
+    return [];
   }
 
   Future<Listing> createListing({

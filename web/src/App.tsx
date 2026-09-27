@@ -8,6 +8,11 @@ import { PriceTrendsPage } from './pages/PriceTrendsPage'
 import { ShortagesPage } from './pages/ShortagesPage'
 import { AnomalyQueuePage } from './pages/AnomalyQueuePage'
 import { ReportsPage } from './pages/ReportsPage'
+import { InspectionQueuePage } from './pages/InspectionQueuePage'
+import { RecordInspectionPage } from './pages/RecordInspectionPage'
+import { DiscrepancyQueuePage } from './pages/DiscrepancyQueuePage'
+import { PublishGatePage } from './pages/PublishGatePage'
+import { InspectionHistoryPage } from './pages/InspectionHistoryPage'
 import './styles/analytics.css'
 import './styles/marketplace.css'
 import { useAuth } from './context/AuthContext'
@@ -30,14 +35,15 @@ function AnalyticsScope() {
   )
 }
 
-// Component B's Order/Scheduling console + Component D's Analytics dashboard —
-// internal Officer/Administrator tooling, still driven by the dev-role picker
-// (DevIdentityContext) rather than the real login below; see AppShell's own doc
-// comment for why. A layout route (renders AppShell + <Outlet/>), not its own
-// nested <Routes> — a nested <Routes> under a "/orders/*" mount would need every
-// child path written relative to that mount point (e.g. "" / "schedule"), which
-// is easy to get wrong; one flat top-level <Routes> with absolute paths avoids
-// that whole class of mistake.
+// Component B's Order/Scheduling console, Component D's Analytics dashboard, and
+// Component C's Quality Grading & Inspection pages — internal Officer/
+// Administrator tooling, still driven by the dev-role picker (DevIdentityContext)
+// rather than the real login below; see AppShell's own doc comment for why. A
+// layout route (renders AppShell + <Outlet/>), not its own nested <Routes> — a
+// nested <Routes> under a "/orders/*" mount would need every child path written
+// relative to that mount point (e.g. "" / "schedule"), which is easy to get
+// wrong; one flat top-level <Routes> with absolute paths avoids that whole
+// class of mistake.
 function OrdersLayout() {
   return (
     <AppShell>
@@ -138,10 +144,15 @@ function App() {
           <Route path="/analytics/anomalies" element={<AnomalyQueuePage />} />
           <Route path="/analytics/reports" element={<ReportsPage />} />
         </Route>
+        <Route path="/quality/inspections" element={<InspectionQueuePage />} />
+        <Route path="/quality/inspections/:listingId/record" element={<RecordInspectionPage />} />
+        <Route path="/quality/discrepancies" element={<DiscrepancyQueuePage />} />
+        <Route path="/quality/publish/:listingId" element={<PublishGatePage />} />
+        <Route path="/quality/history" element={<InspectionHistoryPage />} />
       </Route>
       {/* Everything else, including bare "/", is the real-auth marketplace —
-          the primary consumer-facing app; /orders and /analytics above are
-          reached by direct URL for internal Officer/Administrator use. */}
+          the primary consumer-facing app; /orders, /analytics and /quality
+          above are reached by direct URL for internal Officer/Administrator use. */}
       <Route path="/*" element={<MarketplaceApp />} />
     </Routes>
   )

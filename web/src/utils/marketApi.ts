@@ -311,8 +311,12 @@ export const api = {
     request<void>(`/listings/${id}`, { method: 'DELETE' }),
 
   // Admin actions
+  // Publishes via Component C's FR5 quality gate (POST .../publish) — the
+  // old ungated PATCH .../approve was removed during integration since it set
+  // Published with no inspection check at all. This call now 422s with a
+  // human-readable reason if the listing hasn't passed inspection yet.
   approveListing: (id: string) =>
-    request<Listing>(`/listings/${id}/approve`, { method: 'PATCH' }),
+    request<unknown>(`/listings/${id}/publish`, { method: 'POST' }),
 
   rejectListing: (id: string) =>
     request<Listing>(`/listings/${id}/reject`, { method: 'PATCH' }),

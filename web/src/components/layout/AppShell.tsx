@@ -18,6 +18,15 @@ const ANALYTICS_NAV_ITEMS = [
   { to: '/analytics/reports', label: 'Reports', adminOnly: true },
 ]
 
+// Component C's Quality Grading & Inspection pages (FR5, FR12–FR14) — same
+// Officer/Administrator-only gate as Analytics above, matching their backend
+// [Authorize(Roles = Roles.Officer)] (Roles.OfficerAdmin for the publish gate).
+const QUALITY_NAV_ITEMS = [
+  { to: '/quality/inspections', label: 'Inspection Queue' },
+  { to: '/quality/discrepancies', label: 'Discrepancies' },
+  { to: '/quality/history', label: 'Inspection History' },
+]
+
 const DEV_ROLES: DevRole[] = ['Buyer', 'Farmer', 'Officer', 'Administrator']
 
 /**
@@ -91,6 +100,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </NavLink>
                 ),
               )}
+              <div className="app-sidebar-section">Quality</div>
+              {QUALITY_NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) => `app-sidebar-link${isActive ? ' active' : ''}`}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
             </>
           )}
         </nav>

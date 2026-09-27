@@ -22,4 +22,9 @@ public static class Roles
     public const string BuyerFarmerOfficer = Buyer + "," + Farmer + "," + Officer;
     public const string BuyerOfficer = Buyer + "," + Officer;
     public const string BuyerFarmer = Buyer + "," + Farmer;
+
+    // Component C's FR5 publish gate (POST /api/listings/{id}/publish) is
+    // Officer-driven, but Component A's existing Admin Dashboard also needs to
+    // trigger it (it used to call the now-removed, ungated PATCH .../approve).
+    public const string OfficerAdmin = Officer + "," + Admin;
 }
