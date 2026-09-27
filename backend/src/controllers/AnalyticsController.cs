@@ -10,17 +10,30 @@ namespace AgriConnect.Api.Controllers;
 /// <summary>Component D — Market Price Analytics (FR15–FR17).</summary>
 [ApiController]
 [Route("api/analytics")]
-[Authorize(Roles = "Officer,Administrator")]
+[Authorize]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
 public class AnalyticsController(
     TrendAggregationService trends,
     AnomalyDetectionService anomalies,
     ShortageDetectionService shortages,
-    AnomalyInvestigationService investigation) : ControllerBase
+    AnomalyInvestigationService investigation,
+    ReferenceDataService referenceData) : ControllerBase
 {
+    // Farmers get read-only trends for the Flutter app; everything else is back-office.
+    private const string Readers = "Farmer,Officer,Administrator";
+    private const string Staff = "Officer,Administrator";
+
+    /// <summary>Crops and regions available as analytics filters.</summary>
+    [HttpGet("filters")]
+    [Authorize(Roles = Readers)]
+    [ProducesResponseType(typeof(AnalyticsFiltersDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<AnalyticsFiltersDto>> GetFilters() =>
+        await referenceData.GetFiltersAsync();
+
     /// <summary>Historical price trend for a crop, per region or all regions combined (FR15).</summary>
     [HttpGet("price-trends")]
+    [Authorize(Roles = Readers)]
     [ProducesResponseType(typeof(PriceTrendResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PriceTrendResponseDto>> GetPriceTrends(
@@ -58,6 +71,7 @@ public class AnalyticsController(
     /// <summary>Paged review queue of listings priced away from the AI suggestion (FR16).</summary>
     /// <param name="status">Open, Reviewed or Dismissed. Omit for all statuses.</param>
     [HttpGet("anomalies")]
+    [Authorize(Roles = Staff)]
     [ProducesResponseType(typeof(PagedResponseDto<AnomalyFlagDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PagedResponseDto<AnomalyFlagDto>>> GetAnomalies(
@@ -79,6 +93,7 @@ public class AnalyticsController(
 
     /// <summary>Explains why a listing was flagged and ranks the likely causes (FR16).</summary>
     [HttpGet("anomalies/{listingId:guid}/investigate")]
+    [Authorize(Roles = Staff)]
     [ProducesResponseType(typeof(InvestigationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<InvestigationResultDto>> Investigate(Guid listingId) =>
@@ -86,6 +101,7 @@ public class AnalyticsController(
 
     /// <summary>Officer triage: mark a flag Reviewed or Dismissed.</summary>
     [HttpPatch("anomalies/{id:guid}")]
+    [Authorize(Roles = Staff)]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(AnomalyFlagDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -101,6 +117,7 @@ public class AnalyticsController(
     /// <param name="type">Shortage or Oversupply.</param>
     /// <param name="severity">Low, Medium or High.</param>
     [HttpGet("shortages")]
+    [Authorize(Roles = Staff)]
     [ProducesResponseType(typeof(ItemsResponseDto<ShortageEventDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ItemsResponseDto<ShortageEventDto>>> GetShortages(

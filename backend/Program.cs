@@ -45,12 +45,30 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// Browser clients (React dashboard, Flutter web) run on other origins.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+{
+    policy.AllowAnyHeader().AllowAnyMethod();
+    if (builder.Environment.IsDevelopment())
+    {
+        // Dev servers pick their own ports (Vite 5173, Flutter web a random one).
+        policy.SetIsOriginAllowed(origin =>
+            Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.IsLoopback);
+    }
+    else
+    {
+        policy.WithOrigins(allowedOrigins);
+    }
+}));
+
 // Component D — Market Price Analytics & Reporting.
 builder.Services.AddScoped<TrendAggregationService>();
 builder.Services.AddScoped<AnomalyDetectionService>();
 builder.Services.AddScoped<ShortageDetectionService>();
 builder.Services.AddScoped<AnomalyInvestigationService>();
 builder.Services.AddScoped<ReportExportService>();
+builder.Services.AddScoped<ReferenceDataService>();
 
 // Swashbuckle (classic Swagger) 
 builder.Services.AddEndpointsApiExplorer();
@@ -116,6 +134,8 @@ if (args.Contains("--seed-only"))
     Console.WriteLine("Seeding completed. Exiting (--seed-only flag specified).");
     return;
 }
+
+app.UseCors();
 
 // Serves generated reports from wwwroot/reports.
 app.UseStaticFiles();

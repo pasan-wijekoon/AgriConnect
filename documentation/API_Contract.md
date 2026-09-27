@@ -7,7 +7,7 @@ This document is a **two-way contract**:
 - **Part 1** — what Component D will expose, so Members 1–3 can build against it before it exists.
 - **Part 2** — what Component D needs from Components A, B, and C.
 
-> **Status:** all 8 endpoints are **implemented** and runnable from `backend/backend.http`. Shapes here are the commitment — if one has to change, it gets announced to the team rather than changed silently.
+> **Status:** all 9 endpoints are **implemented** and runnable from `backend/backend.http`. Shapes here are the commitment — if one has to change, it gets announced to the team rather than changed silently.
 >
 > **Testing in Development:** no token needed; requests run as a fake Officer. Send `X-Dev-Role: Administrator` for admin-only routes.
 
@@ -20,6 +20,7 @@ This document is a **two-way contract**:
 | Base path | `/api` |
 | Auth | JWT bearer token, required on every route |
 | Content type | `application/json` |
+| CORS | Development allows any `localhost` origin; production allows only `Cors:AllowedOrigins` in `appsettings.json` |
 | Dates | `date` (ISO `YYYY-MM-DD`) for periods and ranges; `date-time` (ISO 8601 with offset) for timestamps |
 | Money | `decimal`, 2 decimal places, LKR |
 | IDs | `Guid` (UUID v4) |
@@ -55,7 +56,9 @@ This document is a **two-way contract**:
 
 ## 1. `GET /api/analytics/price-trends`
 
-Historical price trends per crop and region. **FR15** · Roles: `Officer`, `Administrator`
+Historical price trends per crop and region. **FR15** · Roles: `Farmer`, `Officer`, `Administrator`
+
+Farmers can read trends so the Flutter app can show them; every other analytics route is Officer/Administrator only.
 
 **Query parameters**
 
@@ -261,6 +264,21 @@ Idempotent — safe to re-run. Upserts against the unique `(CropId, RegionId, Pe
 ```json
 { "periodsProcessed": 84, "snapshotsUpserted": 84 }
 ```
+
+---
+
+## 9. `GET /api/analytics/filters`
+
+Crops and regions for filter dropdowns, so clients never show raw GUIDs. Roles: `Farmer`, `Officer`, `Administrator`
+
+```json
+{
+  "crops": [{ "id": "3f2a...", "name": "Cabbage" }],
+  "regions": [{ "id": "8b1c...", "name": "Dambulla" }]
+}
+```
+
+Both lists are sorted by name.
 
 ---
 
