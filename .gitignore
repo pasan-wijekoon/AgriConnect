@@ -239,3 +239,6 @@ lerna-debug.log*
 # Symbols & Obfuscation
 app.*.symbols
 app.*.map.json
+# Local reference docs (not shared with the team)
+documentation/User_Roles_and_User_Stories.md
+documentation/Component_Capabilities_and_Flows.md
