@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useDevIdentity } from '../../context/DevIdentityContext'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -45,7 +45,7 @@ function OrderTimeline({ status }: { status: OrderStatus }) {
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>()
   const navigate = useNavigate()
-  const { identity } = useAuth()
+  const { identity } = useDevIdentity()
 
   const [order, setOrder] = useState<OrderResponse | null>(null)
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null)

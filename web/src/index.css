@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 :root {
   /* Design.md §5 — Color System */
   --color-primary: #2e7d32;
@@ -139,6 +141,10 @@
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
   }
 }
+
+/* Component A's own dark-theme design tokens and component classes (.btn, .badge,
+   .modal-*, .form-*, etc.) live in styles/marketplace.css, scoped under
+   .marketplace-scope — same reasoning as Component D's .analytics-scope above. */
 
 * {
   box-sizing: border-box;

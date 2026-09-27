@@ -15,7 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Enums serialize/deserialize as their string names (e.g. "Pickup", not 0), matching
 // the enum-as-string convention already used for the DB layer (plan §0.2). Also
 // registers Component D's validation-error-key convention (dateRangeEnd, not
-// DateRangeEnd) on the same AddControllers() call.
+// DateRangeEnd) on the same AddControllers() call. (Component A's AddControllers() set
+// PropertyNamingPolicy = CamelCase explicitly — already ASP.NET Core's own default for
+// AddControllers(), so nothing was lost by not repeating it here.)
 builder.Services.AddControllers(options =>
         options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()))
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -28,22 +30,31 @@ builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddDbContext<AgriConnectDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
-// ---- Authentication (integration decision, 2026-09-27) ----
-// Component B and Component D each independently built a dev-mode auth bypass
-// (DevAuthenticationHandler vs. FakeClaimsPrincipalMiddleware) plus, on Component D's
-// side, a real (but not yet wired to any login endpoint) JWT bearer scheme. Only one
-// auth mechanism can be active app-wide, so — per team decision — this integration
-// branch keeps Component D's JWT bearer + FakeClaimsPrincipalMiddleware as the single
-// auth path. FakeClaimsPrincipalMiddleware was extended (see FakeClaimsPrincipal.cs) to
-// also honour an optional X-Dev-UserId header, matching Component B's
-// DevAuthenticationHandler contract exactly, so Component B's existing IDOR tests
-// (which need two distinct Buyer/Farmer ids, not one fixed id per role) keep passing
-// unchanged. DevAuthenticationHandler.cs itself is left in the repo, unregistered —
-// superseded, not deleted, since it's not this branch's call to remove another
-// component's file outright (see PROGRESS.md).
-var jwt = builder.Configuration.GetSection("Jwt");
-var jwtSecret = jwt["SecretKey"]
-    ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+// ---- Authentication (integration decision, 2026-09-27, updated same day when
+// Component A's real auth was merged in) ----
+// Three independently-built auth stories existed across the four component branches:
+// Component B's DevAuthenticationHandler (dev header bypass), Component D's
+// FakeClaimsPrincipalMiddleware (another dev header bypass) + an unwired JWT bearer
+// scheme, and Component A's actual working login/register/JWT issuance
+// (AuthController/AuthService, PBKDF2-HMAC-SHA256 password hashing). Per team decision,
+// Component A's real auth is now the primary path — Component D's JWT bearer scheme
+// (below) validates the exact tokens AuthService.GenerateToken issues (same signing key
+// config, now read under Component A's Jwt:Key/Jwt:Issuer/Jwt:Audience/Jwt:ExpiryHours
+// names since AuthService.cs already hardcodes those).
+//
+// FakeClaimsPrincipalMiddleware is kept, Development-only, as a secondary fallback —
+// not a competing auth system: it only activates when a request carries neither an
+// Authorization header nor was otherwise authenticated, so a real bearer token always
+// wins. This is what keeps backend.Tests' 127 existing tests (which construct specific
+// role/user-id combinations via X-Dev-Role/X-Dev-UserId, including two distinct
+// Buyer/Farmer ids for IDOR coverage) exercising business logic directly rather than
+// needing a full register-then-login round trip per test — a deliberate scope decision,
+// not an oversight; see PROGRESS.md. DevAuthenticationHandler.cs is left in the repo,
+// unregistered — superseded, not deleted.
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "Jwt:Key is not configured. Set it via appsettings.Development.json, " +
+        "an environment variable (Jwt__Key), or `dotnet user-secrets`.");
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -52,16 +63,24 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwt["Issuer"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "AgriConnect",
             ValidateAudience = true,
-            ValidAudience = jwt["Audience"],
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AgriConnect",
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
         };
     });
 
 builder.Services.AddAuthorization();
+
+// ---- Component A — Produce Listings & Price Discovery (auth + marketplace) ----
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<AgenticAiService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ListingService>();
+builder.Services.AddScoped<TodayPriceCatalogService>();
 
 // ---- Component D — Market Price Analytics & Reporting ----
 builder.Services.AddScoped<TrendAggregationService>();
@@ -69,6 +88,10 @@ builder.Services.AddScoped<AnomalyDetectionService>();
 builder.Services.AddScoped<ShortageDetectionService>();
 builder.Services.AddScoped<AnomalyInvestigationService>();
 builder.Services.AddScoped<ReportExportService>();
+// Missed during the original Component D merge (2026-09-27) — AnalyticsController
+// needs it (GET /api/analytics/filters) but nothing had registered it, a gap only
+// a live browser walkthrough surfaced, not `dotnet build`/`dotnet test`.
+builder.Services.AddScoped<ReferenceDataService>();
 
 // ---- Shared / Cross-Cutting — Audit & Notifications (FR20/FR22, plan §12) ----
 // Not owned by any single component; Component B is the first to need them.
@@ -124,17 +147,18 @@ builder.Services.AddHttpClient<IDistanceService, DistanceService>((sp, client) =
 builder.Services.AddScoped<CollectionCentreService>();
 
 // ---- CORS (needed for the React web client, plan §10) ----
-// No CORS policy existed at all until now — nothing else in the repo has
-// claimed it. ALLOWED_ORIGINS is already provisioned in docker/.env.example;
-// the local-dev default covers the Vite dev server's default port (5173) plus
-// the ports docker-compose.yml maps the web/backend services to.
+// ALLOWED_ORIGINS is already provisioned in docker/.env.example; the local-dev
+// default covers the Vite dev server's default port (5173) plus the ports
+// docker-compose.yml maps the web/backend services to. AllowCredentials() added
+// per Component A's own reasoning (AllowAnyOrigin()+credentials is a CSRF risk) —
+// harmless here since AllowAnyOrigin() was never used, just explicit defense.
 const string WebClientCorsPolicy = "WebClient";
 var allowedOrigins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localhost:5173,http://localhost:3000,http://localhost:5000")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(WebClientCorsPolicy, policy =>
-        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod());
+        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
 });
 
 // Swashbuckle (classic Swagger)
@@ -161,7 +185,10 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 
-// TODO: Replace FakeClaimsPrincipal with real AuthController once Component A's User model is wired up.
+// Development-only fallback, not a competing auth system — see the Authentication
+// comment above builder.Services.AddAuthentication for the full rationale. Only
+// activates when a request has no Authorization header at all, so a real bearer
+// token from Component A's /api/auth/login always takes priority.
 if (app.Environment.IsDevelopment())
 {
     app.UseFakeClaimsPrincipal();

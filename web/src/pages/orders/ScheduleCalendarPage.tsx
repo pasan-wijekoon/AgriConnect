@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useDevIdentity } from '../../context/DevIdentityContext'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Card } from '../../components/ui/Card'
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/StateViews'
@@ -29,7 +29,7 @@ function windowsOverlap(a: ScheduleResponse, b: ScheduleResponse): boolean {
  * capacity indicator per day, and overlapping Confirmed bookings visually
  * flagged as conflicts. */
 export function ScheduleCalendarPage() {
-  const { identity } = useAuth()
+  const { identity } = useDevIdentity()
   const [centres, setCentres] = useState<CollectionCentreResponse[]>([])
   const [centresLoading, setCentresLoading] = useState(true)
   const [centresError, setCentresError] = useState<string | null>(null)

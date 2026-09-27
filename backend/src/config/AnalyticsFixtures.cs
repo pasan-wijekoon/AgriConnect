@@ -18,24 +18,24 @@ public static class AnalyticsFixtures
     // The avg-price band (LKR/kg) for each crop; weekly min/max are kept inside it too.
     private static readonly Dictionary<string, (decimal Low, decimal High)> PriceBands = new()
     {
-        ["Carrot"] = (150m, 220m),
-        ["Tomato"] = (80m, 140m),
-        ["Cabbage"] = (60m, 100m),
+        ["Carrots"] = (150m, 220m),
+        ["Tomatoes"] = (80m, 140m),
+        ["Onions"] = (60m, 100m),
     };
 
-    private static readonly string[] RegionNames = ["Nuwara Eliya", "Dambulla"];
+    private static readonly string[] RegionNames = ["Nuwara Eliya", "Matale"];
 
     // Each supply event also bends its price series over the last 3 weeks (Shock, as a
     // fraction of the half-band), so the chart and the events list tell the same story.
     private static readonly (string Crop, string Region, SupplyEventType Type, SupplyEventSeverity Severity, double Shock, int DaysAgo, string Notes)[] SupplyEvents =
     [
-        ("Tomato", "Dambulla", SupplyEventType.Shortage, SupplyEventSeverity.High, 0.40, 2,
+        ("Tomatoes", "Matale", SupplyEventType.Shortage, SupplyEventSeverity.High, 0.40, 2,
             "Supply 52% below the 8-week baseline for 3 consecutive weeks; heavy rain disrupted harvests."),
-        ("Carrot", "Nuwara Eliya", SupplyEventType.Shortage, SupplyEventSeverity.Medium, 0.22, 5,
+        ("Carrots", "Nuwara Eliya", SupplyEventType.Shortage, SupplyEventSeverity.Medium, 0.22, 5,
             "Supply 28% below baseline for 2 consecutive weeks."),
-        ("Cabbage", "Nuwara Eliya", SupplyEventType.Oversupply, SupplyEventSeverity.Medium, -0.35, 4,
+        ("Onions", "Nuwara Eliya", SupplyEventType.Oversupply, SupplyEventSeverity.Medium, -0.35, 4,
             "Supply 41% above baseline for 3 consecutive weeks; peak harvest overlapping across growers."),
-        ("Cabbage", "Dambulla", SupplyEventType.Oversupply, SupplyEventSeverity.Low, -0.15, 9,
+        ("Onions", "Matale", SupplyEventType.Oversupply, SupplyEventSeverity.Low, -0.15, 9,
             "Supply 17% above baseline for 2 consecutive weeks."),
     ];
 
@@ -45,14 +45,14 @@ public static class AnalyticsFixtures
     // against a low AI suggestion (market volatility).
     private static readonly (decimal Deviation, AnomalyStatus Status, int DaysAgo, string Crop, string Region, decimal Price)[] AnomalyFlags =
     [
-        (52.70m, AnomalyStatus.Open, 1, "Tomato", "Dambulla", 168.00m),
-        (-30.00m, AnomalyStatus.Open, 2, "Cabbage", "Nuwara Eliya", 49.00m),
-        (38.50m, AnomalyStatus.Open, 3, "Carrot", "Dambulla", 262.00m),
-        (64.10m, AnomalyStatus.Open, 5, "Carrot", "Nuwara Eliya", 290.00m),
-        (26.40m, AnomalyStatus.Open, 6, "Carrot", "Nuwara Eliya", 185.00m),
-        (44.20m, AnomalyStatus.Reviewed, 9, "Tomato", "Nuwara Eliya", 150.00m),
-        (31.80m, AnomalyStatus.Reviewed, 12, "Cabbage", "Dambulla", 110.00m),
-        (58.90m, AnomalyStatus.Dismissed, 16, "Cabbage", "Dambulla", 135.00m),
+        (52.70m, AnomalyStatus.Open, 1, "Tomatoes", "Matale", 168.00m),
+        (-30.00m, AnomalyStatus.Open, 2, "Onions", "Nuwara Eliya", 49.00m),
+        (38.50m, AnomalyStatus.Open, 3, "Carrots", "Matale", 262.00m),
+        (64.10m, AnomalyStatus.Open, 5, "Carrots", "Nuwara Eliya", 290.00m),
+        (26.40m, AnomalyStatus.Open, 6, "Carrots", "Nuwara Eliya", 185.00m),
+        (44.20m, AnomalyStatus.Reviewed, 9, "Tomatoes", "Nuwara Eliya", 150.00m),
+        (31.80m, AnomalyStatus.Reviewed, 12, "Onions", "Matale", 110.00m),
+        (58.90m, AnomalyStatus.Dismissed, 16, "Onions", "Matale", 135.00m),
     ];
 
     public static SeedResult Seed(AgriConnectDbContext db)
@@ -124,8 +124,10 @@ public static class AnalyticsFixtures
 
             foreach (var region in RegionNames)
             {
-                // Dambulla is the wholesale hub, so it trades a little above the growing region.
-                var regionOffset = region == "Dambulla" ? 0.10 : -0.10;
+                // Matale (Dambulla's district — the wholesale hub) trades a little above
+                // the growing region. Renamed from the original "Dambulla" during
+                // integration to match Component A's real district-level Region seed data.
+                var regionOffset = region == "Matale" ? 0.10 : -0.10;
                 var shock = SupplyEvents.FirstOrDefault(e => e.Crop == crop && e.Region == region).Shock;
                 var walk = 0.0;
 

@@ -1,70 +1,88 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api, type User } from '../utils/marketApi';
 
-/**
- * Client-side counterpart to the backend's dev-auth seam
- * (backend/src/config/DevAuthenticationHandler.cs, plan §6). No shared
- * User/Auth/JWT implementation exists anywhere in the repo yet, so every
- * request carries X-Dev-Role/X-Dev-UserId headers built from whatever is
- * picked here. Swapping to real auth later only means changing this file and
- * how ordersApi.ts builds its headers — page components never read these
- * headers directly.
- */
-
-export type DevRole = 'Buyer' | 'Farmer' | 'Officer' | 'Administrator'
-
-export interface DevIdentity {
-  role: DevRole
-  userId: string
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  register: (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: string;
+    phone?: string;
+    region?: string;
+  }) => Promise<User>;
+  logout: () => void;
 }
 
-const STORAGE_KEY = 'agriconnect.devIdentity'
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEFAULT_IDENTITY: DevIdentity = {
-  role: 'Officer',
-  userId: '11111111-1111-1111-1111-111111111111',
-}
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-function loadStoredIdentity(): DevIdentity {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return DEFAULT_IDENTITY
-    const parsed = JSON.parse(raw) as Partial<DevIdentity>
-    if (!parsed.role || !parsed.userId) return DEFAULT_IDENTITY
-    return { role: parsed.role, userId: parsed.userId }
-  } catch {
-    return DEFAULT_IDENTITY
-  }
-}
-
-interface AuthContextValue {
-  identity: DevIdentity
-  setIdentity: (identity: DevIdentity) => void
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [identity, setIdentityState] = useState<DevIdentity>(loadStoredIdentity)
-
-  const setIdentity = (next: DevIdentity) => {
-    setIdentityState(next)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    } catch {
-      // Private browsing / storage disabled — identity still works for this
-      // session via React state, it just won't persist across reloads.
+  useEffect(() => {
+    const saved = localStorage.getItem('agriconnect_user');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setUser(parsed);
+      } catch (e) {
+        console.error('Failed to parse saved user', e);
+        localStorage.removeItem('agriconnect_user');
+      }
     }
+    setIsLoading(false);
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const loggedUser = await api.login(email, password);
+      setUser(loggedUser);
+      localStorage.setItem('agriconnect_user', JSON.stringify(loggedUser));
+      return loggedUser;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: string;
+    phone?: string;
+    region?: string;
+  }) => {
+    setIsLoading(true);
+    try {
+      const newUser = await api.register(data);
+      setUser(newUser);
+      localStorage.setItem('agriconnect_user', JSON.stringify(newUser));
+      return newUser;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('agriconnect_user');
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-
-  const value = useMemo(() => ({ identity, setIdentity }), [identity])
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return ctx
-}
+  return context;
+};

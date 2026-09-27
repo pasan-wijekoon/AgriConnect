@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '../../context/AuthContext'
+import { useDevIdentity } from '../../context/DevIdentityContext'
 import { OrderTable } from '../../components/orders/OrderTable'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/StateViews'
@@ -14,7 +14,7 @@ type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { ki
 
 /** Design.md §30 — centre-scoped (per role) order list, filterable by status, paginated. */
 export function OrderQueuePage() {
-  const { identity } = useAuth()
+  const { identity } = useDevIdentity()
   const [status, setStatus] = useState<OrderStatus | 'All'>('All')
   const [page, setPage] = useState(1)
   const [orders, setOrders] = useState<OrderResponse[]>([])

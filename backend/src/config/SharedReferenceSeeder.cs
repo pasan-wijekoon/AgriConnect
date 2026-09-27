@@ -18,11 +18,6 @@ public static class SharedReferenceSeeder
 {
     public record SeedResult(int CropsAdded, int RegionsAdded, int UsersAdded);
 
-    private static readonly Guid CarrotId = Guid.Parse("3f2a0001-0000-0000-0000-000000000001");
-    private static readonly Guid TomatoId = Guid.Parse("3f2a0002-0000-0000-0000-000000000002");
-    private static readonly Guid CabbageId = Guid.Parse("3f2a0006-0000-0000-0000-000000000006");
-    private static readonly Guid NuwaraEliyaId = Guid.Parse("8b1c0001-0000-0000-0000-000000000001");
-    private static readonly Guid DambullaId = Guid.Parse("8b1c0002-0000-0000-0000-000000000002");
     private static readonly Guid AdminUserId = Guid.Parse("a1111111-0000-0000-0000-000000000001");
     private static readonly Guid OfficerUserId = Guid.Parse("a2222222-0000-0000-0000-000000000001");
     private static readonly Guid FarmerUserId = Guid.Parse("f1111111-0000-0000-0000-000000000001");
@@ -38,54 +33,19 @@ public static class SharedReferenceSeeder
     {
         logger?.LogInformation("[SharedReferenceSeeder] Checking shared reference fixtures...");
 
-        // ---- Crops ------------------------------------------------------------
-        var existingCropNames = (await context.Crops
-            .AsNoTracking()
-            .Select(c => c.Name)
-            .ToListAsync())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var candidateCrops = new List<Crop>
-        {
-            new() { Id = CarrotId,  Name = "Carrot",  CreatedAt = DateTimeOffset.UtcNow },
-            new() { Id = TomatoId,  Name = "Tomato",  CreatedAt = DateTimeOffset.UtcNow },
-            new() { Id = CabbageId, Name = "Cabbage", CreatedAt = DateTimeOffset.UtcNow },
-        };
-
-        var newCrops = candidateCrops
-            .Where(c => !existingCropNames.Contains(c.Name))
-            .ToList();
-
-        if (newCrops.Count > 0)
-        {
-            await context.Crops.AddRangeAsync(newCrops);
-            logger?.LogInformation("[SharedReferenceSeeder] Adding {Count} crops: {Names}.",
-                newCrops.Count, string.Join(", ", newCrops.Select(c => c.Name)));
-        }
-
-        // ---- Regions ----------------------------------------------------------
-        var existingRegionNames = (await context.Regions
-            .AsNoTracking()
-            .Select(r => r.Name)
-            .ToListAsync())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var candidateRegions = new List<Region>
-        {
-            new() { Id = NuwaraEliyaId, Name = "Nuwara Eliya", CreatedAt = DateTimeOffset.UtcNow },
-            new() { Id = DambullaId,    Name = "Dambulla",     CreatedAt = DateTimeOffset.UtcNow },
-        };
-
-        var newRegions = candidateRegions
-            .Where(r => !existingRegionNames.Contains(r.Name))
-            .ToList();
-
-        if (newRegions.Count > 0)
-        {
-            await context.Regions.AddRangeAsync(newRegions);
-            logger?.LogInformation("[SharedReferenceSeeder] Adding {Count} regions: {Names}.",
-                newRegions.Count, string.Join(", ", newRegions.Select(r => r.Name)));
-        }
+        // ---- Crops / Regions ----------------------------------------------------
+        // No longer seeded here as of the 2026-09-27 integration: Component A's real
+        // Crop/Region data (10 crops, 25 districts) now lands via migration-time
+        // HasData() seeding (AgriConnectDbContext.SeedComponentAReferenceData), which
+        // always runs before this method does. This method's own candidate lists used
+        // singular/differently-cased names ("Carrot", "Dambulla") that don't match
+        // Component A's real rows ("Carrots", district names) — upserting them by name
+        // no longer recognized them as duplicates and kept inserting confusing,
+        // functionally-orphaned extra rows next to the real ones. Left as a no-op
+        // (rather than deleted outright) so this method's shape/doc comment stay
+        // intact for whoever revisits Crop/Region seeding next.
+        var newCrops = new List<Crop>();
+        var newRegions = new List<Region>();
 
         // ---- Users (dev seed only — real users come from auth registration) ---
         var existingUserEmails = (await context.Users

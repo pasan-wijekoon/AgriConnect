@@ -13,13 +13,22 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <!-- Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3 transitively pulls an earlier EF Core
+         than Microsoft.EntityFrameworkCore.Design 10.0.12 above resolves to — NuGet's
+         higher-version-wins resolution loads Microsoft.EntityFrameworkCore.Relational
+         10.0.12 at runtime against a NpgsqlHistoryRepository compiled for an older one,
+         which throws TypeLoadException (get_LockReleaseBehavior) the moment any
+         DbContext is first resolved from DI. Pinned explicitly so the same version is
+         used everywhere, matching backend.Tests.csproj's own existing pin for the same
+         reason. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
   </ItemGroup>
 
 </Project>

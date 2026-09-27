@@ -1,4 +1,4 @@
-import type { DevIdentity } from '../context/AuthContext'
+import type { DevIdentity } from '../context/DevIdentityContext'
 
 /**
  * Typed client for Component B's Order/Scheduling/CollectionCentre endpoints

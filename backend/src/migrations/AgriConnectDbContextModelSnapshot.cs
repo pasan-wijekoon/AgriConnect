@@ -104,6 +104,11 @@ namespace backend.src.migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -119,6 +124,164 @@ namespace backend.src.migrations
                         .HasDatabaseName("IX_Crop_Name");
 
                     b.ToTable("Crop", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000001"),
+                            Category = "Grains",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Rice"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000002"),
+                            Category = "Beverages",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Tea"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000003"),
+                            Category = "Fruits",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Coconut"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000004"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Tomatoes"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000005"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Carrots"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000006"),
+                            Category = "Spices",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Chili"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000007"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Onions"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000008"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Potatoes"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000009"),
+                            Category = "Spices",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Cinnamon"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-00000000000a"),
+                            Category = "Fruits",
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Banana"
+                        });
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.Listing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ClaimedGrade")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CropId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("FarmerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("MinPrice")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("PickupWindowEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("PickupWindowStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<Guid>("RegionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FarmerId");
+
+                    b.HasIndex("RegionId");
+
+                    b.HasIndex("CropId", "RegionId", "Status", "ClaimedGrade");
+
+                    b.ToTable("Listings");
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.ListingPhoto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.ToTable("ListingPhotos");
                 });
 
             modelBuilder.Entity("AgriConnect.Api.Models.Notification", b =>
@@ -294,6 +457,71 @@ namespace backend.src.migrations
                         });
                 });
 
+            modelBuilder.Entity("AgriConnect.Api.Models.PriceSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AgentWorkflowId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AutoRejectedByValidation")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CheckpointName")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<decimal>("Confidence")
+                        .HasColumnType("decimal(4,3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DecidedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OfficerNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ReasoningSummary")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("SuggestedPriceMax")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<decimal>("SuggestedPriceMin")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ValidationSummary")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId")
+                        .IsUnique();
+
+                    b.ToTable("PriceSuggestions");
+                });
+
             modelBuilder.Entity("AgriConnect.Api.Models.PriceTrendSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
@@ -339,6 +567,9 @@ namespace backend.src.migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CollectionCentreId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -354,6 +585,158 @@ namespace backend.src.migrations
                         .HasDatabaseName("IX_Region_Name");
 
                     b.ToTable("Region", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Colombo"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Kandy"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Galle"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Jaffna"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Anuradhapura"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Matara"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Kurunegala"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Nuwara Eliya"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Gampaha"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-00000000000a"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Kalutara"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-00000000000b"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Matale"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-00000000000c"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Ratnapura"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-00000000000d"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Kegalle"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-00000000000e"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Badulla"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-00000000000f"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Monaragala"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Hambantota"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Trincomalee"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Batticaloa"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Ampara"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Puttalam"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Polonnaruwa"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Kilinochchi"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Mannar"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Mullaitivu"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Vavuniya"
+                        });
                 });
 
             modelBuilder.Entity("AgriConnect.Api.Models.ReportExport", b =>
@@ -469,19 +852,355 @@ namespace backend.src.migrations
                         });
                 });
 
+            modelBuilder.Entity("AgriConnect.Api.Models.TodayPriceCatalogItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefaultRegion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayOrder");
+
+                    b.ToTable("TodayPriceCatalogItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000001"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Dambulla",
+                            DisplayOrder = 1,
+                            ImageUrl = "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Tomatoes",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Nuwara Eliya",
+                            DisplayOrder = 2,
+                            ImageUrl = "https://images.unsplash.com/photo-1598170845058-32b9d6a5c317?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Carrots",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Nuwara Eliya",
+                            DisplayOrder = 3,
+                            ImageUrl = "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Potatoes",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000004"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Dambulla",
+                            DisplayOrder = 4,
+                            ImageUrl = "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Onions",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000005"),
+                            Category = "Spices",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Jaffna",
+                            DisplayOrder = 5,
+                            ImageUrl = "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Chili",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000006"),
+                            Category = "Grains",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Anuradhapura",
+                            DisplayOrder = 6,
+                            ImageUrl = "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Rice (Keeri Samba)",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000007"),
+                            Category = "Fruits",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Kurunegala",
+                            DisplayOrder = 7,
+                            ImageUrl = "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Banana (Ambul)",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000008"),
+                            Category = "Fruits",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Kurunegala",
+                            DisplayOrder = 8,
+                            ImageUrl = "https://images.unsplash.com/photo-1544376798-89aa6b82c6cd?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Coconut",
+                            Unit = "nut",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000009"),
+                            Category = "Beverages",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Nuwara Eliya",
+                            DisplayOrder = 9,
+                            ImageUrl = "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Tea (BOP)",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000a"),
+                            Category = "Spices",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Matara",
+                            DisplayOrder = 10,
+                            ImageUrl = "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Cinnamon (Alba)",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000b"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Nuwara Eliya",
+                            DisplayOrder = 11,
+                            ImageUrl = "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Leeks",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000c"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Nuwara Eliya",
+                            DisplayOrder = 12,
+                            ImageUrl = "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Cabbage",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000d"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Kurunegala",
+                            DisplayOrder = 13,
+                            ImageUrl = "https://images.unsplash.com/photo-1570586437263-ab629fccc818?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Pumpkin",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000e"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Badulla",
+                            DisplayOrder = 14,
+                            ImageUrl = "https://images.unsplash.com/photo-1567375698348-5d9d5ae10c3a?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Beans",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000f"),
+                            Category = "Fruits",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Gampaha",
+                            DisplayOrder = 15,
+                            ImageUrl = "https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Papaya",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000010"),
+                            Category = "Fruits",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Jaffna",
+                            DisplayOrder = 16,
+                            ImageUrl = "https://images.unsplash.com/photo-1553279768-865429fa0078?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Mango",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000011"),
+                            Category = "Spices",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Matale",
+                            DisplayOrder = 17,
+                            ImageUrl = "https://images.unsplash.com/photo-1599909533601-aa1e5c0fb0a4?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Pepper (Black)",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000012"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Jaffna",
+                            DisplayOrder = 18,
+                            ImageUrl = "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Drumstick (Murunga)",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000013"),
+                            Category = "Vegetables",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Dambulla",
+                            DisplayOrder = 19,
+                            ImageUrl = "https://images.unsplash.com/photo-1613881553903-4bedfcea4dd1?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Brinjal (Eggplant)",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000014"),
+                            Category = "Fruits",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DefaultRegion = "Colombo",
+                            DisplayOrder = 20,
+                            ImageUrl = "https://images.unsplash.com/photo-1590502593747-42a996133562?w=500&auto=format&fit=crop",
+                            IsActive = true,
+                            Name = "Lime",
+                            Unit = "kg",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
+                });
+
             modelBuilder.Entity("AgriConnect.Api.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -498,6 +1217,98 @@ namespace backend.src.migrations
                         {
                             t.HasCheckConstraint("CK_User_Role", "\"Role\" IN ('Farmer','Buyer','Officer','Administrator')");
                         });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("f0000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Email = "farmer@agriconnect.lk",
+                            FullName = "Kamal Perera",
+                            IsActive = true,
+                            PasswordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=",
+                            Phone = "+94771234567",
+                            Region = "Nuwara Eliya",
+                            Role = "Farmer"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 2, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Email = "farmer2@agriconnect.lk",
+                            FullName = "Saman Silva",
+                            IsActive = true,
+                            PasswordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=",
+                            Phone = "+94779876543",
+                            Region = "Kandy",
+                            Role = "Farmer"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Email = "buyer@agriconnect.lk",
+                            FullName = "Nihal Fernando",
+                            IsActive = true,
+                            PasswordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=",
+                            Phone = "+94701234567",
+                            Region = "Colombo",
+                            Role = "Buyer"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0000000-0000-0000-0000-000000000099"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Email = "admin@agriconnect.lk",
+                            FullName = "N. Perera",
+                            IsActive = true,
+                            PasswordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=",
+                            Phone = "+94112345678",
+                            Region = "Nuwara Eliya",
+                            Role = "Administrator"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0000000-0000-0000-0000-000000000050"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Email = "officer@agriconnect.lk",
+                            FullName = "Officer Demo",
+                            IsActive = true,
+                            PasswordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=",
+                            Phone = "+94711234567",
+                            Region = "Kandy",
+                            Role = "Officer"
+                        });
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.Listing", b =>
+                {
+                    b.HasOne("AgriConnect.Api.Models.Crop", "Crop")
+                        .WithMany()
+                        .HasForeignKey("CropId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AgriConnect.Api.Models.Region", "Region")
+                        .WithMany()
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Crop");
+
+                    b.Navigation("Region");
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.ListingPhoto", b =>
+                {
+                    b.HasOne("AgriConnect.Api.Models.Listing", "Listing")
+                        .WithMany("Photos")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("AgriConnect.Api.Models.PickupSchedule", b =>
@@ -519,6 +1330,17 @@ namespace backend.src.migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("AgriConnect.Api.Models.PriceSuggestion", b =>
+                {
+                    b.HasOne("AgriConnect.Api.Models.Listing", "Listing")
+                        .WithOne("PriceSuggestion")
+                        .HasForeignKey("AgriConnect.Api.Models.PriceSuggestion", "ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
             modelBuilder.Entity("AgriConnect.Api.Models.StockReservation", b =>
                 {
                     b.HasOne("AgriConnect.Api.Models.Order", "Order")
@@ -533,6 +1355,13 @@ namespace backend.src.migrations
             modelBuilder.Entity("AgriConnect.Api.Models.CollectionCentre", b =>
                 {
                     b.Navigation("PickupSchedules");
+                });
+
+            modelBuilder.Entity("AgriConnect.Api.Models.Listing", b =>
+                {
+                    b.Navigation("Photos");
+
+                    b.Navigation("PriceSuggestion");
                 });
 
             modelBuilder.Entity("AgriConnect.Api.Models.Order", b =>

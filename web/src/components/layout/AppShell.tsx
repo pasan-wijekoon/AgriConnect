@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { useAuth, type DevRole } from '../../context/AuthContext'
+import { useDevIdentity, type DevRole } from '../../context/DevIdentityContext'
 import { setRole as setAnalyticsRole } from '../../context/session'
 import './AppShell.css'
 
@@ -23,17 +23,19 @@ const DEV_ROLES: DevRole[] = ['Buyer', 'Farmer', 'Officer', 'Administrator']
 /**
  * Design.md §11/§12 — the consistent header + sidebar shell every
  * team-developed page shares. The role/user-id picker on the right is a
- * dev-only stand-in for real sign-in (no shared User/Auth/JWT exists yet,
- * plan §6) — it sets the X-Dev-Role/X-Dev-UserId headers every API call uses.
+ * dev-only stand-in that drives the Order/Scheduling/Analytics pages via
+ * X-Dev-Role/X-Dev-UserId headers — those pages aren't wired onto the real
+ * login (Component A's AuthContext/marketplace pages) yet, a separate
+ * follow-up (see PROGRESS.md), not something this integration pass did.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const { identity, setIdentity } = useAuth()
+  const { identity, setIdentity } = useDevIdentity()
 
   // Component D's analytics pages read their role from their own session.ts store
   // (web/src/context/session.ts, predates this integration) rather than this
-  // AuthContext. Rather than rewire their 4 already-tested pages onto a second
-  // context, this picker is the single source of truth and just mirrors every
-  // change into session.ts too, so both stay in sync from one control.
+  // DevIdentityContext. Rather than rewire their 4 already-tested pages onto a
+  // second context, this picker is the single source of truth and just mirrors
+  // every change into session.ts too, so both stay in sync from one control.
   const updateIdentity = (next: typeof identity) => {
     setIdentity(next)
     setAnalyticsRole(next.role === 'Administrator' ? 'Administrator' : 'Officer')
