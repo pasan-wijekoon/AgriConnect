@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { useDevIdentity, type DevRole } from '../../context/DevIdentityContext'
 import { setRole as setAnalyticsRole } from '../../context/session'
 import './AppShell.css'
@@ -56,7 +56,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <span className="app-header-brand">AgriConnect</span>
+        <div className="app-header-left">
+          <span className="app-header-brand">AgriConnect</span>
+          {/* Back to the marketplace (login, Today's Prices, dashboards). */}
+          <Link to="/" className="app-header-back">← Marketplace</Link>
+        </div>
         <div className="dev-identity" title="Dev-mode identity — stands in for real sign-in until shared auth lands">
           <select
             aria-label="Dev role"

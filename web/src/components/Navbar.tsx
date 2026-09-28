@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sprout, ShoppingBag, ShieldCheck, LogOut, TrendingUp, Layers } from './Icons';
 
@@ -13,6 +14,7 @@ const roleLabel: Record<string, { icon: React.FC<{ size?: number }>; label: stri
   Farmer: { icon: Sprout, label: 'Farmer' },
   Buyer: { icon: ShoppingBag, label: 'Buyer' },
   Admin: { icon: ShieldCheck, label: 'Officer' },
+  Officer: { icon: ShieldCheck, label: 'Officer' },
 };
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -111,6 +113,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             <TrendingUp size={14} />
             <span>Today's Prices</span>
           </button>
+
+          {/* Staff tools (orders, scheduling, analytics, quality) live in the back office under /orders. */}
+          {(user.role === 'Admin' || user.role === 'Officer') && (
+            <Link
+              to="/orders"
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.82rem',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: 'var(--text-muted)',
+                textDecoration: 'none',
+              }}
+            >
+              <ShieldCheck size={14} />
+              <span>Back office</span>
+            </Link>
+          )}
         </nav>
       )}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, Route, Routes } from 'react-router-dom'
+import { Link, Outlet, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { OrderQueuePage } from './pages/orders/OrderQueuePage'
 import { OrderDetailPage } from './pages/orders/OrderDetailPage'
@@ -125,9 +125,27 @@ function MarketplaceAppInner() {
               <BuyerDashboard onOpenTodayPrices={() => setCurrentView('today-prices')} />
             )}
             {user.role === 'Admin' && <AdminDashboard />}
+            {user.role === 'Officer' && <OfficerLanding />}
           </>
         )}
       </main>
+    </div>
+  )
+}
+
+// The marketplace has no Officer screens of its own; officers work in the back office.
+function OfficerLanding() {
+  return (
+    <div style={{ maxWidth: '560px', margin: '4rem auto', padding: '0 1rem', display: 'grid', gap: '1rem' }}>
+      <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>Officer tools</h1>
+      <p style={{ color: 'var(--text-muted)' }}>
+        Orders, pickup scheduling, market analytics and quality inspections are in the back office.
+      </p>
+      <div>
+        <Link to="/orders" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+          Open the back office
+        </Link>
+      </div>
     </div>
   )
 }
