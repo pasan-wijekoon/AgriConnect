@@ -9,7 +9,7 @@ export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localh
 // ---- Response shapes (documentation/API_Contract.md) --------------------------------
 
 export interface AnalyticsFilters {
-  crops: NamedItem[]
+  crops: (NamedItem & { hasPriceHistory?: boolean })[]
   regions: NamedItem[]
 }
 

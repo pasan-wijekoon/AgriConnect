@@ -25,7 +25,8 @@ class PriceTrendProvider extends ChangeNotifier {
     await _run(() async {
       if (crops.isEmpty) {
         crops = await _service.fetchCrops();
-        selectedCrop ??= crops.firstOrNull;
+        // Open on a crop that has prices; the first alphabetically may have none yet.
+        selectedCrop ??= crops.where((c) => c.hasPriceHistory).firstOrNull ?? crops.firstOrNull;
       }
       final crop = selectedCrop;
       final result = crop == null ? null : await _fetchTrend(crop);

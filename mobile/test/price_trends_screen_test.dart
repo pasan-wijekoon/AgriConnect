@@ -73,6 +73,27 @@ void main() {
     expect(trendRequest.headers['X-Dev-Role'], 'Farmer');
   });
 
+  testWidgets('opens on the first crop that has prices, not simply the first crop', (tester) async {
+    final requests = <http.Request>[];
+    final client = MockClient((request) async {
+      requests.add(request);
+      if (request.url.path == '/api/analytics/filters') {
+        return json({
+          'crops': [
+            {'id': carrot, 'name': 'Banana', 'hasPriceHistory': false},
+            {'id': tomato, 'name': 'Tomato', 'hasPriceHistory': true},
+          ],
+          'regions': <Object>[],
+        });
+      }
+      return json(tomatoTrend);
+    });
+    await pumpScreen(tester, client);
+
+    expect(requests.last.url.queryParameters['cropId'], tomato);
+    expect(find.textContaining('LKR 125.94', findRichText: true), findsOneWidget);
+  });
+
   testWidgets('switching crop shows an empty state when there is no data', (tester) async {
     await pumpScreen(tester, apiWith(trendFor: (id) => id == tomato ? tomatoTrend : emptyTrend));
 
