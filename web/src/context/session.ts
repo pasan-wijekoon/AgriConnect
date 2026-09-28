@@ -38,7 +38,10 @@ export function useRole(): StaffRole {
   )
 }
 
-// TODO: send the signed-in user's JWT once the shared login flow exists.
+// TODO: send the signed-in user's JWT once these pages move onto the real login.
+// Always sent, not only in `npm run dev`: the API rejects header-less requests (401)
+// and only honours X-Dev-Role when it runs in Development, so a production build of
+// this app (e.g. the Docker image) would otherwise get 401 on every analytics call.
 export function authHeaders(): Record<string, string> {
-  return DEV_ROLE_SWITCH ? { 'X-Dev-Role': role } : {}
+  return { 'X-Dev-Role': role }
 }

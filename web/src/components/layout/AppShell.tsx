@@ -16,6 +16,7 @@ const ANALYTICS_NAV_ITEMS = [
   { to: '/analytics/shortages', label: 'Shortages' },
   { to: '/analytics/anomalies', label: 'Anomaly Queue' },
   { to: '/analytics/reports', label: 'Reports', adminOnly: true },
+  { to: '/analytics/ai-scheduling', label: 'AI Scheduling' },
 ]
 
 // Component C's Quality Grading & Inspection pages (FR5, FR12–FR14) — same

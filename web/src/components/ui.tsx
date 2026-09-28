@@ -100,7 +100,7 @@ export function Pill({ children }: { children: ReactNode }) {
   return <span className="pill">{children}</span>
 }
 
-type IconName = 'chart' | 'grid' | 'flag' | 'file' | 'alert' | 'check' | 'minus' | 'up' | 'down' | 'close' | 'refresh' | 'download'
+type IconName = 'chart' | 'grid' | 'flag' | 'file' | 'alert' | 'check' | 'minus' | 'up' | 'down' | 'close' | 'refresh' | 'download' | 'spark'
 
 const paths: Record<IconName, string> = {
   chart: 'M3 17l5-6 4 4 7-9M3 21h18',
@@ -115,6 +115,7 @@ const paths: Record<IconName, string> = {
   close: 'M6 6l12 12M18 6L6 18',
   refresh: 'M20 11a8 8 0 10-2.3 5.7M20 5v6h-6',
   download: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+  spark: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 17l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z',
 }
 
 export function Icon({ name, label }: { name: IconName; label?: string }) {

@@ -8,6 +8,7 @@ import { PriceTrendsPage } from './pages/PriceTrendsPage'
 import { ShortagesPage } from './pages/ShortagesPage'
 import { AnomalyQueuePage } from './pages/AnomalyQueuePage'
 import { ReportsPage } from './pages/ReportsPage'
+import { AiSchedulingPage } from './pages/AiSchedulingPage'
 import { InspectionQueuePage } from './pages/InspectionQueuePage'
 import { RecordInspectionPage } from './pages/RecordInspectionPage'
 import { DiscrepancyQueuePage } from './pages/DiscrepancyQueuePage'
@@ -143,6 +144,7 @@ function App() {
           <Route path="/analytics/shortages" element={<ShortagesPage />} />
           <Route path="/analytics/anomalies" element={<AnomalyQueuePage />} />
           <Route path="/analytics/reports" element={<ReportsPage />} />
+          <Route path="/analytics/ai-scheduling" element={<AiSchedulingPage />} />
         </Route>
         <Route path="/quality/inspections" element={<InspectionQueuePage />} />
         <Route path="/quality/inspections/:listingId/record" element={<RecordInspectionPage />} />

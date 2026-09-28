@@ -129,3 +129,20 @@ export const exportReport = (body: { type: ReportType; dateRangeStart: string; d
 export const getReport = (id: string) => request<ReportExport>('GET', `/api/reports/${encodeURIComponent(id)}`)
 
 export const downloadUrl = (fileUrl: string) => `${API_BASE_URL}${fileUrl}`
+
+export interface SchedulingPreviewRequest {
+  centreId: string
+  preferredWindow: { start: string; end: string }
+  existingBookings: { slotStart: string; slotEnd: string }[]
+}
+
+export interface SchedulingPreview {
+  proposedSlotStart: string
+  proposedSlotEnd: string
+  conflictChecked: boolean
+  reasoning: string
+}
+
+/** Asks the Logistics Scheduling Agent (via the API) for a slot. Preview only; nothing is saved. */
+export const previewSchedule = (body: SchedulingPreviewRequest) =>
+  request<SchedulingPreview>('POST', '/api/analytics/scheduling-preview', { body })

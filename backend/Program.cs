@@ -158,6 +158,15 @@ builder.Services.AddHttpClient<IAgentClientService, AgentClientService>((sp, cli
 });
 builder.Services.AddScoped<IInspectionService, InspectionService>();
 
+// ---- Component D — AI Scheduling preview (Logistics Scheduling Agent) ----
+// Same agentic-ai service and AgenticAi:BaseUrl as the agents above; lets officers
+// try the agent directly from the analytics dashboard. Stores nothing.
+builder.Services.AddHttpClient<AgriConnect.Api.Services.Agents.LogisticsAgentClient>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/");
+});
+
 // ---- CORS (needed for the React web client, plan §10) ----
 // ALLOWED_ORIGINS is already provisioned in docker/.env.example; the local-dev
 // default covers the Vite dev server's default port (5173) plus the ports
