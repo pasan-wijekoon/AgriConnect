@@ -18,6 +18,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// The API calls this role "Administrator" (the name every [Authorize] attribute and the
+// User table use), while the marketplace pages check for "Admin". Translate once here so
+// an administrator doesn't log in to an empty page.
+function normalizeUser(user: User): User {
+  return (user.role as string) === 'Administrator' ? { ...user, role: 'Admin' } : user;
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -26,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem('agriconnect_user');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
+        const parsed = normalizeUser(JSON.parse(saved));
         setUser(parsed);
       } catch (e) {
         console.error('Failed to parse saved user', e);
@@ -39,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const loggedUser = await api.login(email, password);
+      const loggedUser = normalizeUser(await api.login(email, password));
       setUser(loggedUser);
       localStorage.setItem('agriconnect_user', JSON.stringify(loggedUser));
       return loggedUser;
@@ -58,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }) => {
     setIsLoading(true);
     try {
-      const newUser = await api.register(data);
+      const newUser = normalizeUser(await api.register(data));
       setUser(newUser);
       localStorage.setItem('agriconnect_user', JSON.stringify(newUser));
       return newUser;
