@@ -8,6 +8,11 @@
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
   line-height: 1.4;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
 }
 
 .btn:disabled {
@@ -19,6 +24,8 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+.btn:active:not(:disabled) { transform: translateY(1px); }
 
 .btn-primary {
   background: var(--color-primary);

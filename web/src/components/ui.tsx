@@ -14,9 +14,9 @@ export function PageHeader({ title, description, actions }: { title: string; des
   )
 }
 
-export function Card({ title, actions, children, className = '' }: { title?: string; actions?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({ title, actions, children, className = '', variant = 'default' }: { title?: string; actions?: ReactNode; children: ReactNode; className?: string; variant?: 'default' | 'glass' }) {
   return (
-    <section className={`card ${className}`}>
+    <section className={`card ${variant === 'glass' ? 'card-glass' : ''} ${className}`}>
       {(title || actions) && (
         <div className="card-head">
           {title && <h2>{title}</h2>}

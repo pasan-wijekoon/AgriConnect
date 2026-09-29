@@ -10,7 +10,9 @@
   --color-primary: #2e7d32;
   --color-primary-hover: #256628;
   --color-primary-border: rgba(46, 125, 50, 0.35);
+  --color-primary-soft: rgba(46, 125, 50, 0.12);
   --color-secondary: #66bb6a;
+
   --color-bg: #f7f9f7;
   --color-bg-hover: #edf2ed;
   --color-card: #ffffff;
@@ -124,7 +126,9 @@
   --color-primary: #66bb6a;
   --color-primary-hover: #81c784;
   --color-primary-border: rgba(47, 174, 107, 0.35);
+  --color-primary-soft: rgba(47, 174, 107, 0.12);
   --color-secondary: #81c784;
+
   --color-bg: #0d0d0d;
   --color-bg-hover: #1a211e;
   --color-card: #1a1a19;
@@ -284,6 +288,28 @@
   color-scheme: light;
 }
 
+/* Compatibility aliases keep older marketplace screens on the shared theme. */
+:root {
+  --bg: var(--color-bg);
+  --bg-raised: var(--color-card);
+  --bg-card: var(--color-card);
+  --bg-input: var(--color-bg);
+  --bg-hover: var(--color-bg-hover);
+  --text: var(--color-text);
+  --text-muted: var(--color-text-secondary);
+  --text-faint: var(--color-text-muted);
+  --border: var(--color-border);
+  --border-strong: color-mix(in srgb, var(--color-text-secondary) 35%, var(--color-border));
+  --accent: var(--color-primary);
+  --accent-strong: var(--color-primary-hover);
+  --accent-text: var(--color-primary);
+  --accent-soft: var(--color-primary-soft);
+  --accent-border: var(--color-primary-border);
+  --danger: var(--color-error);
+  --danger-soft: var(--color-error-bg);
+  --danger-border: color-mix(in srgb, var(--color-error) 35%, transparent);
+}
+
 /* Component A's own component classes (.btn, .badge, .modal-*, .form-*, etc.)
    live in styles/marketplace.css, scoped under .marketplace-scope.
    Component D's component classes live in styles/analytics.css, scoped under
@@ -344,4 +370,15 @@ tbody tr:hover { background: var(--color-bg-hover); }
 @media (max-width: 767px) {
   table { min-width: 620px; }
   .table-scroll, .data-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
