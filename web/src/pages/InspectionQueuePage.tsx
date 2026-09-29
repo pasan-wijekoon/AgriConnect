@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDevIdentity } from '../context/DevIdentityContext'
+
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card } from '../components/ui/Card'
 import { Badge, type BadgeTone } from '../components/ui/Badge'
@@ -35,7 +35,7 @@ function gradeTone(grade?: string): BadgeTone {
  * the page's original prop-drilled, standalone-app-shell design.
  */
 export function InspectionQueuePage() {
-  const { identity } = useDevIdentity()
+  
   const navigate = useNavigate()
   const [listings, setListings] = useState<ListingSummary[]>([])
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
@@ -43,7 +43,7 @@ export function InspectionQueuePage() {
   const load = () => {
     setState({ kind: 'loading' })
     qualityApi
-      .getPendingListings(identity)
+      .getPendingListings()
       .then((items) => {
         setListings(items)
         setState({ kind: 'ready' })
@@ -57,7 +57,7 @@ export function InspectionQueuePage() {
   useEffect(() => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identity])
+  }, [])
 
   return (
     <div>

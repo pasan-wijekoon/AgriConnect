@@ -31,7 +31,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     }
 
     [HttpGet]
-    [Authorize(Roles = Roles.BuyerFarmerOfficer)]
+    [Authorize(Roles = Roles.BuyerFarmerOfficerAdmin)]
     [ProducesResponseType(typeof(PagedResult<OrderResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> List(
         [FromQuery] OrderStatus? status,
@@ -44,7 +44,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = Roles.BuyerFarmerOfficer)]
+    [Authorize(Roles = Roles.BuyerFarmerOfficerAdmin)]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
@@ -53,7 +53,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     }
 
     [HttpPut("{id:guid}/status")]
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] OrderStatusUpdateRequest request, CancellationToken ct)
     {
@@ -62,7 +62,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     }
 
     [HttpPost("{id:guid}/cancel")]
-    [Authorize(Roles = Roles.BuyerOfficer)]
+    [Authorize(Roles = Roles.BuyerOfficer + "," + Roles.Admin)]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] OrderCancelRequest? request, CancellationToken ct)
     {
@@ -78,7 +78,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     /// as GetById, plan §6) before ever touching the schedule.
     /// </summary>
     [HttpGet("{id:guid}/schedule")]
-    [Authorize(Roles = Roles.BuyerFarmerOfficer)]
+    [Authorize(Roles = Roles.BuyerFarmerOfficerAdmin)]
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSchedule(Guid id, CancellationToken ct)
     {
@@ -101,7 +101,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     /// preferredWindow to replace an existing Proposed schedule.
     /// </summary>
     [HttpPost("{id:guid}/schedule")]
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status202Accepted)]
     public async Task<IActionResult> ProposeSchedule(Guid id, [FromBody] CreateScheduleRequest request, CancellationToken ct)
     {
@@ -123,7 +123,7 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     /// only path that can move a PickupSchedule to Confirmed (CLAUDE.md §17/§18).
     /// </summary>
     [HttpPut("{id:guid}/schedule/decision")]
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DecideSchedule(Guid id, [FromBody] ScheduleDecisionRequest request, CancellationToken ct)
     {

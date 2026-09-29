@@ -59,7 +59,11 @@ export interface ReportExport {
   type: ReportType
   generatedAt: string
   fileUrl: string
+  dateRangeStart?: string
+  dateRangeEnd?: string
 }
+
+export interface ReportPage { items: ReportExport[]; page: number; size: number; total: number }
 
 export interface SnapshotRefresh {
   periodsProcessed: number
@@ -127,5 +131,7 @@ export const exportReport = (body: { type: ReportType; dateRangeStart: string; d
   request<ReportExport>('POST', '/api/reports/export', { body })
 
 export const getReport = (id: string) => request<ReportExport>('GET', `/api/reports/${encodeURIComponent(id)}`)
+export const getReports = (query: { page?: number; size?: number } = {}) =>
+  request<ReportPage>('GET', '/api/reports', { query })
 
 export const downloadUrl = (fileUrl: string) => `${API_BASE_URL}${fileUrl}`

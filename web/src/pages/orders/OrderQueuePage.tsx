@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useDevIdentity } from '../../context/DevIdentityContext'
 import { OrderTable } from '../../components/orders/OrderTable'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/StateViews'
@@ -14,7 +13,6 @@ type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { ki
 
 /** Design.md §30 — centre-scoped (per role) order list, filterable by status, paginated. */
 export function OrderQueuePage() {
-  const { identity } = useDevIdentity()
   const [status, setStatus] = useState<OrderStatus | 'All'>('All')
   const [page, setPage] = useState(1)
   const [orders, setOrders] = useState<OrderResponse[]>([])
@@ -24,7 +22,7 @@ export function OrderQueuePage() {
   const load = () => {
     setState({ kind: 'loading' })
     ordersApi
-      .list(identity, { status: status === 'All' ? undefined : status, page, size: PAGE_SIZE })
+      .list({ status: status === 'All' ? undefined : status, page, size: PAGE_SIZE })
       .then((result) => {
         setOrders(result.items)
         setTotalCount(result.totalCount)
@@ -41,7 +39,7 @@ export function OrderQueuePage() {
     // load() is redefined every render but only its listed dependencies
     // should trigger a refetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identity, status, page])
+  }, [status, page])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 

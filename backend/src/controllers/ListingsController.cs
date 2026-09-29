@@ -88,6 +88,7 @@ public class ListingsController : ControllerBase
     /// <summary>
     /// GET /api/listings/my — Get current farmer's own listings
     /// </summary>
+    [Authorize(Roles = Roles.Farmer)]
     [HttpGet("my")]
     public async Task<IActionResult> MyListings([FromQuery] ListingSearchQuery query)
     {
@@ -116,6 +117,7 @@ public class ListingsController : ControllerBase
     /// <summary>
     /// PUT /api/listings/{id} — Edit a listing not yet ordered against (FR7)
     /// </summary>
+    [Authorize(Roles = Roles.Farmer)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateListingDto dto)
     {
@@ -146,6 +148,7 @@ public class ListingsController : ControllerBase
     /// <summary>
     /// DELETE /api/listings/{id} — Withdraw a listing (FR7)
     /// </summary>
+    [Authorize(Roles = Roles.Farmer)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Withdraw(Guid id)
     {
@@ -178,7 +181,7 @@ public class ListingsController : ControllerBase
     /// <summary>
     /// PATCH /api/listings/{id}/reject — Admin rejects a listing
     /// </summary>
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = Roles.Admin)]
     [HttpPatch("{id}/reject")]
     public async Task<IActionResult> Reject(Guid id)
     {
@@ -202,7 +205,7 @@ public class ListingsController : ControllerBase
     /// the AI-suggested fair price as-is. This is the human-approval checkpoint
     /// the agentic AI workflow pauses at — no price becomes final without it.
     /// </summary>
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpPatch("{id}/price-suggestion/approve")]
     public async Task<IActionResult> ApprovePriceSuggestion(Guid id)
     {
@@ -225,7 +228,7 @@ public class ListingsController : ControllerBase
     /// PATCH /api/listings/{id}/price-suggestion/reject — Officer/Admin rejects
     /// the AI-suggested fair price outright.
     /// </summary>
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpPatch("{id}/price-suggestion/reject")]
     public async Task<IActionResult> RejectPriceSuggestion(Guid id, [FromBody] DecidePriceSuggestionDto? dto)
     {
@@ -248,7 +251,7 @@ public class ListingsController : ControllerBase
     /// PATCH /api/listings/{id}/price-suggestion/revise — Officer/Admin revises
     /// the suggested range before it becomes final (FR: "Approve / Reject / Request Revision").
     /// </summary>
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpPatch("{id}/price-suggestion/revise")]
     public async Task<IActionResult> RevisePriceSuggestion(Guid id, [FromBody] RevisePriceSuggestionDto dto)
     {
@@ -274,6 +277,7 @@ public class ListingsController : ControllerBase
     /// <summary>
     /// POST /api/listings/{id}/photos — Add photos to a listing
     /// </summary>
+    [Authorize(Roles = Roles.Farmer)]
     [HttpPost("{id}/photos")]
     public async Task<IActionResult> AddPhotos(Guid id, [FromBody] AddPhotosDto dto)
     {

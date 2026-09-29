@@ -1,10 +1,13 @@
 using AgriConnect.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using AgriConnect.Api.Config;
 
 namespace AgriConnect.Api.Controllers;
 
 [ApiController]
 [Route("api")]
+[Authorize(Roles = Roles.BuyerFarmerOfficerAdmin)]
 public class ReferenceDataController : ControllerBase
 {
     private readonly ListingService _service;

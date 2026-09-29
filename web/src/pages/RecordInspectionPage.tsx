@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useDevIdentity } from '../context/DevIdentityContext'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -15,7 +14,6 @@ import { qualityApi, QUALITY_GRADES } from '../utils/qualityApi'
  */
 export function RecordInspectionPage() {
   const { listingId } = useParams<{ listingId: string }>()
-  const { identity } = useDevIdentity()
   const navigate = useNavigate()
 
   const [confirmedGrade, setConfirmedGrade] = useState<string>(QUALITY_GRADES[0])
@@ -33,7 +31,7 @@ export function RecordInspectionPage() {
     setError(null)
     setSubmitting(true)
     try {
-      await qualityApi.recordInspection(identity, {
+      await qualityApi.recordInspection({
         listingId,
         confirmedGrade,
         notes: notes.trim() || undefined,

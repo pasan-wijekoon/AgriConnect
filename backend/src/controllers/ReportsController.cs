@@ -15,6 +15,16 @@ namespace AgriConnect.Api.Controllers;
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
 public class ReportsController(ReportExportService reports) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int size = 20)
+    {
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var requestedBy))
+            return Unauthorized();
+        var result = await reports.ListAsync(requestedBy, page, size);
+        return Ok(new { items = result.Items.Select(ReportExportResponseDto.From), page = Math.Max(1, page), size = Math.Clamp(size, 1, 100), total = result.Total });
+    }
+
     /// <summary>Generates a CSV report. Type is PriceTrends, Listings or Orders.</summary>
     [HttpPost("export")]
     [Consumes("application/json")]
@@ -48,7 +58,9 @@ public class ReportsController(ReportExportService reports) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReportExportResponseDto>> GetById(Guid id)
     {
-        var report = await reports.GetByIdAsync(id)
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var requestedBy))
+            return Unauthorized();
+        var report = await reports.GetByIdAsync(id, requestedBy)
             ?? throw new NotFoundException($"Report {id} was not found.");
         return ReportExportResponseDto.From(report);
     }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useDevIdentity } from '../../context/DevIdentityContext'
+import { useAuth } from '../../context/AuthContext'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -45,7 +45,8 @@ function OrderTimeline({ status }: { status: OrderStatus }) {
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>()
   const navigate = useNavigate()
-  const { identity } = useDevIdentity()
+  const { user } = useAuth()
+  const role = user?.role
 
   const [order, setOrder] = useState<OrderResponse | null>(null)
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null)
@@ -58,10 +59,10 @@ export function OrderDetailPage() {
     setLoading(true)
     setError(null)
     try {
-      const fetchedOrder = await ordersApi.getById(identity, orderId)
+      const fetchedOrder = await ordersApi.getById(orderId)
       setOrder(fetchedOrder)
       try {
-        const fetchedSchedule = await ordersApi.getSchedule(identity, orderId)
+        const fetchedSchedule = await ordersApi.getSchedule(orderId)
         setSchedule(fetchedSchedule)
       } catch (err) {
         // No schedule yet is expected and not an error — anything else is.
@@ -81,20 +82,20 @@ export function OrderDetailPage() {
   useEffect(() => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId, identity])
+  }, [orderId])
 
   if (loading) return <LoadingState label="Loading order…" />
   if (error) return <ErrorState message={error} onRetry={load} />
   if (!order) return <ErrorState message="Order not found." />
 
-  const officerActions = identity.role === 'Officer' ? OFFICER_STATUS_ACTIONS[order.status] : undefined
+  const officerActions = (role === 'Officer' || role === 'Administrator') ? OFFICER_STATUS_ACTIONS[order.status] : undefined
   const canCancel =
-    (identity.role === 'Buyer' && !['Scheduled', 'Completed', 'Cancelled'].includes(order.status)) ||
-    (identity.role === 'Officer' && !['Completed', 'Cancelled'].includes(order.status))
+    (role === 'Buyer' && !['Scheduled', 'Completed', 'Cancelled'].includes(order.status)) ||
+    ((role === 'Officer' || role === 'Administrator') && !['Completed', 'Cancelled'].includes(order.status))
   // No schedule yet, or the previous one was rejected (Cancelled) — either way
   // there's no Proposed/Confirmed schedule blocking a fresh proposal.
   const canProposeSchedule =
-    identity.role === 'Officer' && order.status === 'Approved' && (!schedule || schedule.status === 'Cancelled')
+    (role === 'Officer' || role === 'Administrator') && order.status === 'Approved' && (!schedule || schedule.status === 'Cancelled')
 
   const runAction = async (action: () => Promise<unknown>) => {
     setActionBusy(true)
@@ -156,7 +157,7 @@ export function OrderDetailPage() {
               <Button
                 key={action.next}
                 loading={actionBusy}
-                onClick={() => runAction(() => ordersApi.updateStatus(identity, order.id, action.next))}
+                onClick={() => runAction(() => ordersApi.updateStatus(order.id, action.next))}
               >
                 {action.label}
               </Button>
@@ -165,7 +166,7 @@ export function OrderDetailPage() {
               <Button
                 variant="destructive"
                 loading={actionBusy}
-                onClick={() => runAction(() => ordersApi.cancel(identity, order.id))}
+                onClick={() => runAction(() => ordersApi.cancel(order.id))}
               >
                 Cancel Order
               </Button>
@@ -174,7 +175,7 @@ export function OrderDetailPage() {
               <Button
                 variant="secondary"
                 loading={actionBusy}
-                onClick={() => runAction(() => ordersApi.proposeSchedule(identity, order.id, {}))}
+                onClick={() => runAction(() => ordersApi.proposeSchedule(order.id, {}))}
               >
                 Propose Schedule
               </Button>
@@ -192,8 +193,8 @@ export function OrderDetailPage() {
             <ScheduleProposalReview
               schedule={schedule}
               busy={actionBusy}
-              onApprove={() => runAction(() => ordersApi.decideSchedule(identity, order.id, 'Approve'))}
-              onReject={() => runAction(() => ordersApi.decideSchedule(identity, order.id, 'Reject'))}
+              onApprove={() => runAction(() => ordersApi.decideSchedule(order.id, 'Approve'))}
+              onReject={() => runAction(() => ordersApi.decideSchedule(order.id, 'Reject'))}
             />
           </Card>
         )}

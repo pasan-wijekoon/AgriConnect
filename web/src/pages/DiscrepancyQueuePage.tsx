@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useDevIdentity } from '../context/DevIdentityContext'
+
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
@@ -17,7 +17,7 @@ type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { ki
  * the FR5 publish gate (InspectionService.PublishListingWithGateCheckAsync).
  */
 export function DiscrepancyQueuePage() {
-  const { identity } = useDevIdentity()
+  
   const [discrepancies, setDiscrepancies] = useState<GradeDiscrepancy[]>([])
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [resolvingId, setResolvingId] = useState<string | null>(null)
@@ -27,7 +27,7 @@ export function DiscrepancyQueuePage() {
   const load = () => {
     setState({ kind: 'loading' })
     qualityApi
-      .getDiscrepancies(identity, true)
+      .getDiscrepancies(true)
       .then((items) => {
         setDiscrepancies(items)
         setState({ kind: 'ready' })
@@ -41,13 +41,13 @@ export function DiscrepancyQueuePage() {
   useEffect(() => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identity])
+  }, [])
 
   const handleResolve = async (flag: GradeDiscrepancy) => {
     setActionError(null)
     setResolvingId(flag.id)
     try {
-      await qualityApi.resolveDiscrepancy(identity, flag.id, notesById[flag.id]?.trim() || 'Resolved by officer.')
+      await qualityApi.resolveDiscrepancy(flag.id, notesById[flag.id]?.trim() || 'Resolved by officer.')
       load()
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Failed to resolve the discrepancy.')

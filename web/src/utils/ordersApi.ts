@@ -1,4 +1,4 @@
-import type { DevIdentity } from '../context/DevIdentityContext'
+import { authHeaders } from '../context/session'
 
 /**
  * Typed client for Component B's Order/Scheduling/CollectionCentre endpoints
@@ -85,13 +85,12 @@ export class ApiError extends Error {
 }
 
 /** Exported so other dev-identity-authenticated API clients (e.g. qualityApi.ts) don't duplicate this. */
-export async function request<T>(identity: DevIdentity, path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      'X-Dev-Role': identity.role,
-      'X-Dev-UserId': identity.userId,
+      ...authHeaders(),
       ...init?.headers,
     },
   })
@@ -115,55 +114,47 @@ export async function request<T>(identity: DevIdentity, path: string, init?: Req
 }
 
 export const ordersApi = {
-  create: (identity: DevIdentity, body: CreateOrderRequest) =>
-    request<OrderResponse>(identity, '/api/orders', { method: 'POST', body: JSON.stringify(body) }),
+  create: (body: CreateOrderRequest) => request<OrderResponse>('/api/orders', { method: 'POST', body: JSON.stringify(body) }),
 
-  list: (identity: DevIdentity, params: { status?: OrderStatus; page?: number; size?: number } = {}) => {
+  list: (params: { status?: OrderStatus; page?: number; size?: number } = {}) => {
     const query = new URLSearchParams()
     if (params.status) query.set('status', params.status)
     query.set('page', String(params.page ?? 1))
     query.set('size', String(params.size ?? 20))
-    return request<PagedResult<OrderResponse>>(identity, `/api/orders?${query.toString()}`)
+    return request<PagedResult<OrderResponse>>(`/api/orders?${query.toString()}`)
   },
 
-  getById: (identity: DevIdentity, id: string) => request<OrderResponse>(identity, `/api/orders/${id}`),
+  getById: (id: string) => request<OrderResponse>(`/api/orders/${id}`),
 
-  updateStatus: (identity: DevIdentity, id: string, status: OrderStatus) =>
-    request<OrderResponse>(identity, `/api/orders/${id}/status`, {
+  updateStatus: (id: string, status: OrderStatus) => request<OrderResponse>(`/api/orders/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
     }),
 
-  cancel: (identity: DevIdentity, id: string, reason?: string) =>
-    request<OrderResponse>(identity, `/api/orders/${id}/cancel`, {
+  cancel: (id: string, reason?: string) => request<OrderResponse>(`/api/orders/${id}/cancel`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }),
 
-  getSchedule: (identity: DevIdentity, orderId: string) =>
-    request<ScheduleResponse>(identity, `/api/orders/${orderId}/schedule`),
+  getSchedule: (orderId: string) => request<ScheduleResponse>(`/api/orders/${orderId}/schedule`),
 
-  proposeSchedule: (identity: DevIdentity, orderId: string, body: CreateScheduleRequest) =>
-    request<ScheduleResponse>(identity, `/api/orders/${orderId}/schedule`, {
+  proposeSchedule: (orderId: string, body: CreateScheduleRequest) => request<ScheduleResponse>(`/api/orders/${orderId}/schedule`, {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
-  decideSchedule: (identity: DevIdentity, orderId: string, decision: ScheduleDecision) =>
-    request<ScheduleResponse>(identity, `/api/orders/${orderId}/schedule/decision`, {
+  decideSchedule: (orderId: string, decision: ScheduleDecision) => request<ScheduleResponse>(`/api/orders/${orderId}/schedule/decision`, {
       method: 'PUT',
       body: JSON.stringify({ decision }),
     }),
 
-  nearestCentres: (identity: DevIdentity, lat: number, lng: number, regionId?: string) => {
+  nearestCentres: (lat: number, lng: number, regionId?: string) => {
     const query = new URLSearchParams({ lat: String(lat), lng: String(lng) })
     if (regionId) query.set('regionId', regionId)
-    return request<NearestCentreResponse[]>(identity, `/api/collection-centres/nearest?${query.toString()}`)
+    return request<NearestCentreResponse[]>(`/api/collection-centres/nearest?${query.toString()}`)
   },
 
-  listCentres: (identity: DevIdentity) =>
-    request<CollectionCentreResponse[]>(identity, '/api/collection-centres'),
+  listCentres: () => request<CollectionCentreResponse[]>('/api/collection-centres'),
 
-  listCentreSchedules: (identity: DevIdentity, centreId: string) =>
-    request<ScheduleResponse[]>(identity, `/api/collection-centres/${centreId}/schedules`),
+  listCentreSchedules: (centreId: string) => request<ScheduleResponse[]>(`/api/collection-centres/${centreId}/schedules`),
 }

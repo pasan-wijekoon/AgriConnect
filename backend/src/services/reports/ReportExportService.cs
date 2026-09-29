@@ -67,8 +67,20 @@ public class ReportExportService(AgriConnectDbContext db, IWebHostEnvironment en
         return report;
     }
 
-    public Task<ReportExport?> GetByIdAsync(Guid id) =>
-        db.ReportExports.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
+    public Task<ReportExport?> GetByIdAsync(Guid id, Guid requestedBy) =>
+        db.ReportExports.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id && r.RequestedBy == requestedBy);
+
+    public async Task<(IReadOnlyList<ReportExport> Items, int Total)> ListAsync(Guid requestedBy, int page, int size)
+    {
+        page = Math.Max(1, page);
+        size = Math.Clamp(size, 1, 100);
+        var query = db.ReportExports.AsNoTracking()
+            .Where(r => r.RequestedBy == requestedBy)
+            .OrderByDescending(r => r.GeneratedAt);
+        var total = await query.CountAsync();
+        var items = await query.Skip((page - 1) * size).Take(size).ToListAsync();
+        return (items, total);
+    }
 
     // WebRootPath is null when wwwroot did not exist at startup.
     private string WebRoot => environment.WebRootPath ?? Path.Combine(environment.ContentRootPath, "wwwroot");

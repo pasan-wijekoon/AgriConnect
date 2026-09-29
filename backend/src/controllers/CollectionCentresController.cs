@@ -28,7 +28,7 @@ public class CollectionCentresController(CollectionCentreService centreService, 
     /// <summary>Not in the plan's original endpoint table — added to back the
     /// Officer scheduling calendar's centre selector (Design.md §33).</summary>
     [HttpGet]
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     public async Task<IActionResult> List(CancellationToken ct)
     {
         var result = await centreService.ListAllAsync(ct);
@@ -39,7 +39,7 @@ public class CollectionCentresController(CollectionCentreService centreService, 
     /// Officer scheduling calendar (Design.md §33: "centre bookings calendar
     /// (Proposed/Confirmed/Cancelled)").</summary>
     [HttpGet("{centreId:guid}/schedules")]
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     public async Task<IActionResult> Schedules(Guid centreId, CancellationToken ct)
     {
         var result = await schedulingService.ListByCentreAsync(centreId, ct);

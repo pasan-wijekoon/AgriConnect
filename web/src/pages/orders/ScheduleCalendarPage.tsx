@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useDevIdentity } from '../../context/DevIdentityContext'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Card } from '../../components/ui/Card'
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/StateViews'
@@ -29,7 +28,6 @@ function windowsOverlap(a: ScheduleResponse, b: ScheduleResponse): boolean {
  * capacity indicator per day, and overlapping Confirmed bookings visually
  * flagged as conflicts. */
 export function ScheduleCalendarPage() {
-  const { identity } = useDevIdentity()
   const [centres, setCentres] = useState<CollectionCentreResponse[]>([])
   const [centresLoading, setCentresLoading] = useState(true)
   const [centresError, setCentresError] = useState<string | null>(null)
@@ -42,7 +40,7 @@ export function ScheduleCalendarPage() {
     setCentresLoading(true)
     setCentresError(null)
     ordersApi
-      .listCentres(identity)
+      .listCentres()
       .then((result) => {
         setCentres(result)
         setCentreId((current) => (result.some((c) => c.id === current) ? current : (result[0]?.id ?? '')))
@@ -54,14 +52,14 @@ export function ScheduleCalendarPage() {
       })
   }
 
-  useEffect(loadCentres, [identity])
+  useEffect(loadCentres, [])
 
   const loadSchedules = () => {
     if (!centreId) return
     setLoading(true)
     setError(null)
     ordersApi
-      .listCentreSchedules(identity, centreId)
+      .listCentreSchedules(centreId)
       .then((result) => {
         setSchedules(result)
         setLoading(false)
@@ -72,7 +70,7 @@ export function ScheduleCalendarPage() {
       })
   }
 
-  useEffect(loadSchedules, [identity, centreId])
+  useEffect(loadSchedules, [centreId])
 
   const selectedCentre = centres.find((c) => c.id === centreId)
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useDevIdentity } from '../context/DevIdentityContext'
+
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
@@ -14,7 +14,7 @@ type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { ki
  * Component C — FR13: full, searchable/filterable inspection history.
  */
 export function InspectionHistoryPage() {
-  const { identity } = useDevIdentity()
+  
   const [search, setSearch] = useState('')
   const [grade, setGrade] = useState<string>('')
   const [inspections, setInspections] = useState<InspectionResponse[]>([])
@@ -23,7 +23,7 @@ export function InspectionHistoryPage() {
   const load = () => {
     setState({ kind: 'loading' })
     qualityApi
-      .getInspections(identity, { search: search || undefined, grade: grade || undefined })
+      .getInspections({ search: search || undefined, grade: grade || undefined })
       .then((result) => {
         setInspections(result.items)
         setState({ kind: 'ready' })
@@ -37,7 +37,7 @@ export function InspectionHistoryPage() {
   useEffect(() => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identity, search, grade])
+  }, [search, grade])
 
   return (
     <div>

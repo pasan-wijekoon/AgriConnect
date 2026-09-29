@@ -1,4 +1,3 @@
-import type { DevIdentity } from '../context/DevIdentityContext'
 import { API_BASE_URL, request } from './ordersApi'
 
 /**
@@ -107,51 +106,43 @@ export interface AgentQualityValidation {
 
 export const QUALITY_GRADES = ['Grade A', 'Grade B', 'Grade C', 'Rejected'] as const
 
-async function get<T>(identity: DevIdentity, path: string): Promise<T> {
-  return request<T>(identity, path)
+async function get<T>(path: string): Promise<T> {
+  return request<T>(path)
 }
 
 export const qualityApi = {
-  getDashboardStats: (identity: DevIdentity) =>
-    get<QualityDashboardStats>(identity, '/api/inspections/stats'),
+  getDashboardStats: () => get<QualityDashboardStats>('/api/inspections/stats'),
 
-  getPendingListings: (identity: DevIdentity) =>
-    get<ListingSummary[]>(identity, '/api/listings/pending-inspection'),
+  getPendingListings: () => get<ListingSummary[]>('/api/listings/pending-inspection'),
 
-  getInspections: (identity: DevIdentity, params: { search?: string; grade?: string; page?: number } = {}) => {
+  getInspections: (params: { search?: string; grade?: string; page?: number } = {}) => {
     const qs = new URLSearchParams()
     if (params.search) qs.set('search', params.search)
     if (params.grade) qs.set('grade', params.grade)
     qs.set('page', String(params.page ?? 1))
-    return get<InspectionPagedResult<InspectionResponse>>(identity, `/api/inspections?${qs.toString()}`)
+    return get<InspectionPagedResult<InspectionResponse>>(`/api/inspections?${qs.toString()}`)
   },
 
-  getListingInspections: (identity: DevIdentity, listingId: string) =>
-    get<InspectionResponse[]>(identity, `/api/listings/${listingId}/inspections`),
+  getListingInspections: (listingId: string) => get<InspectionResponse[]>(`/api/listings/${listingId}/inspections`),
 
   recordInspection: (
-    identity: DevIdentity,
     payload: { listingId: string; confirmedGrade: string; notes?: string; photoUrls: string[] },
   ) =>
-    request<InspectionResponse>(identity, '/api/inspections', {
+    request<InspectionResponse>('/api/inspections', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  getDiscrepancies: (identity: DevIdentity, onlyUnresolved = true) =>
-    get<GradeDiscrepancy[]>(identity, `/api/inspections/discrepancies?onlyUnresolved=${onlyUnresolved}`),
+  getDiscrepancies: (onlyUnresolved = true) => get<GradeDiscrepancy[]>(`/api/inspections/discrepancies?onlyUnresolved=${onlyUnresolved}`),
 
-  resolveDiscrepancy: (identity: DevIdentity, flagId: string, resolutionNotes: string) =>
-    request<GradeDiscrepancy>(identity, `/api/inspections/discrepancies/${flagId}/resolve`, {
+  resolveDiscrepancy: (flagId: string, resolutionNotes: string) => request<GradeDiscrepancy>(`/api/inspections/discrepancies/${flagId}/resolve`, {
       method: 'POST',
       body: JSON.stringify({ resolutionNotes }),
     }),
 
-  publishListing: (identity: DevIdentity, listingId: string) =>
-    request<ListingSummary>(identity, `/api/listings/${listingId}/publish`, { method: 'POST' }),
+  publishListing: (listingId: string) => request<ListingSummary>(`/api/listings/${listingId}/publish`, { method: 'POST' }),
 
-  evaluateListingCompliance: (identity: DevIdentity, listingId: string) =>
-    request<AgentQualityValidation>(identity, `/api/listings/${listingId}/evaluate-compliance`, { method: 'POST' }),
+  evaluateListingCompliance: (listingId: string) => request<AgentQualityValidation>(`/api/listings/${listingId}/evaluate-compliance`, { method: 'POST' }),
 }
 
 export { API_BASE_URL }
