@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, type User } from '../utils/marketApi';
+import { api, normalizeRole, normalizeUser, type User } from '../utils/marketApi';
 
 interface AuthContextType {
   user: User | null;
@@ -27,22 +27,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setUser(parsed);
+        api.getMe().then((profile) => setUser({ ...profile, role: normalizeRole(profile.role), token: parsed.token })).catch(() => {
+          localStorage.removeItem('agriconnect_user');
+          setUser(null);
+        }).finally(() => setIsLoading(false));
       } catch (e) {
         console.error('Failed to parse saved user', e);
         localStorage.removeItem('agriconnect_user');
+        setIsLoading(false);
       }
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const loggedUser = await api.login(email, password);
-      setUser(loggedUser);
-      localStorage.setItem('agriconnect_user', JSON.stringify(loggedUser));
-      return loggedUser;
+      const normalizedUser = normalizeUser(loggedUser);
+      setUser(normalizedUser);
+      localStorage.setItem('agriconnect_user', JSON.stringify(normalizedUser));
+      return normalizedUser;
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const newUser = await api.register(data);
-      setUser(newUser);
-      localStorage.setItem('agriconnect_user', JSON.stringify(newUser));
-      return newUser;
+      const normalizedUser = normalizeUser(newUser);
+      setUser(normalizedUser);
+      localStorage.setItem('agriconnect_user', JSON.stringify(normalizedUser));
+      return normalizedUser;
     } finally {
       setIsLoading(false);
     }

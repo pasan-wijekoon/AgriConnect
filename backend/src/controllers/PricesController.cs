@@ -1,4 +1,5 @@
 using AgriConnect.Api.Dtos;
+using AgriConnect.Api.Config;
 using AgriConnect.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,29 +8,15 @@ namespace AgriConnect.Api.Controllers;
 
 [ApiController]
 [Route("api/prices")]
-[Authorize]
+    [Authorize(Roles = Roles.BuyerFarmerOfficerAdmin)]
 public class PricesController : ControllerBase
 {
     private readonly AgenticAiService _agenticAi;
     private readonly ListingService _listingService;
-    private readonly TodayPriceCatalogService _catalogService;
-
-    public PricesController(AgenticAiService agenticAi, ListingService listingService, TodayPriceCatalogService catalogService)
+    public PricesController(AgenticAiService agenticAi, ListingService listingService)
     {
         _agenticAi = agenticAi;
         _listingService = listingService;
-        _catalogService = catalogService;
-    }
-
-    /// <summary>
-    /// GET /api/prices/today — Live fair-price estimates for the admin-managed
-    /// Today's Prices catalog (see TodayPriceCatalogController for management).
-    /// </summary>
-    [HttpGet("today")]
-    public async Task<IActionResult> GetTodayPrices([FromQuery] string? region = null, [FromQuery] string? grade = "A")
-    {
-        var result = await _catalogService.GetLivePrices(region, grade);
-        return Ok(result);
     }
 
     /// <summary>
@@ -55,30 +42,4 @@ public class PricesController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// POST /api/prices/estimate — Post body version for complex recent sale data
-    /// </summary>
-    [HttpPost("estimate")]
-    public async Task<IActionResult> PostPriceEstimate([FromBody] EstimatePriceRequestDto req)
-    {
-        var result = await _agenticAi.EstimateFairPriceAsync(
-            cropId: req.CropId,
-            regionId: req.RegionId,
-            quantity: req.Quantity,
-            claimedGrade: req.ClaimedGrade,
-            cropName: req.CropName,
-            regionName: req.RegionName
-        );
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// POST /api/prices/orchestrate — Runs the LangGraph StateGraph coordinator workflow
-    /// </summary>
-    [HttpPost("orchestrate")]
-    public async Task<IActionResult> RunOrchestration([FromBody] OrchestrationRequestDto req)
-    {
-        var jsonResponse = await _agenticAi.RunOrchestrationAsync(req);
-        return Content(jsonResponse, "application/json");
-    }
 }

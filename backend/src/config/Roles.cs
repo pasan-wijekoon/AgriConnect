@@ -27,4 +27,6 @@ public static class Roles
     // Officer-driven, but Component A's existing Admin Dashboard also needs to
     // trigger it (it used to call the now-removed, ungated PATCH .../approve).
     public const string OfficerAdmin = Officer + "," + Admin;
+    public const string BuyerFarmerOfficerAdmin = Buyer + "," + Farmer + "," + Officer + "," + Admin;
+    public const string BuyerFarmerAdmin = Buyer + "," + Farmer + "," + Admin;
 }

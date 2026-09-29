@@ -110,6 +110,50 @@ public class AuthService
         };
     }
 
+    public async Task<(IReadOnlyList<AdminUserResponse> Items, int Total)> ListUsersAsync(string? search, string? role, int page, int size)
+    {
+        page = Math.Max(1, page); size = Math.Clamp(size, 1, 100);
+        var query = _db.Users.AsNoTracking().AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(u => u.FullName.Contains(search) || u.Email.Contains(search));
+        if (!string.IsNullOrWhiteSpace(role)) query = query.Where(u => u.Role == role);
+        var total = await query.CountAsync();
+        var users = await query.OrderBy(u => u.FullName).Skip((page - 1) * size).Take(size).ToListAsync();
+        return (users.Select(ToAdminUser).ToList(), total);
+    }
+
+    public async Task<AdminUserResponse> CreateManagedUserAsync(CreateManagedUserRequest dto)
+    {
+        ValidateManagedRole(dto.Role);
+        if (await _db.Users.AnyAsync(u => u.Email == dto.Email)) throw new InvalidOperationException("An account with this email already exists.");
+        var user = new User { Id = Guid.NewGuid(), FullName = dto.FullName, Email = dto.Email, PasswordHash = HashPassword(dto.Password), Role = dto.Role, Phone = dto.Phone, Region = dto.Region, IsActive = true };
+        _db.Users.Add(user); await _db.SaveChangesAsync(); return ToAdminUser(user);
+    }
+
+    public async Task<AdminUserResponse?> ChangeRoleAsync(Guid id, string role)
+    {
+        ValidateManagedRole(role); var user = await _db.Users.FindAsync(id); if (user == null) return null;
+        user.Role = role; await _db.SaveChangesAsync(); return ToAdminUser(user);
+    }
+
+    public async Task<AdminUserResponse?> ChangeStatusAsync(Guid id, bool active)
+    {
+        var user = await _db.Users.FindAsync(id); if (user == null) return null;
+        user.IsActive = active; await _db.SaveChangesAsync(); return ToAdminUser(user);
+    }
+
+    public async Task<bool> ResetCredentialsAsync(Guid id, string password)
+    {
+        var user = await _db.Users.FindAsync(id); if (user == null) return false;
+        user.PasswordHash = HashPassword(password); await _db.SaveChangesAsync(); return true;
+    }
+
+    private static void ValidateManagedRole(string role)
+    {
+        if (role is not (Roles.Officer or Roles.Admin)) throw new ArgumentException("Administrators may create or assign only Officer or Administrator roles.");
+    }
+
+    private static AdminUserResponse ToAdminUser(User u) => new(u.Id, u.FullName, u.Email, u.Role, u.Phone, u.Region, u.IsActive, u.CreatedAt);
+
     /// <summary>
     /// Reads the authenticated user's ID and role from the validated JWT
     /// ClaimsPrincipal that ASP.NET Core's authentication middleware attaches

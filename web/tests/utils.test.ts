@@ -5,6 +5,7 @@ import { describe, test } from 'node:test'
 import { causeLabel, describeDeviation } from '../src/utils/anomalies.ts'
 import { daysAgo, formatDay, formatLkr, parseDay } from '../src/utils/format.ts'
 import { toApiError } from '../src/utils/problem.ts'
+import { normalizeApiBaseUrl, normalizeRole } from '../src/utils/marketApi.ts'
 import { buildHeatmap, cellColor, type ShortageEvent } from '../src/utils/shortages.ts'
 import { changePercent, fillGrid, niceTicks, periodGrid, type TrendPoint } from '../src/utils/trend.ts'
 
@@ -119,5 +120,18 @@ describe('API errors', () => {
 
   test('an empty 403 still gets a readable message', () => {
     assert.equal(toApiError(403, null).message, "Your role doesn't have access to this.")
+  })
+})
+
+describe('authentication configuration', () => {
+  test('normalizes API roots to exactly one /api suffix', () => {
+    assert.equal(normalizeApiBaseUrl('http://localhost:5000'), 'http://localhost:5000/api')
+    assert.equal(normalizeApiBaseUrl('http://localhost:5000/api/'), 'http://localhost:5000/api')
+    assert.equal(normalizeApiBaseUrl(), 'http://localhost:5000/api')
+  })
+
+  test('maps the legacy Admin role to the canonical Administrator role', () => {
+    assert.equal(normalizeRole('Admin'), 'Administrator')
+    assert.equal(normalizeRole('Administrator'), 'Administrator')
   })
 })

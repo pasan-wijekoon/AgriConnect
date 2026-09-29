@@ -86,19 +86,6 @@ export const AddEditListingModal: React.FC<AddEditListingModalProps> = ({
     try {
       const fileList = Array.from(files);
 
-      // Instant preview: generate local base64/data URLs immediately (0ms delay)
-      const localDataUrls = await Promise.all(
-        fileList.map(
-          (file) =>
-            new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            })
-        )
-      );
-
       // Check if current list only has the default single preset photo
       const isPresetPhoto =
         photoUrls.length === 1 &&
@@ -106,29 +93,10 @@ export const AddEditListingModal: React.FC<AddEditListingModalProps> = ({
 
       // If just preset photo, replace with user's uploaded photo(s) so their photo is COVER!
       if (isPresetPhoto) {
-        setPhotoUrls([...localDataUrls]);
-      } else {
-        setPhotoUrls((prev) => [...localDataUrls, ...prev]);
       }
 
-      // Concurrently upload to server in background to get server path if available
-      try {
-        const uploadPromises = fileList.map((file) => api.uploadPhoto(file));
-        const serverUrls = await Promise.all(uploadPromises);
-
-        // Replace the local data URLs with server URLs
-        setPhotoUrls((current) => {
-          return current.map((url) => {
-            const index = localDataUrls.indexOf(url);
-            if (index !== -1 && serverUrls[index]) {
-              return serverUrls[index];
-            }
-            return url;
-          });
-        });
-      } catch (uploadErr) {
-        console.warn('Backend upload fell back to local image data:', uploadErr);
-      }
+      const serverUrls = await Promise.all(fileList.map((file) => api.uploadPhoto(file)));
+      setPhotoUrls((prev) => [...serverUrls, ...(isPresetPhoto ? [] : prev)]);
     } catch (err: any) {
       setError(err?.message || 'Failed to process photo from device');
     } finally {

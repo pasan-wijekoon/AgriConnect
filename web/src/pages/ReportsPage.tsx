@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 
 import { Card, EmptyState, ErrorNotice, Field, Icon, PageHeader } from '../components/ui.tsx'
-import { DEV_ROLE_SWITCH, setRole, useRole } from '../context/session.ts'
-import { downloadUrl, exportReport, getReport, type ReportExport, type ReportType } from '../utils/api.ts'
+import { useRole } from '../context/session.ts'
+import { downloadUrl, exportReport, getReport, getReports, type ReportExport, type ReportType } from '../utils/api.ts'
 import { daysAgo, formatDateTime } from '../utils/format.ts'
 import { ApiError } from '../utils/problem.ts'
 
@@ -12,27 +12,9 @@ const TYPES: { value: ReportType; label: string; note?: string }[] = [
   { value: 'Orders', label: 'Orders', note: 'Header only until Component B (Orders) is integrated.' },
 ]
 
-const HISTORY_KEY = 'agriconnect.recentReports'
-
 interface RecentReport extends ReportExport {
   from: string
   to: string
-}
-
-function readHistory(): RecentReport[] {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]') as RecentReport[]
-  } catch {
-    return []
-  }
-}
-
-function writeHistory(items: RecentReport[]) {
-  try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(items))
-  } catch {
-    // Storage unavailable; the list just won't persist.
-  }
 }
 
 const typeLabel = (t: ReportType) => TYPES.find((x) => x.value === t)?.label ?? t
@@ -48,13 +30,6 @@ export function ReportsPage() {
         <Card>
           <EmptyState title="Reports are for administrators">
             Your role is Officer. Ask an administrator to export a report.
-            {DEV_ROLE_SWITCH && (
-              <div className="empty-action">
-                <button type="button" className="btn" onClick={() => setRole('Administrator')}>
-                  Switch to Administrator (development)
-                </button>
-              </div>
-            )}
           </EmptyState>
         </Card>
       )}
@@ -69,7 +44,13 @@ function Reports() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [latest, setLatest] = useState<RecentReport | null>(null)
-  const [history, setHistory] = useState<RecentReport[]>(readHistory)
+  const [history, setHistory] = useState<RecentReport[]>([])
+
+  useEffect(() => {
+    getReports({ page: 1, size: 20 }).then((page) => {
+      setHistory(page.items.map((item) => ({ ...item, from: item.dateRangeStart ?? '', to: item.dateRangeEnd ?? '' })))
+    }).catch((err) => setError(err as Error))
+  }, [])
 
   const fieldError = (field: string) => (error instanceof ApiError ? error.fieldErrors[field]?.[0] : undefined)
   const rangeInvalid = from && to && to < from
@@ -83,9 +64,7 @@ function Reports() {
       const report = await exportReport({ type, dateRangeStart: from, dateRangeEnd: to })
       const entry = { ...report, from, to }
       setLatest(entry)
-      const next = [entry, ...history.filter((h) => h.id !== entry.id)].slice(0, 10)
-      setHistory(next)
-      writeHistory(next)
+      setHistory((current) => [entry, ...current.filter((h) => h.id !== entry.id)])
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -134,7 +113,7 @@ function Reports() {
         </Card>
       )}
 
-      <Card title="Recent reports" actions={<span className="muted small">Generated in this browser</span>}>
+      <Card title="Recent reports" actions={<span className="muted small">Saved on the server</span>}>
         {history.length === 0 ? (
           <EmptyState title="No reports yet">Reports you generate appear here.</EmptyState>
         ) : (

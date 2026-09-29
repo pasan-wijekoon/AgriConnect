@@ -5,6 +5,7 @@ using AgriConnect.Api.Services;
 using AgriConnect.Api.Services.Analytics;
 using AgriConnect.Api.Services.Reports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -80,7 +81,6 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<AgenticAiService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ListingService>();
-builder.Services.AddScoped<TodayPriceCatalogService>();
 
 // ---- Component D — Market Price Analytics & Reporting ----
 builder.Services.AddScoped<TrendAggregationService>();
@@ -243,14 +243,31 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 
-// Development-only fallback, not a competing auth system — see the Authentication
-// comment above builder.Services.AddAuthentication for the full rationale. Only
-// activates when a request has no Authorization header at all, so a real bearer
-// token from Component A's /api/auth/login always takes priority.
-if (app.Environment.IsDevelopment())
+// A signed JWT must not keep an account alive after an administrator deactivates it.
+// Claims remain valid cryptographically, so check the current account state before
+// every protected request. This also prevents stale tokens from accessing data.
+app.Use(async (context, next) =>
 {
-    app.UseFakeClaimsPrincipal();
-}
+    if (context.User.Identity?.IsAuthenticated == true &&
+        Guid.TryParse(context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var userId))
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+        var active = await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && u.IsActive);
+        if (!active)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Authentication required",
+                Detail = "This account is inactive or no longer exists."
+            });
+            return;
+        }
+    }
+    await next();
+});
 
 app.UseAuthorization();
 

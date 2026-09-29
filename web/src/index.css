@@ -1,11 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* ── Light theme (default) ──────────────────────────────────────────────────
+   Single source of truth for every design token across the three CSS scopes:
+   back-office (--color-*), marketplace-scope (aliased in marketplace.css),
+   and analytics-scope (aliased in analytics.css).
+   -------------------------------------------------------------------------- */
 :root {
   /* Design.md §5 — Color System */
   --color-primary: #2e7d32;
   --color-primary-hover: #256628;
+  --color-primary-border: rgba(46, 125, 50, 0.35);
   --color-secondary: #66bb6a;
   --color-bg: #f7f9f7;
+  --color-bg-hover: #edf2ed;
   --color-card: #ffffff;
   --color-text: #1f2937;
   --color-text-secondary: #6b7280;
@@ -41,6 +48,7 @@
 
   /* Design.md §9 — Border radius */
   --radius-sm: 8px;
+  --radius-md: 10px;
   --radius-card: 12px;
   --radius-lg: 16px;
   --radius-pill: 999px;
@@ -50,20 +58,8 @@
 
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  color-scheme: light;
-  color: var(--color-text);
-  background: var(--color-bg);
-  font-family: var(--font-sans);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  /* Component D — Market Price Analytics & Reporting's own token set, used only
-     within .analytics-scope (web/src/styles/analytics.css). Bare names (--brand,
-     --surface, etc.) rather than this file's --color-* prefix, so nothing here
-     collides with the tokens above — kept as its own block rather than renamed,
-     to match the values Component D's LineChart/App.css already reference. */
+  /* Component D — analytics-scope bare token set (aliased in analytics.css Task 5,
+     but also defined here in :root so they resolve globally for light mode). */
   --page: #f9f9f7;
   --surface: #fcfcfb;
   --surface-raised: #ffffff;
@@ -80,18 +76,19 @@
   --brand-soft: #e6f2e6;
   --on-brand: #ffffff;
 
+  /* Chart / series tokens — scope-independent, no dark equivalent needed */
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --band: rgba(42, 120, 214, 0.16);
 
-  /* Status: always paired with an icon or label, never colour alone. */
+  /* Status indicators: always paired with icon/label, never colour alone */
   --good: #0ca30c;
   --good-text: #006300;
   --warning: #fab219;
   --critical: #d03b3b;
   --critical-text: #b3261e;
 
-  /* Diverging heatmap: oversupply (blue) <- neutral -> shortage (red); Low, Medium, High. */
+  /* Diverging heatmap: oversupply (blue) ← neutral → shortage (red) */
   --over-low: #86b6ef;
   --over-medium: #3987e5;
   --over-high: #1c5cab;
@@ -105,10 +102,140 @@
 
   --radius: 10px;
   --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 8px 24px rgba(11, 11, 11, 0.06);
+
+  color-scheme: light;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Dark theme — explicit override via [data-theme='dark'] ─────────────────
+   Set by ThemeContext.tsx on document.documentElement.
+   Takes priority over the media query block below.
+   -------------------------------------------------------------------------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Core --color-* tokens */
+  --color-primary: #66bb6a;
+  --color-primary-hover: #81c784;
+  --color-primary-border: rgba(47, 174, 107, 0.35);
+  --color-secondary: #81c784;
+  --color-bg: #0d0d0d;
+  --color-bg-hover: #1a211e;
+  --color-card: #1a1a19;
+  --color-text: #f1f4f2;
+  --color-text-secondary: #9ba6a1;
+  --color-text-muted: #667069;
+  --color-border: #2f3a35;
+
+  /* Semantic status — dark variants */
+  --color-success: #66bb6a;
+  --color-success-bg: rgba(47, 174, 107, 0.12);
+  --color-pending: #e0ac57;
+  --color-pending-bg: rgba(201, 146, 47, 0.15);
+  --color-warning: #e08776;
+  --color-warning-bg: rgba(201, 80, 63, 0.12);
+  --color-error: #e08776;
+  --color-error-bg: rgba(201, 80, 63, 0.12);
+  --color-info: #7bb3e0;
+  --color-info-bg: rgba(74, 144, 201, 0.12);
+  --color-proposed: #b39ddb;
+  --color-proposed-bg: rgba(109, 40, 217, 0.2);
+  --color-neutral: #9ba6a1;
+  --color-neutral-bg: #1a1a19;
+
+  /* Shadow */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  /* Analytics bare tokens — dark values */
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-raised: #222220;
+  --text: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #a3a198;
+  --grid: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --hover: rgba(255, 255, 255, 0.05);
+  --brand: #66bb6a;
+  --brand-strong: #81c784;
+  --brand-soft: #1e2e1f;
+  --on-brand: #ffffff;
+
+  /* Chart series — adjusted for dark backgrounds */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --band: rgba(57, 135, 229, 0.22);
+
+  /* Status indicators */
+  --good-text: #0ca30c;
+  --critical-text: #e66767;
+
+  /* Heatmap — inverted for dark */
+  --over-low: #184f95;
+  --over-medium: #256abf;
+  --over-high: #86b6ef;
+  --short-low: #8a2b2a;
+  --short-medium: #d03b3b;
+  --short-high: #f19b9a;
+  --neutral-cell: #383835;
+  --cell-ink-low: #ffffff;
+  --cell-ink-medium: #ffffff;
+  --cell-ink-high: #0b0b0b;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* ── Dark theme — OS preference, when user has not set a manual override ────
+   Applies when prefers-color-scheme: dark AND data-theme != 'light'.
+   The [data-theme='dark'] block above takes precedence by specificity when
+   the toggle has been used.
+   -------------------------------------------------------------------------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    /* Core --color-* tokens */
+    --color-primary: #66bb6a;
+    --color-primary-hover: #81c784;
+    --color-primary-border: rgba(47, 174, 107, 0.35);
+    --color-secondary: #81c784;
+    --color-bg: #0d0d0d;
+    --color-bg-hover: #1a211e;
+    --color-card: #1a1a19;
+    --color-text: #f1f4f2;
+    --color-text-secondary: #9ba6a1;
+    --color-text-muted: #667069;
+    --color-border: #2f3a35;
+
+    /* Semantic status */
+    --color-success: #66bb6a;
+    --color-success-bg: rgba(47, 174, 107, 0.12);
+    --color-pending: #e0ac57;
+    --color-pending-bg: rgba(201, 146, 47, 0.15);
+    --color-warning: #e08776;
+    --color-warning-bg: rgba(201, 80, 63, 0.12);
+    --color-error: #e08776;
+    --color-error-bg: rgba(201, 80, 63, 0.12);
+    --color-info: #7bb3e0;
+    --color-info-bg: rgba(74, 144, 201, 0.12);
+    --color-proposed: #b39ddb;
+    --color-proposed-bg: rgba(109, 40, 217, 0.2);
+    --color-neutral: #9ba6a1;
+    --color-neutral-bg: #1a1a19;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    /* Analytics bare tokens */
     --page: #0d0d0d;
     --surface: #1a1a19;
     --surface-raised: #222220;
@@ -122,12 +249,18 @@
     --brand: #66bb6a;
     --brand-strong: #81c784;
     --brand-soft: #1e2e1f;
-    --on-brand: #0b0b0b;
+    --on-brand: #ffffff;
+
+    /* Chart series */
     --series-1: #3987e5;
     --series-2: #d95926;
     --band: rgba(57, 135, 229, 0.22);
+
+    /* Status indicators */
     --good-text: #0ca30c;
     --critical-text: #e66767;
+
+    /* Heatmap */
     --over-low: #184f95;
     --over-medium: #256abf;
     --over-high: #86b6ef;
@@ -138,13 +271,24 @@
     --cell-ink-low: #ffffff;
     --cell-ink-medium: #ffffff;
     --cell-ink-high: #0b0b0b;
+
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+
+    color: var(--color-text);
+    background: var(--color-bg);
   }
 }
 
-/* Component A's own dark-theme design tokens and component classes (.btn, .badge,
-   .modal-*, .form-*, etc.) live in styles/marketplace.css, scoped under
-   .marketplace-scope — same reasoning as Component D's .analytics-scope above. */
+/* ── Light theme explicit override (toggle → light on dark-preference OS) ── */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+/* Component A's own component classes (.btn, .badge, .modal-*, .form-*, etc.)
+   live in styles/marketplace.css, scoped under .marketplace-scope.
+   Component D's component classes live in styles/analytics.css, scoped under
+   .analytics-scope. Both now alias their palette tokens to the --color-* tokens
+   above rather than hardcoding values. */
 
 * {
   box-sizing: border-box;
@@ -153,6 +297,9 @@
 body {
   margin: 0;
   min-height: 100svh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.45;
 }
 
 #root {
@@ -180,4 +327,21 @@ select {
 
 a {
   color: var(--color-primary);
+}
+
+::selection { background: var(--color-secondary); color: #103b18; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border: 3px solid var(--color-bg); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { padding: 11px 12px; text-align: left; color: var(--color-text-secondary); background: var(--color-bg); font-size: 11px; text-transform: uppercase; letter-spacing: .055em; }
+td { padding: 13px 12px; border-top: 1px solid var(--color-border); color: var(--color-text); vertical-align: middle; }
+tbody tr { transition: background .15s ease; }
+tbody tr:hover { background: var(--color-bg-hover); }
+
+@media (max-width: 767px) {
+  table { min-width: 620px; }
+  .table-scroll, .data-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }

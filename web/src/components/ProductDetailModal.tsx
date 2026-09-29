@@ -37,7 +37,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const isOwner = user?.id === listing.farmerId;
   const isFarmer = user?.role === 'Farmer';
   const isBuyer = user?.role === 'Buyer';
-  const isAdmin = user?.role === 'Admin';
+  const isAdmin = user?.role === 'Administrator';
+  const isOfficer = user?.role === 'Officer';
 
   const formatDate = (dateStr: string) => {
     try {
@@ -444,7 +445,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             )}
 
             {/* Admin / Officer Logic */}
-            {isAdmin && (
+          {(isAdmin || isOfficer) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   Officer Review Mode (Listing ID: {listing.id.substring(0, 8)}...)

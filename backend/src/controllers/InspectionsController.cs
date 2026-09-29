@@ -21,7 +21,7 @@ public class InspectionsController(IInspectionService inspectionService) : Contr
     /// Record an inspection outcome (confirmed grade, notes, optional photos).
     /// Automatically checks for claimed-vs-confirmed grade discrepancies (FR12, FR14).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpPost]
     public async Task<ActionResult<InspectionResponseDto>> RecordInspection([FromBody] CreateInspectionRequest request)
     {
@@ -43,7 +43,7 @@ public class InspectionsController(IInspectionService inspectionService) : Contr
     /// <summary>
     /// List/filter inspection history (FR13).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpGet]
     public async Task<ActionResult<InspectionPagedResult<InspectionResponseDto>>> GetInspections([FromQuery] InspectionFilterParams filter)
     {
@@ -54,7 +54,7 @@ public class InspectionsController(IInspectionService inspectionService) : Contr
     /// <summary>
     /// Get specific inspection details.
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<InspectionResponseDto>> GetInspectionById(Guid id)
     {
@@ -69,7 +69,7 @@ public class InspectionsController(IInspectionService inspectionService) : Contr
     /// <summary>
     /// Amend an inspection record with required reason and immutable audit trail (FR13).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<InspectionResponseDto>> AmendInspection(Guid id, [FromBody] UpdateInspectionRequest request)
     {
@@ -91,7 +91,7 @@ public class InspectionsController(IInspectionService inspectionService) : Contr
     /// <summary>
     /// List listings flagged for claimed-vs-confirmed grade mismatch (FR14).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpGet("discrepancies")]
     public async Task<ActionResult<List<GradeDiscrepancyDto>>> GetDiscrepancies([FromQuery] bool? onlyUnresolved = true)
     {
@@ -102,7 +102,7 @@ public class InspectionsController(IInspectionService inspectionService) : Contr
     /// <summary>
     /// Resolve a grade discrepancy flag with resolution notes (FR14).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpPost("discrepancies/{id:guid}/resolve")]
     public async Task<ActionResult<GradeDiscrepancyDto>> ResolveDiscrepancy(Guid id, [FromBody] ResolveDiscrepancyRequest request)
     {
@@ -120,7 +120,7 @@ public class InspectionsController(IInspectionService inspectionService) : Contr
     /// <summary>
     /// Get high-level Quality & Inspection summary dashboard statistics.
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpGet("stats")]
     public async Task<ActionResult<QualityDashboardStatsDto>> GetDashboardStats()
     {

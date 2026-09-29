@@ -21,7 +21,7 @@ public class ListingsInspectionController(IInspectionService inspectionService, 
     /// <summary>
     /// Agentic AI Quality & Compliance Evaluation Gate Check (FR5, FR14, FR19, FR20).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpPost("{id:guid}/evaluate-compliance")]
     public async Task<ActionResult<AgentQualityValidationDto>> EvaluateCompliance(Guid id)
     {
@@ -39,7 +39,7 @@ public class ListingsInspectionController(IInspectionService inspectionService, 
     /// <summary>
     /// Get the latest Agentic AI workflow record and audit details for a listing (FR20).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpGet("{id:guid}/agent-workflow")]
     public async Task<ActionResult<AgentWorkflowResponseDto>> GetListingAgentWorkflow(Guid id)
     {
@@ -54,7 +54,7 @@ public class ListingsInspectionController(IInspectionService inspectionService, 
     /// <summary>
     /// Full inspection history for a listing (FR13).
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpGet("{id:guid}/inspections")]
     public async Task<ActionResult<List<InspectionResponseDto>>> GetInspectionsForListing(Guid id)
     {
@@ -96,7 +96,7 @@ public class ListingsInspectionController(IInspectionService inspectionService, 
     /// <summary>
     /// Get listings awaiting officer quality inspection.
     /// </summary>
-    [Authorize(Roles = Roles.Officer)]
+    [Authorize(Roles = Roles.OfficerAdmin)]
     [HttpGet("pending-inspection")]
     public async Task<ActionResult<List<ListingSummaryDto>>> GetPendingListings()
     {

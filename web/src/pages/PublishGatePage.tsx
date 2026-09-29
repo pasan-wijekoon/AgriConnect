@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useDevIdentity } from '../context/DevIdentityContext'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
@@ -20,7 +19,6 @@ type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { ki
  */
 export function PublishGatePage() {
   const { listingId } = useParams<{ listingId: string }>()
-  const { identity } = useDevIdentity()
   const navigate = useNavigate()
 
   const [inspections, setInspections] = useState<InspectionResponse[]>([])
@@ -35,7 +33,7 @@ export function PublishGatePage() {
     if (!listingId) return
     setState({ kind: 'loading' })
     qualityApi
-      .getListingInspections(identity, listingId)
+      .getListingInspections(listingId)
       .then((items) => {
         setInspections(items)
         setState({ kind: 'ready' })
@@ -45,7 +43,7 @@ export function PublishGatePage() {
         setState({ kind: 'error', message })
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identity, listingId])
+  }, [listingId])
 
   if (!listingId) {
     return <ErrorState message="No listing was specified." />
@@ -57,7 +55,7 @@ export function PublishGatePage() {
     setActionError(null)
     setEvaluating(true)
     try {
-      setEvaluation(await qualityApi.evaluateListingCompliance(identity, listingId))
+      setEvaluation(await qualityApi.evaluateListingCompliance(listingId))
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Agent evaluation failed.')
     } finally {
@@ -70,7 +68,7 @@ export function PublishGatePage() {
     setPublishedMessage(null)
     setPublishing(true)
     try {
-      const result = await qualityApi.publishListing(identity, listingId)
+      const result = await qualityApi.publishListing(listingId)
       setPublishedMessage(`Listing published (status: ${result.status}).`)
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Publish failed.')

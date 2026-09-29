@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sprout, Lock, Mail } from '../components/Icons';
 
@@ -16,7 +17,8 @@ const SRI_LANKA_DISTRICTS = [
 ];
 
 export const LoginPage: React.FC = () => {
-  const { login, register } = useAuth();
+  const { login, register, user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   
   // Login form state
@@ -32,6 +34,8 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  if (!authLoading && user) return <Navigate to="/dashboard" replace />;
 
   // Phone number validation: must be 10 digits starting with 07
   const validatePhone = (value: string): string | null => {
@@ -70,6 +74,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await login(email, password);
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check credentials.');
     } finally {
@@ -108,6 +113,7 @@ export const LoginPage: React.FC = () => {
         phone: phone.replace(/[\s\-]/g, ''), // Send raw digits
         region
       });
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
     } finally {

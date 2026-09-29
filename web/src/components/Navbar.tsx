@@ -12,7 +12,8 @@ interface NavbarProps {
 const roleLabel: Record<string, { icon: React.FC<{ size?: number }>; label: string }> = {
   Farmer: { icon: Sprout, label: 'Farmer' },
   Buyer: { icon: ShoppingBag, label: 'Buyer' },
-  Admin: { icon: ShieldCheck, label: 'Officer' },
+  Officer: { icon: ShieldCheck, label: 'Officer' },
+  Administrator: { icon: ShieldCheck, label: 'Administrator' },
 };
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -89,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
           >
             <Layers size={14} />
-            <span>{user.role === 'Admin' ? 'Officer Queue' : 'Marketplace'}</span>
+            <span>{user.role === 'Officer' || user.role === 'Administrator' ? 'Officer Queue' : 'Marketplace'}</span>
           </button>
 
           <button

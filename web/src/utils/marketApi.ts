@@ -1,6 +1,11 @@
 // AgriConnect Web Dashboard - API Client (Expanded with Auth)
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export function normalizeApiBaseUrl(value?: string): string {
+  const base = (value || 'http://localhost:5000').replace(/\/+$/, '');
+  return /\/api$/i.test(base) ? base : `${base}/api`;
+}
+
+export const API_BASE = normalizeApiBaseUrl(import.meta.env?.VITE_API_BASE_URL);
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -8,7 +13,7 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
-  role: 'Farmer' | 'Buyer' | 'Admin';
+  role: 'Farmer' | 'Buyer' | 'Officer' | 'Administrator';
   phone?: string;
   region?: string;
   avatarUrl?: string;
@@ -16,8 +21,7 @@ export interface User {
 }
 
 export function resolveImageUrl(url?: string | null): string {
-  const fallback = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&auto=format&fit=crop';
-  if (!url || !url.trim()) return fallback;
+  if (!url || !url.trim()) return '';
   const trimmed = url.trim();
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
     return trimmed;
@@ -51,6 +55,17 @@ export interface Region {
   collectionCentreId?: string;
 }
 
+export function normalizeRole(role: string): User['role'] {
+  return role === 'Admin' ? 'Administrator' : role as User['role'];
+}
+
+export function normalizeUser(user: User): User {
+  return { ...user, role: normalizeRole(user.role) };
+}
+
+/** @deprecated Catalog management was retired; retained only for legacy type-checking. */
+export interface TodayPriceCatalogItem { id: string; name: string; category: string; unit: string; defaultRegion: string; imageUrl?: string; displayOrder: number; isActive: boolean }
+
 export interface Photo {
   id: string;
   url: string;
@@ -70,44 +85,6 @@ export interface PriceSuggestion {
   decidedAt?: string;
   officerNote?: string;
   createdAt: string;
-}
-
-export interface TodayPriceItem {
-  cropId: string;
-  name: string;
-  category: string;
-  unit: string;
-  region: string;
-  grade: string;
-  suggestedPriceMin: number;
-  suggestedPriceMax: number;
-  averagePrice: number;
-  confidence: number;
-  change24h: number;
-  trend: 'rising' | 'falling' | 'stable';
-  imageUrl: string;
-  reasoning: string;
-  benchmarkWholesale: number;
-}
-
-export interface TodayPriceCatalogItem {
-  id: string;
-  name: string;
-  category: string;
-  unit: string;
-  defaultRegion: string;
-  imageUrl?: string;
-  displayOrder: number;
-  isActive: boolean;
-}
-
-export interface TodayPricesResponse {
-  date: string;
-  totalCrops: number;
-  selectedGrade: string;
-  selectedRegion: string;
-  marketStatus: string;
-  items: TodayPriceItem[];
 }
 
 export interface PriceEstimateResult {
@@ -215,7 +192,7 @@ export const api = {
     request<User>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
-    }),
+    }).then(normalizeUser),
 
   register: (data: {
     fullName: string;
@@ -228,7 +205,7 @@ export const api = {
     request<User>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    }).then(normalizeUser),
 
   getMe: () => request<UserProfile>('/auth/me'),
 
@@ -360,22 +337,9 @@ export const api = {
         }
       }
     } catch (err) {
-      console.warn('Backend photo upload unavailable, falling back to local base64:', err);
+      throw new Error('Photo upload failed. Please try again.');
     }
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  },
-
-  // Today Prices Discovery (Component A Agentic AI)
-  getTodayPrices: (region?: string, grade: string = 'A'): Promise<TodayPricesResponse> => {
-    const params = new URLSearchParams();
-    if (region && region !== 'All') params.append('region', region);
-    if (grade) params.append('grade', grade);
-    return request<TodayPricesResponse>(`/prices/today?${params.toString()}`);
+    throw new Error('Photo upload failed. Please try again.');
   },
 
   // Live Quick Price Estimation (Farmer Add Modal)
@@ -397,50 +361,10 @@ export const api = {
     return request<PriceEstimateResult>(`/prices/estimate?${q.toString()}`);
   },
 
-  // Run LangGraph StateGraph Orchestration
-  runOrchestration: (data: {
-    objectiveText: string;
-    triggerType?: string;
-    triggerEntityId?: string;
-    listingContext: Record<string, unknown>;
-  }): Promise<Record<string, unknown>> =>
-    request<Record<string, unknown>>('/prices/orchestrate', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  /** @deprecated The Today's Prices catalog is no longer part of the public product scope. */
+  getTodayPriceCatalog: (): Promise<TodayPriceCatalogItem[]> => Promise.reject(new Error('Today\'s Prices catalog retired')),
+  updateTodayPriceCatalogItem: (_id: string, _data: unknown) => Promise.reject(new Error('Today\'s Prices catalog retired')),
+  createTodayPriceCatalogItem: (_data: unknown) => Promise.reject(new Error('Today\'s Prices catalog retired')),
+  deleteTodayPriceCatalogItem: (_id: string) => Promise.reject(new Error('Today\'s Prices catalog retired')),
 
-  // Admin: Today's Prices catalog management (which crops appear on the
-  // discovery page — prices themselves are always computed live)
-  getTodayPriceCatalog: () =>
-    request<TodayPriceCatalogItem[]>('/admin/today-prices-catalog'),
-
-  createTodayPriceCatalogItem: (data: {
-    name: string;
-    category: string;
-    unit?: string;
-    defaultRegion: string;
-    imageUrl?: string;
-    displayOrder?: number;
-  }) =>
-    request<TodayPriceCatalogItem>('/admin/today-prices-catalog', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  updateTodayPriceCatalogItem: (id: string, data: {
-    name?: string;
-    category?: string;
-    unit?: string;
-    defaultRegion?: string;
-    imageUrl?: string;
-    displayOrder?: number;
-    isActive?: boolean;
-  }) =>
-    request<TodayPriceCatalogItem>(`/admin/today-prices-catalog/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-
-  deleteTodayPriceCatalogItem: (id: string) =>
-    request<void>(`/admin/today-prices-catalog/${id}`, { method: 'DELETE' }),
 };
