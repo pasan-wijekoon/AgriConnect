@@ -52,6 +52,19 @@ public class CollectionCentresApiTests : IClassFixture<ApiTestFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("?lat=7.29")]
+    [InlineData("?lng=80.63")]
+    public async Task Nearest_MissingCoordinates_Returns400(string query)
+    {
+        using var client = _factory.CreateAuthedClient(Roles.Buyer, BuyerOne);
+
+        var response = await client.GetAsync("/api/collection-centres/nearest" + query);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     [Fact]
     public async Task Nearest_ValidRequest_ReturnsSortedNonDegradedResults()
     {
