@@ -1,10 +1,16 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AgriConnect.Api.Config;
+using AgriConnect.Api.Models;
 using AgriConnect.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace backend.Tests.integration;
 
@@ -85,20 +91,57 @@ public class ApiTestFactory : WebApplicationFactory<Program>
         });
     }
 
-    /// <summary>An <see cref="HttpClient"/> pre-set with dev-auth headers for the
-    /// given role/user id, or with no auth headers at all if both are omitted
-    /// (for testing 401s).</summary>
+    /// <summary>An <see cref="HttpClient"/> carrying a real signed JWT for the given
+    /// role/user id (the dev-header bypass no longer exists), or no credentials at all
+    /// if both are omitted (for testing 401s). The token's account must exist and be
+    /// active (Program.cs checks it on every request), so a missing user row is created
+    /// here; seeded fixture users are left untouched.</summary>
     public HttpClient CreateAuthedClient(string? role = null, Guid? userId = null)
     {
         var client = CreateClient();
-        if (role is not null)
+        if (role is not null && userId is not null)
         {
-            client.DefaultRequestHeaders.Add(DevAuthDefaults.RoleHeader, role);
-        }
-        if (userId is not null)
-        {
-            client.DefaultRequestHeaders.Add(DevAuthDefaults.UserIdHeader, userId.Value.ToString());
+            var token = IssueToken(role, userId.Value);
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         }
         return client;
+    }
+
+    private string IssueToken(string role, Guid userId)
+    {
+        using var scope = Services.CreateScope();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+
+        var user = db.Users.FirstOrDefault(u => u.Id == userId);
+        if (user is null)
+        {
+            user = new User
+            {
+                Id = userId,
+                FullName = $"Test {role}",
+                Email = $"test-{userId:N}@agriconnect.test",
+                PasswordHash = "not-a-real-hash",
+                Role = role,
+            };
+            db.Users.Add(user);
+            db.SaveChanges();
+        }
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+        var jwt = new JwtSecurityToken(
+            issuer: config["Jwt:Issuer"] ?? "AgriConnect",
+            audience: config["Jwt:Audience"] ?? "AgriConnect",
+            claims:
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Role, role),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            ],
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
+        return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 }
