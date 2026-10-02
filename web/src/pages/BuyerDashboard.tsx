@@ -6,9 +6,10 @@ import { ShoppingBag, Search, RefreshCw, TrendingUp } from '../components/Icons'
 
 interface BuyerDashboardProps {
   onOpenTodayPrices?: () => void;
+  onOpenOrders?: () => void;
 }
 
-export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrices }) => {
+export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrices, onOpenOrders }) => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
@@ -311,6 +312,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
         <ProductDetailModal
           listing={selectedListing}
           onClose={() => setSelectedListing(null)}
+          onViewOrders={onOpenOrders}
         />
       )}
     </div>

@@ -47,6 +47,14 @@ public class User
     [MaxLength(500)]
     public string? AvatarUrl { get; set; }
 
+    /// <summary>
+    /// Officers only: the collection centre this officer works at. When set, the
+    /// officer only sees/acts on orders for that centre (its region's listings or
+    /// schedules booked there). Null = unscoped (e.g. non-officer roles). No FK
+    /// constraint — same no-FK pattern as the other cross-component references.
+    /// </summary>
+    public Guid? CollectionCentreId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public bool IsActive { get; set; } = true;

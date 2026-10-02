@@ -87,3 +87,14 @@
     background: var(--color-bg);
   }
 }
+
+.order-table-sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.order-table-tag {
+  font-size: 11px;
+  color: var(--color-proposed);
+  font-weight: 600;
+}

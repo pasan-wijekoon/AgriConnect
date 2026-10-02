@@ -13,7 +13,21 @@ public record OrderResponse(
     DeliveryPreference DeliveryPreference,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    DateTimeOffset? ReservationExpiresAt);
+    DateTimeOffset? ReservationExpiresAt,
+    // Display fields (added so clients never have to show raw GUIDs) — all
+    // optional/nullable: absent when the referenced listing/user/centre can't
+    // be resolved.
+    string? CropName = null,
+    string? Unit = null,
+    Guid? FarmerId = null,
+    string? FarmerName = null,
+    string? BuyerName = null,
+    string? RegionName = null,
+    Guid? CollectionCentreId = null,
+    string? CollectionCentreName = null,
+    ScheduleStatus? ScheduleStatus = null,
+    DateTimeOffset? SlotStart = null,
+    DateTimeOffset? SlotEnd = null);
 
 public record OrderStatusUpdateRequest(OrderStatus Status);
 

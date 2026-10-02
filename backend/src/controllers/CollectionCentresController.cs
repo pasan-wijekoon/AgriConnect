@@ -9,7 +9,8 @@ namespace AgriConnect.Api.Controllers;
 [ApiController]
 [Route("api/collection-centres")]
 [Authorize]
-public class CollectionCentresController(CollectionCentreService centreService, SchedulingService schedulingService) : ControllerBase
+public class CollectionCentresController(
+    CollectionCentreService centreService, SchedulingService schedulingService, AgriConnect.Api.Config.AgriConnectDbContext db) : ControllerBase
 {
     [HttpGet("nearest")]
     [Authorize(Roles = Roles.BuyerFarmer)]
@@ -31,7 +32,7 @@ public class CollectionCentresController(CollectionCentreService centreService, 
     [Authorize(Roles = Roles.OfficerAdmin)]
     public async Task<IActionResult> List(CancellationToken ct)
     {
-        var result = await centreService.ListAllAsync(ct);
+        var result = await centreService.ListAllAsync(User.GetUserId(), ct);
         return Ok(result);
     }
 
@@ -42,6 +43,13 @@ public class CollectionCentresController(CollectionCentreService centreService, 
     [Authorize(Roles = Roles.OfficerAdmin)]
     public async Task<IActionResult> Schedules(Guid centreId, CancellationToken ct)
     {
+        var scope = await OfficerScope.ForAsync(db, User.GetUserId(), ct);
+        if (scope.IsScoped && scope.CentreId != centreId)
+        {
+            // Another centre's bookings - 404, same as other cross-centre access.
+            return Problem(detail: "Collection centre not found.", statusCode: StatusCodes.Status404NotFound);
+        }
+
         var result = await schedulingService.ListByCentreAsync(centreId, ct);
         return Ok(result);
     }

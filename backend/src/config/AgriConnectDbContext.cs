@@ -287,6 +287,9 @@ public class AgriConnectDbContext : DbContext
             entity.Property(e => e.Region).HasMaxLength(100);
             entity.Property(e => e.AvatarUrl).HasMaxLength(500);
 
+            entity.HasIndex(e => e.CollectionCentreId)
+                  .HasDatabaseName("IX_User_CollectionCentreId");
+
             entity.HasIndex(e => e.Email)
                   .IsUnique()
                   .HasDatabaseName("IX_User_Email");

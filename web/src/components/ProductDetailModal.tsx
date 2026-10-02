@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { type Listing, resolveImageUrl } from '../utils/marketApi';
 import { useAuth } from '../context/AuthContext';
+import { ApiError, ordersApi, type DeliveryPreference, type OrderResponse } from '../utils/ordersApi';
 import { X, MapPin, Calendar, Sparkles, CheckCircle2, AlertCircle, ShoppingBag, Edit, Trash2 } from './Icons';
 
 interface ProductDetailModalProps {
@@ -10,6 +11,8 @@ interface ProductDetailModalProps {
   onWithdraw?: (listing: Listing) => void;
   onApprove?: (listing: Listing) => void;
   onReject?: (listing: Listing) => void;
+  /** Called when a Buyer chooses "View my orders" after placing an order. */
+  onViewOrders?: () => void;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -18,13 +21,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onEdit,
   onWithdraw,
   onApprove,
-  onReject
+  onReject,
+  onViewOrders
 }) => {
   const { user } = useAuth();
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [orderQuantity, setOrderQuantity] = useState<number>(100);
-  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [orderMode, setOrderMode] = useState(false);
+  const [deliveryPreference, setDeliveryPreference] = useState<DeliveryPreference>('Pickup');
+  const [submitting, setSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<OrderResponse | null>(null);
 
   if (!listing) return null;
 
@@ -49,14 +56,35 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowOrderSuccess(true);
-    setTimeout(() => {
-      setShowOrderSuccess(false);
+    setOrderError(null);
+
+    if (!Number.isFinite(orderQuantity) || orderQuantity <= 0) {
+      setOrderError('Enter a quantity greater than 0.');
+      return;
+    }
+    if (orderQuantity > listing.quantity) {
+      setOrderError(`Only ${listing.quantity} ${listing.unit} are listed.`);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Real order: the backend reserves the stock atomically (FR9) and answers 409
+      // with the remaining quantity if someone else got there first.
+      const order = await ordersApi.create({
+        listingId: listing.id,
+        quantity: orderQuantity,
+        deliveryPreference,
+      });
+      setPlacedOrder(order);
       setOrderMode(false);
-      onClose();
-    }, 2200);
+    } catch (err) {
+      setOrderError(err instanceof ApiError ? err.message : 'We couldn’t place your order. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -329,7 +357,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Estimated Wholesale Total</label>
+                  <label className="form-label">Estimated total (at floor price)</label>
                   <div style={{
                     padding: '10px 14px',
                     background: 'rgba(0, 0, 0, 0.3)',
@@ -343,31 +371,62 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </div>
               </div>
 
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Collection</label>
+                <select
+                  className="form-input"
+                  value={deliveryPreference}
+                  onChange={(e) => setDeliveryPreference(e.target.value as DeliveryPreference)}
+                >
+                  <option value="Pickup">Pickup at the collection centre</option>
+                  <option value="Delivery">Delivery</option>
+                </select>
+              </div>
+
+              <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                Your quantity is reserved as soon as you order. An officer will review it and confirm a pickup slot.
+              </p>
+
+              {orderError && (
+                <div role="alert" style={{ color: 'var(--danger)', background: 'var(--danger-soft)', border: '1px solid var(--danger-border)', borderRadius: '10px', padding: '10px 12px', fontSize: '0.85rem' }}>
+                  {orderError}
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                  Confirm & Submit Order
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={submitting}>
+                  {submitting ? 'Placing order…' : 'Confirm & Submit Order'}
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => setOrderMode(false)}>
+                <button type="button" className="btn btn-secondary" disabled={submitting} onClick={() => { setOrderMode(false); setOrderError(null); }}>
                   Cancel
                 </button>
               </div>
             </form>
           )}
 
-          {showOrderSuccess && (
-            <div style={{
+          {placedOrder && (
+            <div role="status" style={{
               background: 'var(--accent-soft)',
               border: '1px solid var(--accent)',
               color: 'var(--accent-text)',
               padding: '14px',
               borderRadius: '12px',
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
+              justifyContent: 'space-between',
               gap: '10px',
               fontWeight: 600
             }}>
-              <CheckCircle2 size={20} />
-              <span>Wholesale purchase order successfully dispatched to farmer & regional collection centre!</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <CheckCircle2 size={20} />
+                Order placed — {placedOrder.quantity} {listing.unit} reserved. An officer will review it shortly.
+              </span>
+              {onViewOrders && (
+                <button type="button" className="btn btn-primary" onClick={() => { onClose(); onViewOrders(); }}>
+                  View my orders
+                </button>
+              )}
             </div>
           )}
 
@@ -432,7 +491,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             )}
 
             {/* Buyer Logic */}
-            {isBuyer && !orderMode && (
+            {isBuyer && !orderMode && !placedOrder && listing.status === 'Published' && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', gap: '10px' }}>
                 <button
                   className="btn btn-primary"
@@ -445,7 +504,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             )}
 
             {/* Admin / Officer Logic */}
-          {(isAdmin || isOfficer) && (
+            {(isAdmin || isOfficer) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   Officer Review Mode (Listing ID: {listing.id.substring(0, 8)}...)

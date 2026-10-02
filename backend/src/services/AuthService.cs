@@ -43,6 +43,7 @@ public class AuthService
             Phone = user.Phone,
             Region = user.Region,
             AvatarUrl = user.AvatarUrl,
+            CollectionCentreId = user.CollectionCentreId,
             Token = GenerateToken(user)
         };
     }
@@ -106,6 +107,11 @@ public class AuthService
             Phone = user.Phone,
             Region = user.Region,
             AvatarUrl = user.AvatarUrl,
+            CollectionCentreId = user.CollectionCentreId,
+            CollectionCentreName = user.CollectionCentreId == null
+                ? null
+                : await _db.CollectionCentres.Where(c => c.Id == user.CollectionCentreId)
+                    .Select(c => c.Name).FirstOrDefaultAsync(),
             CreatedAt = user.CreatedAt
         };
     }

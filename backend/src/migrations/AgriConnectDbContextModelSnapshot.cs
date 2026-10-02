@@ -1354,6 +1354,9 @@ namespace backend.src.migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("CollectionCentreId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1389,6 +1392,9 @@ namespace backend.src.migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CollectionCentreId")
+                        .HasDatabaseName("IX_User_CollectionCentreId");
 
                     b.HasIndex("Email")
                         .IsUnique()

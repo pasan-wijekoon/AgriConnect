@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './context/AuthContext'
 import { LoginPage } from './pages/LoginPage'
@@ -13,6 +13,7 @@ import { PublishGatePage } from './pages/PublishGatePage'
 import { OrderQueuePage } from './pages/orders/OrderQueuePage'
 import { OrderDetailPage } from './pages/orders/OrderDetailPage'
 import { ScheduleCalendarPage } from './pages/orders/ScheduleCalendarPage'
+import { MyOrdersPage } from './pages/MyOrdersPage'
 import { PriceTrendsPage } from './pages/PriceTrendsPage'
 import { ShortagesPage } from './pages/ShortagesPage'
 import { AnomalyQueuePage } from './pages/AnomalyQueuePage'
@@ -25,8 +26,9 @@ function RoleRoute({ roles, children }: { roles: string[]; children: React.React
 }
 function Home() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   if (user?.role === 'Farmer') return <FarmerDashboard />
-  if (user?.role === 'Buyer') return <BuyerDashboard />
+  if (user?.role === 'Buyer') return <BuyerDashboard onOpenOrders={() => navigate('/my-orders')} />
   if (user?.role === 'Administrator') return <AdminDashboard />
   return <PriceTrendsPage />
 }
@@ -40,6 +42,7 @@ export default function App() {
       <Route path="/quality/discrepancies" element={<RoleRoute roles={['Officer','Administrator']}><DiscrepancyQueuePage /></RoleRoute>} />
       <Route path="/quality/history" element={<RoleRoute roles={['Officer','Administrator']}><InspectionHistoryPage /></RoleRoute>} />
       <Route path="/quality/publish/:listingId" element={<RoleRoute roles={['Officer','Administrator']}><PublishGatePage /></RoleRoute>} />
+      <Route path="/my-orders" element={<RoleRoute roles={['Buyer','Farmer']}><MyOrdersPage /></RoleRoute>} />
       <Route path="/orders" element={<RoleRoute roles={['Buyer','Officer','Administrator']}><OrderQueuePage /></RoleRoute>} />
       <Route path="/orders/:orderId" element={<RoleRoute roles={['Buyer','Officer','Administrator']}><OrderDetailPage /></RoleRoute>} />
       <Route path="/orders/schedule" element={<RoleRoute roles={['Officer','Administrator']}><ScheduleCalendarPage /></RoleRoute>} />

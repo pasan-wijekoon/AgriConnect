@@ -3,7 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/collection_centre.dart';
-import '../../providers/dev_identity_provider.dart';
+import '../../providers/session_provider.dart';
 import '../../services/order_service.dart';
 import '../../theme/app_colors.dart';
 
@@ -22,8 +22,6 @@ class NearestCentreScreen extends StatefulWidget {
 enum _LoadState { idle, locating, loading, loaded, error }
 
 class _NearestCentreScreenState extends State<NearestCentreScreen> {
-  final _service = OrderService();
-
   _LoadState _state = _LoadState.idle;
   String? _error;
   List<NearestCentre> _centres = [];
@@ -58,10 +56,8 @@ class _NearestCentreScreenState extends State<NearestCentreScreen> {
       if (!mounted) return;
       setState(() => _state = _LoadState.loading);
 
-      final identity = context.read<DevIdentityProvider>();
-      final centres = await _service.nearestCentres(
-        devRoleToHeader(identity.role),
-        identity.userId,
+      final service = OrderService(context.read<SessionProvider>().client);
+      final centres = await service.nearestCentres(
         lat: position.latitude,
         lng: position.longitude,
       );
@@ -189,7 +185,7 @@ class _NearestCentreScreenState extends State<NearestCentreScreen> {
                       ],
                     ),
                   ),
-                  Text('Cap. ${centre.capacity}',
+                  Text(centre == _centres.first ? 'Nearest' : 'Cap. ${centre.capacity}',
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),

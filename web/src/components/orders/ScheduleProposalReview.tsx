@@ -8,6 +8,8 @@ interface ScheduleProposalReviewProps {
   schedule: ScheduleResponse
   onApprove: () => Promise<void>
   onReject: () => Promise<void>
+  /** Opens the revision dialog (FR19 "Request Revision"). */
+  onRequestRevision?: () => void
   busy: boolean
 }
 
@@ -27,7 +29,13 @@ function formatWindow(startIso: string, endIso: string): string {
  * the backend's scheduling flow yet (see PROGRESS.md) — so this shows what
  * the API actually returns rather than fabricating a confidence number.
  */
-export function ScheduleProposalReview({ schedule, onApprove, onReject, busy }: ScheduleProposalReviewProps) {
+export function ScheduleProposalReview({
+  schedule,
+  onApprove,
+  onReject,
+  onRequestRevision,
+  busy,
+}: ScheduleProposalReviewProps) {
   const [action, setAction] = useState<'approve' | 'reject' | null>(null)
 
   const isDecidable = schedule.status === 'Proposed'
@@ -51,7 +59,7 @@ export function ScheduleProposalReview({ schedule, onApprove, onReject, busy }: 
 
       {isDecidable && (
         <p className="schedule-review-ai-note">
-          This is an AI-generated proposal. It only takes effect once you approve it.
+          This slot was proposed automatically. It only takes effect once you approve it — or you can reject it, or send it back for a different window.
         </p>
       )}
 
@@ -68,6 +76,11 @@ export function ScheduleProposalReview({ schedule, onApprove, onReject, busy }: 
 
       {isDecidable && (
         <div className="schedule-review-actions">
+          {onRequestRevision && (
+            <Button variant="secondary" onClick={onRequestRevision} disabled={busy}>
+              Request revision
+            </Button>
+          )}
           <Button variant="destructive" onClick={handleReject} loading={busy && action === 'reject'}>
             Reject
           </Button>

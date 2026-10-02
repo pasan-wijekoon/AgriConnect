@@ -1,4 +1,4 @@
-import { authHeaders } from '../context/session'
+import { getAuthToken, handleUnauthorized } from './authToken'
 
 /**
  * Typed client for Component B's Order/Scheduling/CollectionCentre endpoints
@@ -11,7 +11,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localho
 export type OrderStatus = 'Pending' | 'Approved' | 'Scheduled' | 'Completed' | 'Cancelled'
 export type DeliveryPreference = 'Pickup' | 'Delivery'
 export type ScheduleStatus = 'Proposed' | 'Confirmed' | 'Cancelled'
-export type ScheduleDecision = 'Approve' | 'Reject'
+export type ScheduleDecision = 'Approve' | 'Reject' | 'RequestRevision'
 
 export interface OrderResponse {
   id: string
@@ -23,6 +23,27 @@ export interface OrderResponse {
   createdAt: string
   updatedAt: string
   reservationExpiresAt: string | null
+  // Display fields resolved by the backend (null when it can't resolve them).
+  cropName?: string | null
+  unit?: string | null
+  farmerId?: string | null
+  farmerName?: string | null
+  buyerName?: string | null
+  regionName?: string | null
+  collectionCentreId?: string | null
+  collectionCentreName?: string | null
+  scheduleStatus?: ScheduleStatus | null
+  slotStart?: string | null
+  slotEnd?: string | null
+}
+
+export interface NotificationResponse {
+  id: string
+  type: string
+  title: string | null
+  message: string
+  readAt: string | null
+  createdAt: string
 }
 
 export interface PagedResult<T> {
@@ -84,16 +105,23 @@ export class ApiError extends Error {
   }
 }
 
-/** Exported so other dev-identity-authenticated API clients (e.g. qualityApi.ts) don't duplicate this. */
+/** Exported so other authenticated API clients (e.g. qualityApi.ts) don't duplicate this. Identity comes from the bearer token. */
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getAuthToken()
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...authHeaders(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
+  }).catch(() => {
+    throw new ApiError(0, 'Cannot reach the server. Check your connection and try again.')
   })
+
+  if (response.status === 401 && token) {
+    handleUnauthorized()
+  }
 
   if (!response.ok) {
     let detail: string | undefined
@@ -114,7 +142,8 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const ordersApi = {
-  create: (body: CreateOrderRequest) => request<OrderResponse>('/api/orders', { method: 'POST', body: JSON.stringify(body) }),
+  create: (body: CreateOrderRequest) =>
+    request<OrderResponse>('/api/orders', { method: 'POST', body: JSON.stringify(body) }),
 
   list: (params: { status?: OrderStatus; page?: number; size?: number } = {}) => {
     const query = new URLSearchParams()
@@ -126,26 +155,35 @@ export const ordersApi = {
 
   getById: (id: string) => request<OrderResponse>(`/api/orders/${id}`),
 
-  updateStatus: (id: string, status: OrderStatus) => request<OrderResponse>(`/api/orders/${id}/status`, {
+  updateStatus: (id: string, status: OrderStatus) =>
+    request<OrderResponse>(`/api/orders/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
     }),
 
-  cancel: (id: string, reason?: string) => request<OrderResponse>(`/api/orders/${id}/cancel`, {
+  cancel: (id: string, reason?: string) =>
+    request<OrderResponse>(`/api/orders/${id}/cancel`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }),
 
-  getSchedule: (orderId: string) => request<ScheduleResponse>(`/api/orders/${orderId}/schedule`),
+  getSchedule: (orderId: string) =>
+    request<ScheduleResponse>(`/api/orders/${orderId}/schedule`),
 
-  proposeSchedule: (orderId: string, body: CreateScheduleRequest) => request<ScheduleResponse>(`/api/orders/${orderId}/schedule`, {
+  proposeSchedule: (orderId: string, body: CreateScheduleRequest) =>
+    request<ScheduleResponse>(`/api/orders/${orderId}/schedule`, {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
-  decideSchedule: (orderId: string, decision: ScheduleDecision) => request<ScheduleResponse>(`/api/orders/${orderId}/schedule/decision`, {
+  decideSchedule: (
+    orderId: string,
+    decision: ScheduleDecision,
+    extra: { reason?: string; preferredWindow?: { start: string; end: string } } = {},
+  ) =>
+    request<ScheduleResponse>(`/api/orders/${orderId}/schedule/decision`, {
       method: 'PUT',
-      body: JSON.stringify({ decision }),
+      body: JSON.stringify({ decision, ...extra }),
     }),
 
   nearestCentres: (lat: number, lng: number, regionId?: string) => {
@@ -154,7 +192,18 @@ export const ordersApi = {
     return request<NearestCentreResponse[]>(`/api/collection-centres/nearest?${query.toString()}`)
   },
 
-  listCentres: () => request<CollectionCentreResponse[]>('/api/collection-centres'),
+  listCentres: () =>
+    request<CollectionCentreResponse[]>('/api/collection-centres'),
 
-  listCentreSchedules: (centreId: string) => request<ScheduleResponse[]>(`/api/collection-centres/${centreId}/schedules`),
+  listCentreSchedules: (centreId: string) =>
+    request<ScheduleResponse[]>(`/api/collection-centres/${centreId}/schedules`),
+
+  // ---- Notifications (FR22) ----
+  listNotifications: () => request<NotificationResponse[]>('/api/notifications'),
+
+  unreadNotificationCount: () => request<{ count: number }>('/api/notifications/unread-count'),
+
+  markNotificationRead: (id: string) => request<void>(`/api/notifications/${id}/read`, { method: 'PUT' }),
+
+  markAllNotificationsRead: () => request<void>('/api/notifications/read-all', { method: 'PUT' }),
 }

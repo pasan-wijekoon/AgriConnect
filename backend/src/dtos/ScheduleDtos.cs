@@ -28,7 +28,10 @@ public record ScheduleResponse(
 public enum ScheduleDecision
 {
     Approve,
-    Reject
+    Reject,
+    /// <summary>Sends the proposal back for a new window at the same centre.</summary>
+    RequestRevision
 }
 
-public record ScheduleDecisionRequest(ScheduleDecision Decision);
+public record ScheduleDecisionRequest(
+    ScheduleDecision Decision, string? Reason = null, ScheduleWindowDto? PreferredWindow = null);

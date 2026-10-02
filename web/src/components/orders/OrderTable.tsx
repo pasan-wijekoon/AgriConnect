@@ -14,8 +14,9 @@ export function OrderTable({ orders }: { orders: OrderResponse[] }) {
       <thead>
         <tr>
           <th>Order</th>
-          <th>Quantity</th>
-          <th>Delivery</th>
+          <th>Produce</th>
+          <th>Buyer</th>
+          <th>Pickup</th>
           <th>Status</th>
           <th>Placed</th>
           <th aria-label="Actions" />
@@ -25,14 +26,30 @@ export function OrderTable({ orders }: { orders: OrderResponse[] }) {
         {orders.map((order) => (
           <tr key={order.id}>
             <td data-label="Order">#{order.id.slice(0, 8)}</td>
-            <td data-label="Quantity">{order.quantity} kg</td>
-            <td data-label="Delivery">{order.deliveryPreference}</td>
+            <td data-label="Produce">
+              <strong>{order.cropName ?? '—'}</strong>
+              <div className="order-table-sub">
+                {Number(order.quantity.toFixed(2))} {order.unit ?? 'kg'} · {order.deliveryPreference}
+              </div>
+            </td>
+            <td data-label="Buyer">{order.buyerName ?? '—'}</td>
+            <td data-label="Pickup">
+              {order.slotStart ? (
+                <>
+                  {new Date(order.slotStart).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
+                  {order.scheduleStatus === 'Proposed' && <span className="order-table-tag"> proposed</span>}
+                  {order.collectionCentreName && <div className="order-table-sub">{order.collectionCentreName}</div>}
+                </>
+              ) : (
+                <span className="order-table-sub">{order.status === 'Approved' ? 'Needs a slot' : '—'}</span>
+              )}
+            </td>
             <td data-label="Status">
               <OrderStatusBadge status={order.status} />
             </td>
             <td data-label="Placed">{new Date(order.createdAt).toLocaleDateString()}</td>
             <td data-label="" className="order-table-actions">
-              <Link to={`/orders/${order.id}`}>View Details</Link>
+              <Link to={`/orders/${order.id}`}>Review</Link>
             </td>
           </tr>
         ))}

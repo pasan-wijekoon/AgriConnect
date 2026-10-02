@@ -14,6 +14,7 @@ export interface User {
   fullName: string;
   email: string;
   role: 'Farmer' | 'Buyer' | 'Officer' | 'Administrator';
+  collectionCentreId?: string | null;
   phone?: string;
   region?: string;
   avatarUrl?: string;

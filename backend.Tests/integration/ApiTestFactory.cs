@@ -67,6 +67,11 @@ public class ApiTestFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Development");
 
+        // Production default is a 48h hold; tests run against a long-lived shared dev
+        // database, so keep their Pending reservations short-lived (the expiry sweep
+        // then clears them) instead of accumulating hold on the shared demo listings.
+        builder.UseSetting("Orders:ReservationTtlMinutes", "30");
+
         builder.ConfigureServices(services =>
         {
             var distanceServiceDescriptor = services.SingleOrDefault(

@@ -2,6 +2,7 @@ using AgriConnect.Api.Config;
 using AgriConnect.Api.Dtos;
 using AgriConnect.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AgriConnect.Api.Services;
 
@@ -39,7 +40,9 @@ public class OrderService(
     IListingAvailabilityPort listingPort,
     IStockReservationService reservationService,
     AuditLogService auditLog,
-    NotificationService notifications)
+    NotificationService notifications,
+    SchedulingService? schedulingService = null,
+    ILogger<OrderService>? logger = null)
 {
     // Explicit allow-list (plan §5.3/CLAUDE.md §16) — anything not listed here is
     // rejected with 400, never silently accepted.
@@ -107,10 +110,10 @@ public class OrderService(
         auditLog.Log(buyerId, "OrderCreated", "Order", order.Id,
             new { order.ListingId, order.Quantity, order.DeliveryPreference });
         notifications.Notify(buyerId, "OrderPlaced",
-            $"Your order for {order.Quantity} has been placed and is awaiting approval.");
+            $"Your order for {await DescribeAsync(order, ct)} has been placed and is awaiting approval.");
         await db.SaveChangesAsync(ct);
 
-        return OrderOperationResult<OrderResponse>.Ok(ToResponse(order, reservation.Reservation));
+        return OrderOperationResult<OrderResponse>.Ok(await ToResponseAsync(order, reservation.Reservation, ct));
     }
 
     public async Task<OrderOperationResult<OrderResponse>> GetByIdAsync(
@@ -128,7 +131,7 @@ public class OrderService(
             return OrderOperationResult<OrderResponse>.Fail(OrderOperationError.NotFound, "Order not found.");
         }
 
-        return OrderOperationResult<OrderResponse>.Ok(ToResponse(order, order.StockReservation));
+        return OrderOperationResult<OrderResponse>.Ok(await ToResponseAsync(order, order.StockReservation, ct));
     }
 
     public async Task<PagedResult<OrderResponse>> ListAsync(
@@ -149,26 +152,15 @@ public class OrderService(
         }
         else if (role == Roles.Farmer)
         {
-            // Fixture-scale filter: resolves ownership per order via the availability
-            // port since it doesn't yet support "listings by farmer" as a query.
-            // Component A's real Listing table will support a direct SQL join —
-            // replace this in-memory filter once that lands (plan §3).
-            var candidates = await query.OrderByDescending(o => o.CreatedAt).ToListAsync(ct);
-            var owned = new List<Order>();
-            foreach (var order in candidates)
-            {
-                var availability = await listingPort.GetAvailabilityAsync(order.ListingId, ct);
-                if (availability is not null && availability.FarmerId == currentUserId)
-                {
-                    owned.Add(order);
-                }
-            }
-
-            var pageItems = owned.Skip((page - 1) * size).Take(size).Select(o => ToResponse(o, o.StockReservation)).ToList();
-            return new PagedResult<OrderResponse>(pageItems, page, size, owned.Count);
+            // Orders against listings this farmer owns — a single SQL join now that
+            // Component A's real Listing table exists (was a per-order port lookup).
+            query = query.Where(o => db.Listings.Any(l => l.Id == o.ListingId && l.FarmerId == currentUserId));
         }
-        // Officer: no additional filter — centre-scoping is a documented open
-        // question (no Officer<->CollectionCentre column exists yet; plan §16 #3).
+        else if (role == Roles.Officer)
+        {
+            var scope = await OfficerScope.ForAsync(db, currentUserId, ct);
+            query = scope.Apply(db, query);
+        }
 
         var total = await query.CountAsync(ct);
         var items = await query
@@ -177,8 +169,7 @@ public class OrderService(
             .Take(size)
             .ToListAsync(ct);
 
-        return new PagedResult<OrderResponse>(
-            items.Select(o => ToResponse(o, o.StockReservation)).ToList(), page, size, total);
+        return new PagedResult<OrderResponse>(await ToResponsesAsync(items, ct), page, size, total);
     }
 
     public async Task<OrderOperationResult<OrderResponse>> UpdateStatusAsync(
@@ -187,6 +178,12 @@ public class OrderService(
         var order = await db.Orders.Include(o => o.StockReservation).FirstOrDefaultAsync(o => o.Id == orderId, ct);
         if (order is null)
         {
+            return OrderOperationResult<OrderResponse>.Fail(OrderOperationError.NotFound, "Order not found.");
+        }
+
+        if (!await (await OfficerScope.ForAsync(db, actorId, ct)).CanAccessAsync(db, orderId, ct))
+        {
+            // 404, not 403 - another centre's order must not be discoverable.
             return OrderOperationResult<OrderResponse>.Fail(OrderOperationError.NotFound, "Order not found.");
         }
 
@@ -203,11 +200,47 @@ public class OrderService(
 
         auditLog.Log(actorId, "OrderStatusChanged", "Order", order.Id,
             new { From = previousStatus, To = newStatus });
-        await NotifyOrderStakeholdersAsync(order, $"Your order status changed to {newStatus}.", ct);
+        await NotifyOrderStakeholdersAsync(
+            order, $"Your order for {await DescribeAsync(order, ct)} is now {newStatus}.", ct);
 
         await db.SaveChangesAsync(ct);
 
-        return OrderOperationResult<OrderResponse>.Ok(ToResponse(order, order.StockReservation));
+        if (newStatus == OrderStatus.Approved)
+        {
+            await TryAutoProposeScheduleAsync(order.Id, actorId, ct);
+        }
+
+        return OrderOperationResult<OrderResponse>.Ok(await ToResponseAsync(order, order.StockReservation, ct));
+    }
+
+    /// <summary>
+    /// Approval kicks off a schedule *proposal* (never a confirmation - FR19/CLAUDE.md
+    /// 17/18: the Officer still has to Approve/Reject/Request Revision it). A failed
+    /// proposal (no capacity, agent down, ...) must not undo the approval itself, so
+    /// it's logged and the Officer can retry from the order page.
+    /// </summary>
+    private async Task TryAutoProposeScheduleAsync(Guid orderId, Guid actorId, CancellationToken ct)
+    {
+        if (schedulingService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var proposal = await schedulingService.ProposeAsync(
+                orderId, new CreateScheduleRequest(null, null), actorId, ct);
+            if (!proposal.Success)
+            {
+                logger?.LogWarning(
+                    "Auto-proposal for order {OrderId} did not produce a schedule: {Reason}",
+                    orderId, proposal.ErrorMessage);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger?.LogError(ex, "Auto-proposal for order {OrderId} failed.", orderId);
+        }
     }
 
     public async Task<OrderOperationResult<OrderResponse>> CancelAsync(
@@ -238,6 +271,11 @@ public class OrderService(
         }
         else if (role == Roles.Officer)
         {
+            if (!await (await OfficerScope.ForAsync(db, currentUserId, ct)).CanAccessAsync(db, orderId, ct))
+            {
+                return OrderOperationResult<OrderResponse>.Fail(OrderOperationError.NotFound, "Order not found.");
+            }
+
             if (order.Status is OrderStatus.Completed or OrderStatus.Cancelled)
             {
                 return OrderOperationResult<OrderResponse>.Fail(
@@ -256,14 +294,15 @@ public class OrderService(
         // Reason is now actually persisted (was accepted-but-dropped before audit
         // logging existed — see PROGRESS.md Known Issues/Decisions).
         auditLog.Log(currentUserId, "OrderCancelled", "Order", order.Id, new { Role = role, Reason = reason });
-        await NotifyOrderStakeholdersAsync(order, "Your order was cancelled.", ct);
+        await NotifyOrderStakeholdersAsync(
+            order, $"Your order for {await DescribeAsync(order, ct)} was cancelled.", ct);
 
         await db.SaveChangesAsync(ct);
 
         // No separate reservation-release write is needed: the active-reservation
         // sum in StockReservationService already filters out Cancelled orders, so
         // the reservation stops counting the instant this commits (plan §7.2).
-        return OrderOperationResult<OrderResponse>.Ok(ToResponse(order, order.StockReservation));
+        return OrderOperationResult<OrderResponse>.Ok(await ToResponseAsync(order, order.StockReservation, ct));
     }
 
     /// <summary>
@@ -287,9 +326,7 @@ public class OrderService(
     {
         if (role == Roles.Officer)
         {
-            // No Officer<->CollectionCentre binding exists yet — open question,
-            // plan §16 #3. Until it lands, any Officer may view any order.
-            return true;
+            return await (await OfficerScope.ForAsync(db, currentUserId, ct)).CanAccessAsync(db, order.Id, ct);
         }
 
         if (role == Roles.Buyer)
@@ -306,14 +343,105 @@ public class OrderService(
         return false;
     }
 
-    private static OrderResponse ToResponse(Order order, StockReservation? reservation) => new(
-        order.Id,
-        order.ListingId,
-        order.BuyerId,
-        order.Quantity,
-        order.Status,
-        order.DeliveryPreference,
-        order.CreatedAt,
-        order.UpdatedAt,
-        reservation?.ExpiresAt);
+    /// <summary>"18.75 kg of Carrots" - the human-readable subject of an order for
+    /// notification text (falls back to just the quantity if the listing is gone).</summary>
+    private async Task<string> DescribeAsync(Order order, CancellationToken ct)
+    {
+        var listing = await db.Listings.AsNoTracking()
+            .Where(l => l.Id == order.ListingId)
+            .Select(l => new { l.Unit, CropName = l.Crop.Name })
+            .FirstOrDefaultAsync(ct);
+
+        var quantity = order.Quantity.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        return listing is null ? quantity : $"{quantity} {listing.Unit} of {listing.CropName}";
+    }
+
+    private async Task<OrderResponse> ToResponseAsync(Order order, StockReservation? reservation, CancellationToken ct)
+    {
+        order.StockReservation ??= reservation;
+        return (await ToResponsesAsync([order], ct))[0];
+    }
+
+    /// <summary>Builds responses for a page of orders with a fixed number of batched
+    /// lookups (listings, users, schedules, centres) rather than one per order.</summary>
+    private async Task<List<OrderResponse>> ToResponsesAsync(IReadOnlyList<Order> orders, CancellationToken ct)
+    {
+        if (orders.Count == 0)
+        {
+            return [];
+        }
+
+        var listingIds = orders.Select(o => o.ListingId).Distinct().ToList();
+        var orderIds = orders.Select(o => o.Id).ToList();
+
+        var listings = await db.Listings.AsNoTracking()
+            .Where(l => listingIds.Contains(l.Id))
+            .Select(l => new ListingInfo(l.Id, l.FarmerId, l.Unit, l.RegionId, l.Crop.Name, l.Region.Name))
+            .ToDictionaryAsync(l => l.Id, ct);
+
+        var userIds = orders.Select(o => o.BuyerId).Concat(listings.Values.Select(l => l.FarmerId)).Distinct().ToList();
+        var userNames = await db.Users.AsNoTracking()
+            .Where(u => userIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.FullName })
+            .ToDictionaryAsync(u => u.Id, u => u.FullName, ct);
+
+        var schedules = await db.PickupSchedules.AsNoTracking()
+            .Where(p => orderIds.Contains(p.OrderId))
+            .ToDictionaryAsync(p => p.OrderId, ct);
+
+        var regionIds = listings.Values.Select(l => l.RegionId).Distinct().ToList();
+        var scheduleCentreIds = schedules.Values.Select(sc => sc.CollectionCentreId).Distinct().ToList();
+        var centres = await db.CollectionCentres.AsNoTracking()
+            .Where(c => regionIds.Contains(c.RegionId) || scheduleCentreIds.Contains(c.Id))
+            .Select(c => new CentreInfo(c.Id, c.Name, c.RegionId))
+            .ToListAsync(ct);
+
+        string? NameOf(Guid id) =>
+            userNames.TryGetValue(id, out var n) && !string.IsNullOrWhiteSpace(n) ? n : null;
+
+        return orders.Select(order =>
+        {
+            listings.TryGetValue(order.ListingId, out var listing);
+            schedules.TryGetValue(order.Id, out var schedule);
+
+            // The order's centre: wherever its schedule is booked, else the default
+            // centre serving the listing's region (what auto-proposal will pick).
+            CentreInfo? centre = null;
+            if (schedule is not null)
+            {
+                centre = centres.FirstOrDefault(c => c.Id == schedule.CollectionCentreId);
+            }
+            else if (listing is not null)
+            {
+                centre = centres.Where(c => c.RegionId == listing.RegionId).OrderBy(c => c.Name).FirstOrDefault();
+            }
+
+            return new OrderResponse(
+                order.Id,
+                order.ListingId,
+                order.BuyerId,
+                order.Quantity,
+                order.Status,
+                order.DeliveryPreference,
+                order.CreatedAt,
+                order.UpdatedAt,
+                // The hold only matters (and only expires) while Pending.
+                order.Status == OrderStatus.Pending ? order.StockReservation?.ExpiresAt : null,
+                listing?.CropName,
+                listing?.Unit,
+                listing?.FarmerId,
+                listing is null ? null : NameOf(listing.FarmerId),
+                NameOf(order.BuyerId),
+                listing?.RegionName,
+                centre?.Id,
+                centre?.Name,
+                schedule?.Status,
+                schedule?.SlotStart,
+                schedule?.SlotEnd);
+        }).ToList();
+    }
+
+    private sealed record ListingInfo(Guid Id, Guid FarmerId, string Unit, Guid RegionId, string CropName, string RegionName);
+
+    private sealed record CentreInfo(Guid Id, string Name, Guid RegionId);
 }

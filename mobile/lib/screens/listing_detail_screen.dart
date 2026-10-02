@@ -3,15 +3,20 @@ import 'package:intl/intl.dart';
 import '../models/listing.dart';
 import '../models/listing_inspection_status.dart';
 import '../services/api_service.dart';
+import 'orders/place_order_screen.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final String listingId;
   final ApiService apiService;
 
+  /// Buyers get an "Order now" action on published listings (FR8).
+  final bool canOrder;
+
   const ListingDetailScreen({
     super.key,
     required this.listingId,
     required this.apiService,
+    this.canOrder = false,
   });
 
   @override
@@ -283,6 +288,24 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           ],
         ],
       ),
+      bottomNavigationBar: widget.canOrder && listing.status == 'Published'
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.shopping_basket_outlined),
+                  label: Text('Order ${listing.cropName}'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E7D32),
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => PlaceOrderScreen(listing: listing)),
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

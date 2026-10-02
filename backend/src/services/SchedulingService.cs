@@ -56,6 +56,12 @@ public class SchedulingService(
                 SchedulingOperationError.NotFound, "Order not found.");
         }
 
+        if (!await (await OfficerScope.ForAsync(db, actorId, ct)).CanAccessAsync(db, orderId, ct))
+        {
+            return SchedulingOperationResult<ScheduleResponse>.Fail(
+                SchedulingOperationError.NotFound, "Order not found.");
+        }
+
         // API table (plan §5.2): "order must be Approved". Also covers the §8.3
         // rule "Order is not already Cancelled/Completed" — Approved is the only
         // legal state to schedule from.
@@ -88,9 +94,16 @@ public class SchedulingService(
 
             if (regionCentres.Count == 0)
             {
-                return SchedulingOperationResult<ScheduleResponse>.Fail(
-                    SchedulingOperationError.InvalidRequest,
-                    "No collection centre available in the listing's region; specify collectionCentreId explicitly.");
+                // No centre serves the listing's region: fall back to every centre so
+                // the matching agent can pick the nearest one (FR21). Without buyer
+                // coordinates there is nothing to rank by, so an explicit centre is needed.
+                regionCentres = await db.CollectionCentres.ToListAsync(ct);
+                if (regionCentres.Count == 0 || request.BuyerLocation is null)
+                {
+                    return SchedulingOperationResult<ScheduleResponse>.Fail(
+                        SchedulingOperationError.InvalidRequest,
+                        "No collection centre available in the listing's region; specify collectionCentreId explicitly.");
+                }
             }
 
             Guid? matchedCentreId = null;
@@ -136,7 +149,7 @@ public class SchedulingService(
                 // buyer location had been supplied at all.
             }
 
-            centreId = matchedCentreId ?? regionCentres.OrderBy(c => c.Id).First().Id;
+            centreId = matchedCentreId ?? regionCentres.OrderBy(c => c.Name).First().Id;
         }
 
         var centre = await db.CollectionCentres.FirstOrDefaultAsync(c => c.Id == centreId, ct);
@@ -216,7 +229,10 @@ public class SchedulingService(
 
         auditLog.Log(actorId, "SchedulePropose", "PickupSchedule", schedule.Id,
             new { schedule.CollectionCentreId, schedule.SlotStart, schedule.SlotEnd });
-        await NotifyOrderStakeholdersAsync(order, "A pickup/delivery schedule has been proposed for your order.", ct);
+        await NotifyOrderStakeholdersAsync(
+            order,
+            $"A pickup slot ({schedule.SlotStart:d MMM, HH:mm} UTC) has been proposed for your order at {centre.Name}. It is final once an officer confirms it.",
+            ct);
 
         await db.SaveChangesAsync(ct);
 
@@ -289,7 +305,8 @@ public class SchedulingService(
     }
 
     public async Task<SchedulingOperationResult<ScheduleResponse>> DecideAsync(
-        Guid orderId, ScheduleDecision decision, Guid actorId, CancellationToken ct = default)
+        Guid orderId, ScheduleDecision decision, Guid actorId, CancellationToken ct = default,
+        string? revisionReason = null, ScheduleWindowDto? revisionWindow = null)
     {
         var order = await db.Orders
             .Include(o => o.PickupSchedule)
@@ -301,10 +318,32 @@ public class SchedulingService(
                 SchedulingOperationError.NotFound, "Order not found.");
         }
 
+        if (!await (await OfficerScope.ForAsync(db, actorId, ct)).CanAccessAsync(db, orderId, ct))
+        {
+            return SchedulingOperationResult<ScheduleResponse>.Fail(
+                SchedulingOperationError.NotFound, "Order not found.");
+        }
+
         if (order.PickupSchedule is not { Status: ScheduleStatus.Proposed } schedule)
         {
             return SchedulingOperationResult<ScheduleResponse>.Fail(
                 SchedulingOperationError.InvalidRequest, "Order has no schedule proposal awaiting a decision.");
+        }
+
+        if (decision == ScheduleDecision.RequestRevision)
+        {
+            // FR19 "Request Revision": the Officer sends the proposal back for a new
+            // window (their own, or the next day at the same time) at the same centre.
+            // Re-proposing upserts the same PickupSchedule row in place, still
+            // Proposed - it is never confirmed without another explicit Approve.
+            var window = revisionWindow
+                ?? new ScheduleWindowDto(schedule.SlotStart.AddDays(1), schedule.SlotEnd.AddDays(1));
+
+            auditLog.Log(actorId, "ScheduleRevisionRequested", "PickupSchedule", schedule.Id,
+                new { Reason = revisionReason, Requested = window });
+
+            return await ProposeAsync(
+                orderId, new CreateScheduleRequest(schedule.CollectionCentreId, window), actorId, ct);
         }
 
         if (decision == ScheduleDecision.Approve)
@@ -327,8 +366,8 @@ public class SchedulingService(
         await NotifyOrderStakeholdersAsync(
             order,
             decision == ScheduleDecision.Approve
-                ? "Your pickup/delivery schedule was confirmed."
-                : "Your proposed pickup/delivery schedule was rejected.",
+                ? $"Your pickup slot ({schedule.SlotStart:d MMM, HH:mm} UTC) was confirmed."
+                : "Your proposed pickup slot was rejected; a new one will be proposed.",
             ct);
 
         try

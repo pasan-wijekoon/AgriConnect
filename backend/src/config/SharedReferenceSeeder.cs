@@ -1,4 +1,5 @@
 using AgriConnect.Api.Models;
+using AgriConnect.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +21,7 @@ public static class SharedReferenceSeeder
 
     private static readonly Guid AdminUserId = Guid.Parse("a1111111-0000-0000-0000-000000000001");
     private static readonly Guid OfficerUserId = Guid.Parse("a2222222-0000-0000-0000-000000000001");
+    private static readonly Guid Officer2UserId = Guid.Parse("a2222222-0000-0000-0000-000000000002");
     private static readonly Guid FarmerUserId = Guid.Parse("f1111111-0000-0000-0000-000000000001");
 
     /// <summary>
@@ -48,40 +50,78 @@ public static class SharedReferenceSeeder
         var newRegions = new List<Region>();
 
         // ---- Users (dev seed only — real users come from auth registration) ---
-        var existingUserEmails = (await context.Users
-            .AsNoTracking()
-            .Select(u => u.Email)
-            .ToListAsync())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // Demo passwords are the documented dev value "password" (same as
+        // backend/create_users.sql's demo accounts) — dev/demo seed data only.
+        var demoPasswordHash = AuthService.HashPassword("password");
+        var kandyCentreId = OrderLogisticsFixtures.GetCollectionCentres()[0].Id;
+        var colomboCentreId = OrderLogisticsFixtures.GetCollectionCentres()[4].Id;
 
         var candidateUsers = new List<User>
         {
             new()
             {
                 Id        = AdminUserId,
+                FullName  = "System Administrator",
                 Email     = "admin@agriconnect.lk",
+                PasswordHash = demoPasswordHash,
                 Role      = "Administrator",
                 CreatedAt = DateTimeOffset.UtcNow
             },
             new()
             {
                 Id        = OfficerUserId,
+                FullName  = "Kandy Centre Officer",
                 Email     = "officer@agriconnect.lk",
+                PasswordHash = demoPasswordHash,
                 Role      = "Officer",
+                Region    = "Kandy",
+                CollectionCentreId = kandyCentreId,
+                CreatedAt = DateTimeOffset.UtcNow
+            },
+            new()
+            {
+                Id        = Officer2UserId,
+                FullName  = "Colombo Centre Officer",
+                Email     = "officer2@agriconnect.lk",
+                PasswordHash = demoPasswordHash,
+                Role      = "Officer",
+                Region    = "Colombo",
+                CollectionCentreId = colomboCentreId,
                 CreatedAt = DateTimeOffset.UtcNow
             },
             new()
             {
                 Id        = FarmerUserId,
+                FullName  = "Demo Farmer",
                 Email     = "farmer@agriconnect.lk",
                 Role      = "Farmer",
                 CreatedAt = DateTimeOffset.UtcNow
             },
         };
 
-        var newUsers = candidateUsers
-            .Where(u => !existingUserEmails.Contains(u.Email))
-            .ToList();
+        var existingUsers = await context.Users.ToListAsync();
+        var newUsers = new List<User>();
+        foreach (var candidate in candidateUsers)
+        {
+            var existing = existingUsers.FirstOrDefault(
+                u => string.Equals(u.Email, candidate.Email, StringComparison.OrdinalIgnoreCase));
+            if (existing is null)
+            {
+                newUsers.Add(candidate);
+                continue;
+            }
+
+            // Officers seeded by older versions had no name/password (couldn't log
+            // in at all) and no centre binding — backfill without touching accounts
+            // that already have credentials.
+            if (existing.Role == "Officer" || existing.Role == "Administrator")
+            {
+                if (string.IsNullOrEmpty(existing.PasswordHash)) existing.PasswordHash = candidate.PasswordHash;
+                if (string.IsNullOrEmpty(existing.FullName)) existing.FullName = candidate.FullName;
+                if (existing.Role == "Officer" && existing.CollectionCentreId is null)
+                    existing.CollectionCentreId = candidate.CollectionCentreId;
+            }
+        }
 
         if (newUsers.Count > 0)
         {
@@ -91,7 +131,7 @@ public static class SharedReferenceSeeder
         }
 
         int totalNew = newCrops.Count + newRegions.Count + newUsers.Count;
-        if (totalNew > 0)
+        if (totalNew > 0 || context.ChangeTracker.HasChanges())
         {
             await context.SaveChangesAsync();
             logger?.LogInformation("[SharedReferenceSeeder] Saved {Count} new reference rows.", totalNew);

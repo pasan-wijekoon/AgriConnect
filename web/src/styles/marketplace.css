@@ -289,3 +289,33 @@
 @keyframes marketplace-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Small-screen adjustments ─────────────────────────────────────────────
+   The marketplace dashboards were built with fixed desktop paddings/font sizes as
+   inline styles, so phone widths overflowed. These overrides (!important is needed
+   to beat the inline styles) keep them usable at phone width without touching each
+   page's markup. */
+@media (max-width: 640px) {
+  .marketplace-scope main > div {
+    padding: 1rem !important;
+  }
+
+  .marketplace-scope .glass-card {
+    padding: 1.25rem !important;
+  }
+
+  .marketplace-scope main h1 {
+    font-size: 1.7rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .marketplace-scope .btn {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .marketplace-scope .modal-content,
+  .marketplace-scope .modal-body {
+    max-width: 100%;
+  }
+}

@@ -127,7 +127,8 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DecideSchedule(Guid id, [FromBody] ScheduleDecisionRequest request, CancellationToken ct)
     {
-        var result = await schedulingService.DecideAsync(id, request.Decision, User.GetUserId(), ct);
+        var result = await schedulingService.DecideAsync(
+            id, request.Decision, User.GetUserId(), ct, request.Reason, request.PreferredWindow);
         return result.Success ? Ok(result.Value) : ToSchedulingErrorResult(result.Error, result.ErrorMessage!);
     }
 

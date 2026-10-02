@@ -1,0 +1,332 @@
+/* Buyer/Farmer order tracking page (marketplace dark theme tokens). */
+.mo {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 32px);
+  color: var(--text);
+}
+
+.mo-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mo-head h1 {
+  margin: 0 0 4px;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.mo-head p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.mo-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+}
+
+.mo-chip {
+  padding: 7px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mo-chip.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent-text);
+}
+
+.mo-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.mo-error {
+  color: var(--danger);
+  border-color: var(--danger-border);
+}
+
+.mo-link {
+  background: none;
+  border: none;
+  color: var(--accent-text);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.mo-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .mo-layout:has(.mo-detail) {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+}
+
+.mo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.mo-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  text-align: left;
+  background: var(--bg-card);
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font: inherit;
+}
+
+.mo-card:hover,
+.mo-card.selected {
+  border-color: var(--accent-border);
+  background: var(--bg-hover);
+}
+
+.mo-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mo-meta,
+.mo-slot {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.mo-slot em {
+  color: #a78bfa;
+  font-style: normal;
+}
+
+.mo-waiting {
+  color: var(--warn);
+}
+
+.mo-placed {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.mo-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.mo-pill-pending { background: var(--warn-soft); color: var(--warn); }
+.mo-pill-approved, .mo-pill-completed, .mo-pill-confirmed { background: var(--accent-soft); color: var(--accent-text); }
+.mo-pill-scheduled { background: var(--info-soft); color: var(--info); }
+.mo-pill-proposed { background: rgba(167, 139, 250, 0.14); color: #a78bfa; }
+.mo-pill-cancelled { background: var(--danger-soft); color: var(--danger); }
+
+.mo-detail {
+  position: relative;
+  padding: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 899px) {
+  .mo-detail {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 45;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.mo-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mo-detail-head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.mo-ref {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+}
+
+.mo-close {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.mo-kv {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+}
+
+.mo-kv dt {
+  color: var(--text-muted);
+}
+
+.mo-kv dd {
+  margin: 0;
+}
+
+.mo-banner {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.mo-banner-warn { background: var(--warn-soft); color: var(--warn); }
+.mo-banner-info { background: var(--info-soft); color: var(--info); margin: 8px 0 0; }
+.mo-banner-error { background: var(--danger-soft); color: var(--danger); }
+
+.mo-timeline {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.mo-timeline li {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 14px;
+  position: relative;
+  color: var(--text-faint);
+}
+
+.mo-timeline li:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 24px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-strong);
+}
+
+.mo-timeline li.done {
+  color: var(--text);
+}
+
+.mo-timeline li.done:not(:last-child)::before {
+  background: var(--accent);
+}
+
+.mo-dot {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.mo-timeline li.done .mo-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #06120c;
+}
+
+.mo-timeline small {
+  display: block;
+  color: var(--text-muted);
+}
+
+.mo-schedule {
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.mo-schedule h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.mo-schedule p {
+  margin: 2px 0;
+  font-size: 0.88rem;
+}
+
+.mo-cancel {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid var(--danger-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--danger);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mo-cancel:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* The app-wide stylesheet sets a dark heading colour; headings here sit on the dark marketplace theme. */
+.mo h1,
+.mo h2,
+.mo h3 {
+  color: var(--text);
+}
