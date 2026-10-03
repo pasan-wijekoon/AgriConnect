@@ -65,6 +65,26 @@ export function normalizeUser(user: User): User {
 }
 
 /** @deprecated Catalog management was retired; retained only for legacy type-checking. */
+/** An account in the Administrator's staff list (`GET /api/admin/users`). */
+export interface AdminUser {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  phone?: string | null;
+  region?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  collectionCentreId?: string | null;
+}
+
+export interface AdminUserPage {
+  items: AdminUser[];
+  page: number;
+  size: number;
+  total: number;
+}
+
 export interface TodayPriceItem {
   cropId: string;
   name: string;
@@ -354,8 +374,12 @@ export const api = {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      // /api/upload requires the signed-in user's JWT. Do not set Content-Type: the browser adds
+      // the multipart boundary itself.
+      const token = getAuthToken();
       const res = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
       });
       if (res.ok) {
@@ -363,8 +387,14 @@ export const api = {
         if (data.url) {
           return data.url.startsWith('/') ? `${API_BASE.replace('/api', '')}${data.url}` : data.url;
         }
+      } else if (res.status === 401) {
+        throw new Error('Your session has expired. Please sign in again.');
+      } else {
+        const problem = await res.json().catch(() => null);
+        throw new Error(problem?.message || problem?.detail || 'Photo upload failed. Please try again.');
       }
     } catch (err) {
+      if (err instanceof Error && err.message !== 'Failed to fetch') throw err;
       throw new Error('Photo upload failed. Please try again.');
     }
     throw new Error('Photo upload failed. Please try again.');
@@ -388,6 +418,32 @@ export const api = {
     if (params.quantity) q.append('quantity', params.quantity.toString());
     return request<PriceEstimateResult>(`/prices/estimate?${q.toString()}`);
   },
+
+  // Administrator: staff accounts (Officers / Administrators)
+  listUsers: (params: { role?: string; search?: string; page?: number; size?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (params.role) q.append('role', params.role);
+    if (params.search) q.append('search', params.search);
+    q.append('page', String(params.page ?? 1));
+    q.append('size', String(params.size ?? 100));
+    return request<AdminUserPage>(`/admin/users?${q.toString()}`);
+  },
+
+  createManagedUser: (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: 'Officer' | 'Administrator';
+    phone?: string;
+    collectionCentreId?: string | null;
+  }) =>
+    request<AdminUser>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+
+  setUserActive: (id: string, isActive: boolean) =>
+    request<AdminUser>(`/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive }) }),
+
+  resetUserPassword: (id: string, newPassword: string) =>
+    request<void>(`/admin/users/${id}/reset-credentials`, { method: 'POST', body: JSON.stringify({ newPassword }) }),
 
   // Today's Prices discovery (Component A, Fair-Price Estimation Agent)
   getTodayPrices: (region?: string, grade: string = 'A'): Promise<TodayPricesResponse> => {

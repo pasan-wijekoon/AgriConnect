@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { type Listing, resolveImageUrl } from '../utils/marketApi';
 import { useAuth } from '../context/AuthContext';
 import { ApiError, ordersApi, type DeliveryPreference, type OrderResponse } from '../utils/ordersApi';
@@ -25,6 +26,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onViewOrders
 }) => {
   const { user } = useAuth();
+  useEscapeKey(onClose);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [orderQuantity, setOrderQuantity] = useState<number>(Math.max(1, Math.min(100, Math.floor(listing?.quantity ?? 100))));
   const [orderMode, setOrderMode] = useState(false);
@@ -372,7 +374,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Collection</label>
+                <label className="form-label">Collection method</label>
                 <select
                   className="form-input"
                   value={deliveryPreference}

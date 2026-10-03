@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { type Listing, type PriceSuggestion, api } from '../utils/marketApi';
 import { Sparkles, RefreshCw, ShieldCheck } from './Icons';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface Props {
   listing: Listing;
@@ -16,6 +17,7 @@ const statusBadgeClass: Record<string, string> = {
 };
 
 export const PriceSuggestionPanel: React.FC<Props> = ({ listing, onClose, onUpdate }) => {
+  useEscapeKey(onClose);
   const [suggestion, setSuggestion] = useState<PriceSuggestion | undefined>(listing.priceSuggestion);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

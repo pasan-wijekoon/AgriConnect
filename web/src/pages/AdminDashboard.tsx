@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api, type Listing, type Crop, type Region, type TodayPriceCatalogItem } from '../utils/marketApi';
 import { useAuth } from '../context/AuthContext';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { PriceSuggestionPanel } from '../components/PriceSuggestionPanel';
+import { OfficerManagement } from '../components/OfficerManagement';
+import { readableError } from '../utils/apiErrors';
+import { publishErrorToast } from '../utils/publishErrors';
+import { Toast, type ToastData } from '../components/Toast';
 import {
   ShieldCheck, CheckCircle2, XCircle, Sparkles, RefreshCw,
   MapPin, Layers, Eye, TrendingUp, Plus, Edit, Trash2
@@ -11,14 +16,15 @@ import {
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'queue' | 'ai-review' | 'reference' | 'catalog'>('queue');
+  const [activeTab, setActiveTab] = useState<'queue' | 'ai-review' | 'reference' | 'catalog' | 'officers'>('queue');
   const [queueStatus, setQueueStatus] = useState<'PendingApproval' | 'Published' | 'Withdrawn'>('PendingApproval');
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [crops, setCrops] = useState<Crop[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [toast, setToast] = useState<ToastData | null>(null);
 
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [priceReviewListing, setPriceReviewListing] = useState<Listing | null>(null);
@@ -80,7 +86,7 @@ export const AdminDashboard: React.FC = () => {
       setShowCatalogForm(false);
       await fetchCatalog();
     } catch (err: any) {
-      alert(err.message || 'Failed to save catalog item');
+      notifyError(readableError(err, 'Failed to save catalog item'));
     }
   };
 
@@ -89,7 +95,7 @@ export const AdminDashboard: React.FC = () => {
       await api.updateTodayPriceCatalogItem(item.id, { isActive: !item.isActive });
       await fetchCatalog();
     } catch (err: any) {
-      alert(err.message || 'Failed to update catalog item');
+      notifyError(readableError(err, 'Failed to update catalog item'));
     }
   };
 
@@ -100,7 +106,7 @@ export const AdminDashboard: React.FC = () => {
       notify(`Removed "${item.name}" from Today's Prices.`);
       await fetchCatalog();
     } catch (err: any) {
-      alert(err.message || 'Failed to remove catalog item');
+      notifyError(readableError(err, 'Failed to remove catalog item'));
     }
   };
 
@@ -127,10 +133,9 @@ export const AdminDashboard: React.FC = () => {
     fetchAllData();
   }, [queueStatus]);
 
-  const notify = (msg: string) => {
-    setActionMessage(msg);
-    setTimeout(() => setActionMessage(null), 3000);
-  };
+  const closeToast = () => setToast(null);
+  const notify = (message: string) => setToast({ kind: 'success', message });
+  const notifyError = (message: string) => setToast({ kind: 'error', message });
 
   // Approve listing
   const handleApprove = async (listing: Listing) => {
@@ -139,7 +144,8 @@ export const AdminDashboard: React.FC = () => {
       notify(`Listing ${listing.cropName} (${listing.id.substring(0, 8)}) APPROVED and published to wholesale marketplace!`);
       await fetchAllData();
     } catch (err: any) {
-      alert(err.message || 'Approval failed');
+      // A listing is published only after an officer has recorded a quality inspection (FR5).
+      setToast(publishErrorToast(readableError(err, 'Approval failed'), listing.id, navigate));
     }
   };
 
@@ -151,35 +157,14 @@ export const AdminDashboard: React.FC = () => {
         notify(`Listing ${listing.cropName} REJECTED.`);
         await fetchAllData();
       } catch (err: any) {
-        alert(err.message || 'Rejection failed');
+        notifyError(readableError(err, 'Rejection failed'));
       }
     }
   };
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
-      {/* Toast Notification */}
-      {actionMessage && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: 'var(--bg-hover)',
-          color: 'var(--text)',
-          padding: '12px 20px',
-          borderRadius: '12px',
-          boxShadow: 'var(--shadow-md)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontWeight: 600,
-          zIndex: 100,
-          animation: 'fadeIn 0.2s ease-out'
-        }}>
-          <CheckCircle2 size={18} />
-          <span>{actionMessage}</span>
-        </div>
-      )}
+      <Toast toast={toast} onClose={closeToast} />
 
       {/* Top Banner */}
       <div style={{
@@ -309,6 +294,28 @@ export const AdminDashboard: React.FC = () => {
         >
           <TrendingUp size={18} />
           <span>Today's Prices Catalog</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('officers')}
+          style={{
+            padding: '10px 18px',
+            borderRadius: '10px',
+            border: 'none',
+            fontSize: '0.95rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            background: activeTab === 'officers' ? 'var(--bg-hover)' : 'var(--border)',
+            color: activeTab === 'officers' ? 'var(--text)' : 'var(--text-muted)',
+            boxShadow: activeTab === 'officers' ? '0 4px 14px var(--border-strong)' : 'none',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <ShieldCheck size={18} />
+          <span>Officers</span>
         </button>
       </div>
 
@@ -598,6 +605,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Tab: Collection-centre officers (add / deactivate / reset password) */}
+      {activeTab === 'officers' && <OfficerManagement />}
 
       {/* Tab 3: Reference Data (Crops & Regions) */}
       {activeTab === 'reference' && (
