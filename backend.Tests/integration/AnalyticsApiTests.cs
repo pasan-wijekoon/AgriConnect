@@ -50,12 +50,45 @@ public class AnalyticsApiTests : IClassFixture<ApiTestFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    [Fact] // TC-D-31
-    public async Task Filters_AsABuyer_Returns403()
+    [Fact] // TC-D-31 (updated 2026-10-03: Buyers may now read the trend filters and trends)
+    public async Task Filters_AsABuyer_Returns200()
     {
         using var client = _factory.CreateAuthedClient(Roles.Buyer);
 
         var response = await client.GetAsync("/api/analytics/filters");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Theory] // Buyers read trends only; the review queue and shortages stay back-office
+    [InlineData("/api/analytics/anomalies")]
+    [InlineData("/api/analytics/shortages")]
+    public async Task BackOfficeEndpoints_AsABuyer_Return403(string url)
+    {
+        using var client = _factory.CreateAuthedClient(Roles.Buyer);
+
+        var response = await client.GetAsync(url);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PriceTrends_AsABuyer_Returns200()
+    {
+        var cropId = await CropWithPricesAsync();
+        using var client = _factory.CreateAuthedClient(Roles.Buyer);
+
+        var response = await client.GetAsync($"/api/analytics/price-trends?cropId={cropId}&from={From}&to={To}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SnapshotRefresh_AsABuyer_Returns403()
+    {
+        using var client = _factory.CreateAuthedClient(Roles.Buyer);
+
+        var response = await client.PostAsync("/api/analytics/snapshots/refresh", null);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }

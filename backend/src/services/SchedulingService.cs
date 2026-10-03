@@ -78,6 +78,11 @@ public class SchedulingService(
                 SchedulingOperationError.Conflict, "Order already has a confirmed schedule.");
         }
 
+        var now = DateTimeOffset.UtcNow;
+        var preferredWindow = request.PreferredWindow is { } w
+            ? new SchedulingWindow(w.Start, w.End)
+            : new SchedulingWindow(now.AddDays(1), now.AddDays(1).AddHours(1));
+
         var centreId = request.CollectionCentreId;
         if (centreId is null)
         {
@@ -120,8 +125,15 @@ public class SchedulingService(
                 var candidates = new List<MatchCandidateCentre>(regionCentres.Count);
                 foreach (var c in regionCentres)
                 {
+                    // Concurrent Confirmed bookings overlapping the requested window (plan §8.3) —
+                    // not every Confirmed booking the centre has ever had, which would mark a
+                    // centre permanently "full" once it had handled Capacity orders in total.
                     var confirmedCount = await db.PickupSchedules.CountAsync(
-                        p => p.CollectionCentreId == c.Id && p.Status == ScheduleStatus.Confirmed, ct);
+                        p => p.CollectionCentreId == c.Id
+                             && p.Status == ScheduleStatus.Confirmed
+                             && p.OrderId != orderId
+                             && p.SlotStart < preferredWindow.End
+                             && p.SlotEnd > preferredWindow.Start, ct);
                     candidates.Add(new MatchCandidateCentre(c.Id, c.Name, c.Latitude, c.Longitude, c.Capacity, confirmedCount));
                 }
 
@@ -158,11 +170,6 @@ public class SchedulingService(
             return SchedulingOperationResult<ScheduleResponse>.Fail(
                 SchedulingOperationError.NotFound, "Collection centre not found.");
         }
-
-        var now = DateTimeOffset.UtcNow;
-        var preferredWindow = request.PreferredWindow is { } w
-            ? new SchedulingWindow(w.Start, w.End)
-            : new SchedulingWindow(now.AddDays(1), now.AddDays(1).AddHours(1));
 
         if (preferredWindow.End <= preferredWindow.Start)
         {

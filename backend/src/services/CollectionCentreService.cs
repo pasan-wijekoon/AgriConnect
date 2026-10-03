@@ -10,7 +10,8 @@ namespace AgriConnect.Api.Services;
 /// region-scoped first, then sorted by distance (plan §9, DFD §6.4). A centre at
 /// full capacity is still included (plan §9 default — capacity isn't a documented
 /// filter for this endpoint, since a full centre may free up before pickup); its
-/// Capacity is surfaced in the response instead of hiding it.
+/// Capacity is surfaced in the response instead of hiding it. Coordinates further than
+/// <c>Centres:MaxNearestDistanceKm</c> (default 200) from every centre get an empty list.
 /// </summary>
 public class CollectionCentreService(
     AgriConnectDbContext db, IDistanceService distanceService, IConfiguration? configuration = null)
@@ -30,6 +31,18 @@ public class CollectionCentreService(
             // No region given, or no centre serves that region: rank every centre by
             // distance instead of returning nothing (FR21 - nearest suitable centre).
             centres = await db.CollectionCentres.AsNoTracking().ToListAsync(cancellationToken);
+        }
+
+        // "No suitable centre" (CLAUDE.md §19): if even the closest centre is further away
+        // than Centres:MaxNearestDistanceKm in a straight line, the coordinates are not
+        // anywhere AgriConnect operates (e.g. the 0,0 a client sends for "unknown"), so say
+        // so with an empty result instead of ranking by thousands of km. Checked with the
+        // local haversine so no Maps call is spent on it.
+        var maxKm = configuration?.GetValue("Centres:MaxNearestDistanceKm", 200d) ?? 200d;
+        if (centres.Count == 0 || centres.Min(c => HaversineCalculator.DistanceKm(
+                (double)lat, (double)lng, (double)c.Latitude, (double)c.Longitude)) > maxKm)
+        {
+            return [];
         }
 
         // Distances are looked up in parallel under one overall time budget: the

@@ -164,6 +164,44 @@ public class SchedulingServiceTests
     }
 
     [Fact]
+    public async Task ProposeAsync_WithBuyerLocation_CountsOnlyBookingsOverlappingTheWindowAsCentreLoad()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db, capacity: 1);
+        var window = FutureWindow(daysFromNow: 2);
+
+        async Task AddConfirmedAsync(DateTimeOffset start, DateTimeOffset end)
+        {
+            var other = new Order
+            {
+                Id = Guid.NewGuid(), ListingId = ListingId, BuyerId = Guid.NewGuid(), Quantity = 1m,
+                Status = OrderStatus.Scheduled, DeliveryPreference = DeliveryPreference.Pickup,
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+            };
+            db.Orders.Add(other);
+            db.PickupSchedules.Add(new PickupSchedule
+            {
+                Id = Guid.NewGuid(), OrderId = other.Id, CollectionCentreId = centre.Id,
+                SlotStart = start, SlotEnd = end, Status = ScheduleStatus.Confirmed
+            });
+            await db.SaveChangesAsync();
+        }
+
+        // A booking on another day must not make the centre look full for this window...
+        await AddConfirmedAsync(window.Start.AddDays(3), window.End.AddDays(3));
+        var matchingPort = new FakeBuyerFarmerMatchingPort(result: null);
+        await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id, new CreateScheduleRequest(null, window, new BuyerLocationDto(7.29m, 80.63m)), ActorId);
+        Assert.Equal(0, matchingPort.LastCandidatesPassedIn!.Single().CurrentConfirmedBookings);
+
+        // ...while one that overlaps it does.
+        await AddConfirmedAsync(window.Start, window.End);
+        await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id, new CreateScheduleRequest(null, window, new BuyerLocationDto(7.29m, 80.63m)), ActorId);
+        Assert.Equal(1, matchingPort.LastCandidatesPassedIn!.Single().CurrentConfirmedBookings);
+    }
+
+    [Fact]
     public async Task ProposeAsync_WithBuyerLocation_AgentFindsNoCapacity_ReturnsConflict()
     {
         await using var db = NewInMemoryDb();

@@ -16,12 +16,35 @@ public class ListingService
         _agenticAi = agenticAi;
     }
 
+    private const int MaxPageSize = 100;
+
+    // A page < 1 made Skip() negative (500), and an unbounded pageSize let one call read the table.
+    private static void NormalizePaging(ListingSearchQuery query)
+    {
+        query.Page = Math.Max(1, query.Page);
+        query.PageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
+    }
+
+    /// <summary>Unspecified is treated as UTC (what the web/mobile clients mean), Local is converted.</summary>
+    private static DateTime AsUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value,
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+    };
+
     // ── Create Listing (FR3) ──────────────────────────────────
     public async Task<ListingResponseDto> CreateListing(Guid farmerId, CreateListingDto dto)
     {
-        // Validate pickup window
+        // Validate pickup window. Dates are normalised to UTC first: a client sending an
+        // offset ("...+05:30" / "+00:00") is bound as DateTime.Kind=Local, which Npgsql
+        // refuses to write to timestamptz (it surfaced as a 500).
+        dto.PickupWindowStart = AsUtc(dto.PickupWindowStart);
+        dto.PickupWindowEnd = AsUtc(dto.PickupWindowEnd);
         if (dto.PickupWindowEnd <= dto.PickupWindowStart)
             throw new ArgumentException("Pickup window end must be after start.");
+        if (dto.PickupWindowEnd <= DateTime.UtcNow)
+            throw new ArgumentException("Pickup window must end in the future.");
 
         // Validate crop and region exist
         var crop = await _db.Crops.FindAsync(dto.CropId)
@@ -126,6 +149,7 @@ public class ListingService
         };
 
         // Pagination
+        NormalizePaging(query);
         var totalCount = await q.CountAsync();
         var items = await q
             .Skip((query.Page - 1) * query.PageSize)
@@ -170,6 +194,7 @@ public class ListingService
                 : q.OrderByDescending(l => l.CreatedAt)
         };
 
+        NormalizePaging(query);
         var totalCount = await q.CountAsync();
         var items = await q
             .Skip((query.Page - 1) * query.PageSize)
@@ -221,8 +246,13 @@ public class ListingService
         if (dto.Quantity.HasValue) listing.Quantity = dto.Quantity.Value;
         if (dto.Unit != null) listing.Unit = dto.Unit;
         if (dto.ClaimedGrade != null) listing.ClaimedGrade = dto.ClaimedGrade;
-        if (dto.PickupWindowStart.HasValue) listing.PickupWindowStart = dto.PickupWindowStart.Value;
-        if (dto.PickupWindowEnd.HasValue) listing.PickupWindowEnd = dto.PickupWindowEnd.Value;
+        if (dto.PickupWindowStart.HasValue) listing.PickupWindowStart = AsUtc(dto.PickupWindowStart.Value);
+        if (dto.PickupWindowEnd.HasValue) listing.PickupWindowEnd = AsUtc(dto.PickupWindowEnd.Value);
+        if ((dto.PickupWindowStart.HasValue || dto.PickupWindowEnd.HasValue)
+            && listing.PickupWindowEnd <= listing.PickupWindowStart)
+            throw new ArgumentException("Pickup window end must be after start.");
+        if (dto.PickupWindowEnd.HasValue && listing.PickupWindowEnd <= DateTime.UtcNow)
+            throw new ArgumentException("Pickup window must end in the future.");
         if (dto.MinPrice.HasValue) listing.MinPrice = dto.MinPrice.Value;
         if (dto.Description != null) listing.Description = dto.Description;
 
