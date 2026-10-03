@@ -159,8 +159,8 @@ class ApiService {
       'quantity': quantity,
       'unit': unit,
       'claimedGrade': claimedGrade,
-      'pickupWindowStart': pickupWindowStart.toIso8601String(),
-      'pickupWindowEnd': pickupWindowEnd.toIso8601String(),
+      'pickupWindowStart': pickupWindowStart.toUtc().toIso8601String(),
+      'pickupWindowEnd': pickupWindowEnd.toUtc().toIso8601String(),
       'minPrice': minPrice,
       'photoUrls': photoUrls.isNotEmpty
           ? photoUrls
@@ -197,8 +197,8 @@ class ApiService {
       if (quantity != null) 'quantity': quantity,
       if (unit != null) 'unit': unit,
       if (claimedGrade != null) 'claimedGrade': claimedGrade,
-      if (pickupWindowStart != null) 'pickupWindowStart': pickupWindowStart.toIso8601String(),
-      if (pickupWindowEnd != null) 'pickupWindowEnd': pickupWindowEnd.toIso8601String(),
+      if (pickupWindowStart != null) 'pickupWindowStart': pickupWindowStart.toUtc().toIso8601String(),
+      if (pickupWindowEnd != null) 'pickupWindowEnd': pickupWindowEnd.toUtc().toIso8601String(),
       if (minPrice != null) 'minPrice': minPrice,
     });
 

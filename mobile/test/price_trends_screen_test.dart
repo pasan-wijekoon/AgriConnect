@@ -43,7 +43,7 @@ http.Response json(Object body, [int status = 200]) =>
 Future<void> pumpScreen(WidgetTester tester, MockClient client) async {
   await tester.pumpWidget(MaterialApp(
     home: PriceTrendsScreen(
-      service: PriceTrendService(client: client, baseUrl: 'http://api'),
+      service: PriceTrendService(client: client, baseUrl: 'http://api', getToken: () => 'test-jwt'),
       clock: () => DateTime(2026, 9, 27, 14, 30),
     ),
   ));
@@ -70,7 +70,7 @@ void main() {
     final trendRequest = requests.last;
     expect(trendRequest.url.queryParameters,
         {'cropId': tomato, 'from': '2026-06-07', 'to': '2026-09-27', 'bucket': 'week'});
-    expect(trendRequest.headers['X-Dev-Role'], 'Farmer');
+    expect(trendRequest.headers['Authorization'], 'Bearer test-jwt');
   });
 
   testWidgets('opens on the first crop that has prices, not simply the first crop', (tester) async {

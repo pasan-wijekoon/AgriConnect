@@ -6,6 +6,7 @@ import '../../providers/order_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/price_trend_service.dart';
+import '../../services/today_prices_service.dart';
 import '../../theme/app_colors.dart';
 import '../account/account_screen.dart';
 import '../browse_listings_screen.dart';
@@ -14,6 +15,7 @@ import '../my_listings_screen.dart';
 import '../orders/nearest_centre_screen.dart';
 import '../orders/order_tracking_screen.dart';
 import '../price_trends/price_trends_screen.dart';
+import '../prices/today_prices_screen.dart';
 
 class _Tab {
   final String label;
@@ -50,7 +52,7 @@ class _MainShellState extends State<MainShell> {
     final api = context.read<ApiService>();
     final priceService = widget.priceTrendService;
 
-    Widget prices() => PriceTrendsScreen(service: priceService ?? PriceTrendService());
+    Widget prices() => PriceTrendsScreen(service: priceService ?? PriceTrendService(getToken: () => context.read<SessionProvider>().token));
 
     _tabs = _isFarmer
         ? [
@@ -85,7 +87,10 @@ class _MainShellState extends State<MainShell> {
     final priceService = widget.priceTrendService;
 
     void openPrices() => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => PriceTrendsScreen(service: priceService ?? PriceTrendService())));
+        builder: (_) => PriceTrendsScreen(service: priceService ?? PriceTrendService(getToken: () => context.read<SessionProvider>().token))));
+
+    void openTodayPrices() => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => TodayPricesScreen(service: TodayPricesService(context.read<SessionProvider>().client))));
 
     final actions = _isFarmer
         ? [
@@ -109,6 +114,11 @@ class _MainShellState extends State<MainShell> {
                 label: 'Market prices',
                 subtitle: 'Weekly price trends',
                 onTap: () => _selectTab(3)),
+            HomeAction(
+                icon: Icons.sell_outlined,
+                label: "Today's prices",
+                subtitle: 'AI fair price per crop',
+                onTap: openTodayPrices),
           ]
         : [
             HomeAction(
@@ -131,6 +141,11 @@ class _MainShellState extends State<MainShell> {
                 label: 'Market prices',
                 subtitle: 'Weekly price trends',
                 onTap: openPrices),
+            HomeAction(
+                icon: Icons.sell_outlined,
+                label: "Today's prices",
+                subtitle: 'AI fair price per crop',
+                onTap: openTodayPrices),
           ];
 
     return HomeScreen(actions: actions, onSeeOrders: () => _selectTab(2));
