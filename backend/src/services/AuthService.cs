@@ -28,7 +28,8 @@ public class AuthService
 
     public async Task<AuthResponseDto> Login(LoginDto dto)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email && u.IsActive)
+        var email = dto.Email.Trim().ToLower();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email && u.IsActive)
             ?? throw new UnauthorizedAccessException("Invalid email or password.");
 
         if (!VerifyPassword(dto.Password, user.PasswordHash))
@@ -130,27 +131,77 @@ public class AuthService
     public async Task<AdminUserResponse> CreateManagedUserAsync(CreateManagedUserRequest dto)
     {
         ValidateManagedRole(dto.Role);
-        if (await _db.Users.AnyAsync(u => u.Email == dto.Email)) throw new InvalidOperationException("An account with this email already exists.");
-        var user = new User { Id = Guid.NewGuid(), FullName = dto.FullName, Email = dto.Email, PasswordHash = HashPassword(dto.Password), Role = dto.Role, Phone = dto.Phone, Region = dto.Region, IsActive = true };
+        ValidatePasswordStrength(dto.Password);
+
+        var email = dto.Email.Trim().ToLowerInvariant();
+        if (await _db.Users.AnyAsync(u => u.Email.ToLower() == email))
+            throw new InvalidOperationException("An account with this email already exists.");
+
+        var (centreId, region) = await ResolveCentreAsync(dto.Role, dto.CollectionCentreId);
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            FullName = dto.FullName.Trim(),
+            Email = email,
+            PasswordHash = HashPassword(dto.Password),
+            Role = dto.Role,
+            Phone = string.IsNullOrWhiteSpace(dto.Phone) ? null : dto.Phone.Trim(),
+            Region = string.IsNullOrWhiteSpace(dto.Region) ? region : dto.Region.Trim(),
+            CollectionCentreId = centreId,
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsActive = true
+        };
         _db.Users.Add(user); await _db.SaveChangesAsync(); return ToAdminUser(user);
     }
 
-    public async Task<AdminUserResponse?> ChangeRoleAsync(Guid id, string role)
+    public async Task<AdminUserResponse?> ChangeRoleAsync(Guid id, string role, Guid? collectionCentreId = null)
     {
-        ValidateManagedRole(role); var user = await _db.Users.FindAsync(id); if (user == null) return null;
-        user.Role = role; await _db.SaveChangesAsync(); return ToAdminUser(user);
+        ValidateManagedRole(role);
+        var user = await _db.Users.FindAsync(id); if (user == null) return null;
+
+        // Becoming an Officer needs a centre (existing one or the one supplied); becoming an
+        // Administrator drops the binding.
+        var (centreId, _) = await ResolveCentreAsync(role, collectionCentreId ?? user.CollectionCentreId);
+        user.Role = role; user.CollectionCentreId = centreId;
+        await _db.SaveChangesAsync(); return ToAdminUser(user);
     }
 
-    public async Task<AdminUserResponse?> ChangeStatusAsync(Guid id, bool active)
+    public async Task<AdminUserResponse?> ChangeStatusAsync(Guid id, bool active, Guid? actorId = null)
     {
+        // An administrator who deactivates their own account locks themselves out.
+        if (!active && actorId == id)
+            throw new InvalidOperationException("You cannot deactivate your own account.");
         var user = await _db.Users.FindAsync(id); if (user == null) return null;
         user.IsActive = active; await _db.SaveChangesAsync(); return ToAdminUser(user);
     }
 
     public async Task<bool> ResetCredentialsAsync(Guid id, string password)
     {
+        ValidatePasswordStrength(password);
         var user = await _db.Users.FindAsync(id); if (user == null) return false;
         user.PasswordHash = HashPassword(password); await _db.SaveChangesAsync(); return true;
+    }
+
+    /// <summary>Officers must belong to a collection centre; Administrators never do.</summary>
+    private async Task<(Guid? CentreId, string? Region)> ResolveCentreAsync(string role, Guid? centreId)
+    {
+        if (role != Roles.Officer) return (null, null);
+        if (centreId is null)
+            throw new ArgumentException("An Officer must be assigned to a collection centre.");
+        var centre = await _db.CollectionCentres.AsNoTracking()
+            .Where(c => c.Id == centreId)
+            .Select(c => new { c.Id, RegionName = _db.Regions.Where(r => r.Id == c.RegionId).Select(r => r.Name).FirstOrDefault() })
+            .FirstOrDefaultAsync()
+            ?? throw new ArgumentException("The selected collection centre does not exist.");
+        return (centre.Id, centre.RegionName);
+    }
+
+    private static void ValidatePasswordStrength(string password)
+    {
+        // Staff accounts get a stricter rule than the self-registration minimum.
+        if (password.Length < 8 || !password.Any(char.IsLetter) || !password.Any(char.IsDigit))
+            throw new ArgumentException("The password must be at least 8 characters and contain a letter and a digit.");
     }
 
     private static void ValidateManagedRole(string role)
@@ -158,7 +209,7 @@ public class AuthService
         if (role is not (Roles.Officer or Roles.Admin)) throw new ArgumentException("Administrators may create or assign only Officer or Administrator roles.");
     }
 
-    private static AdminUserResponse ToAdminUser(User u) => new(u.Id, u.FullName, u.Email, u.Role, u.Phone, u.Region, u.IsActive, u.CreatedAt);
+    private static AdminUserResponse ToAdminUser(User u) => new(u.Id, u.FullName, u.Email, u.Role, u.Phone, u.Region, u.IsActive, u.CreatedAt, u.CollectionCentreId);
 
     /// <summary>
     /// Reads the authenticated user's ID and role from the validated JWT

@@ -107,11 +107,15 @@ public class ApiTestFactory : WebApplicationFactory<Program>
     /// if the role is omitted (for testing 401s). The token's account must exist and be
     /// active (Program.cs checks it on every request), so a missing user row is created
     /// here; seeded fixture users are left untouched.</summary>
+    /// <summary>The account <see cref="CreateAuthedClient"/> uses when only a role is given.</summary>
+    public static Guid StableUserId(string role) =>
+        new(System.Security.Cryptography.MD5.HashData(Encoding.UTF8.GetBytes($"agriconnect-test-{role}")));
+
     public HttpClient CreateAuthedClient(string? role = null, Guid? userId = null)
     {
         var client = CreateClient();
         // Role-only callers (the analytics tests) get one stable test account per role.
-        if (role is not null) userId ??= new Guid(System.Security.Cryptography.MD5.HashData(Encoding.UTF8.GetBytes($"agriconnect-test-{role}")));
+        if (role is not null) userId ??= StableUserId(role);
         if (role is not null && userId is not null)
         {
             var token = IssueToken(role, userId.Value);
