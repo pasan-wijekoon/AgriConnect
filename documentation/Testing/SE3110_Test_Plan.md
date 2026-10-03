@@ -1,10 +1,5 @@
-# SE3090 — Software Testing and Quality Evaluation
+# SE3110 — Software Testing and Quality Evaluation
 # Test Plan: AgriConnect
-
-**Project:** AgriConnect — Smart Agriculture Marketplace & Advisory Platform
-**Document version:** 1.0
-**Date:** 2026-09-27
-**Prepared by:** [Team Name / Group Number]
 
 ---
 
@@ -41,6 +36,17 @@ Testing covers every category and tool listed in the Finalized Tools Table (§5)
 - Localisation/multi-language testing (English-only at this stage, per SRS §6).
 - Native iOS-specific and native Android-specific platform code paths beyond what `integration_test`/Appium can exercise without physical devices, if such devices are unavailable to the team.
 
+### 2.3 Non-Functional Testing Selection and Justification
+
+Performance and security testing are mandatory for this assessment. The additional types below were selected because they are relevant to AgriConnect's users and risks.
+
+| Type | Status | Justification |
+|---|---|---|
+| Performance / Load / Stress (k6) | Required | Marketplace ordering peaks at harvest/market times, and stock reservation must stay correct under concurrent requests (SRS §8). |
+| Security (OWASP ZAP) | Required | The API handles role-based data, prices, and orders; broken access control and injection are high-impact risks. |
+| Accessibility (Lighthouse) | Selected | Farmers and buyers vary in literacy, device quality, and assistive-technology use. |
+| Compatibility (Playwright) | Selected | Buyers and officers use different browsers; avoids implicitly testing on one engine only. |
+
 ---
 
 ## 3. Objectives
@@ -49,7 +55,7 @@ Testing covers every category and tool listed in the Finalized Tools Table (§5)
 2. Verify that the four independently-developed components genuinely interoperate once merged — not just that each compiles and passes its own tests in isolation — with particular attention to data actually flowing correctly across component boundaries (e.g. a listing created via the Produce Listings module must be orderable via the Order module).
 3. Verify database-level data integrity: constraints, foreign keys, and cascade/restrict behaviour hold under both normal and adversarial (concurrent, malformed, boundary) conditions.
 4. Verify the system's non-functional qualities named in the SRS (§8): acceptable response time under load, high availability under peak conditions, safety of AI-driven changes (nothing commits without human approval), protection of financial/price data from invalid values, role-based access control, auditability, usability, and accessibility.
-5. Identify and document defects with enough detail (steps, expected vs. actual result, environment) that they are reproducible and actionable by the development team.
+5. Identify and document defects with enough detail (steps, expected vs. actual result, environment) that they are reproducible and actionable by the development team, fix important defects, and retest them.
 6. Produce a Test Case Document (companion to this plan) that gives full traceability from each Functional Requirement to the concrete test case(s) that verify it.
 
 ---
@@ -96,11 +102,11 @@ The following tools are finalized for this project. No substitutions or addition
 
 | Environment | OS |
 |---|---|
-| Local development / manual testing | Windows 11 (Home/Pro), build 26200 or later |
-| CI pipeline (recommended) | Ubuntu 22.04 LTS (GitHub Actions `ubuntu-latest` runner) |
-| Mobile build host | Windows 11 (Android toolchain) — a macOS host is additionally required for any iOS-specific build/test step |
+| Local development / manual testing | Windows 11 , build 26200 or later |
+| CI pipeline  | Ubuntu 22.04 LTS (GitHub Actions `ubuntu-latest` runner) |
+| Mobile build host | Windows 11 (Android toolchain)  |
 
-### 6.2 Backend / API
+### 6.2 Backend(with APIs)
 
 | Component | Version |
 |---|---|
@@ -154,21 +160,23 @@ The following tools are finalized for this project. No substitutions or addition
 
 | Tool | Notes |
 |---|---|
-| k6 | Run from a dedicated load-generation machine/CI runner, never the developer workstation running the system under test, to avoid resource contention skewing results |
+| k6 | Run from a dedicated load-generation machine/CI runner, never the developer workstation running the system under test, to avoid resource contention skewing results. If this is not possible, machine specifications are recorded and the limitation is noted with the results. |
 | OWASP ZAP | Run in automated (baseline/full scan) mode against a dedicated test deployment of the API — never against a production instance |
 
 ---
 
 ## 7. Team Members and Assigned Testing Areas
 
-> ⚠️ **TODO — replace this placeholder table with your actual team roster before submission.**
+
 
 | Name | Student ID | Assigned Testing Area(s) | Assigned Tools |
 |---|---|---|---|
-| [Name 1] | [ID] | Backend Testing, Database Testing | xUnit, Newman, Testcontainers for .NET, EF Core |
-| [Name 2] | [ID] | Web Testing, Accessibility, Compatibility | Vitest, Playwright, Lighthouse |
-| [Name 3] | [ID] | Mobile Testing, Cross-Platform Integration Testing | flutter_test, integration_test, Appium |
-| [Name 4] | [ID] | Performance/Load/Stress, Security | k6, OWASP ZAP |
+| Adithya M A D K | IT24102690 | Backend Testing, Database Testing | xUnit, Newman, Testcontainers for .NET, EF Core |
+| Marasinghe M A Y D | IT24102714 | Web Testing, Accessibility, Compatibility | Vitest, Playwright, Lighthouse |
+| Wijekoon W H M P V P | IT24103113 | Mobile Testing, Cross-Platform Integration Testing | flutter_test, integration_test, Appium |
+| Subasingha S A P R  | IT24103048 | Performance/Load/Stress, Security | k6, OWASP ZAP |
+
+Each member is responsible for the test code, execution, results, and defects of their own area, and must be able to run, explain, and modify those tests in the individual viva. Each member's test code must be traceable through their own Git commits.
 
 ---
 
@@ -185,23 +193,24 @@ The following tools are finalized for this project. No substitutions or addition
 - All planned test cases for the area (see the companion Test Case Document) have been executed at least once.
 - No open **Critical** or **High** severity defect remains unresolved for that area, unless explicitly deferred and accepted by the team/instructor.
 - Test results (Actual Result, Pass/Fail) are recorded in the Test Case Document for every executed case.
+- Important defects that were fixed have been retested, with the retest result recorded in the Defect / Bug Report.
 - For non-functional areas specifically: the measured metric (response time, WCAG score, browser pass/fail matrix, vulnerability count by severity) is recorded against the target defined in that area's test cases.
 
 ---
 
 ## 9. Test Schedule (indicative)
 
-| Phase | Activity | Areas Covered |
-|---|---|---|
-| 1 | Environment setup, tool installation, fixture/test-data preparation | All |
-| 2 | Backend unit + API integration testing | Backend Testing, Database Testing |
-| 3 | Web component + E2E testing | Web Testing |
-| 4 | Mobile widget + integration testing | Mobile Testing |
-| 5 | Cross-platform integration testing (web + mobile, full stack) | Cross-Platform Integration Testing |
-| 6 | Non-functional testing pass | Performance, Accessibility, Compatibility, Security |
-| 7 | Defect triage, retest, sign-off | All |
 
-Exact dates should be filled in against the module's assessment calendar.
+| Phase | Date | Activity | Areas Covered |
+|---|---|---|---|
+| 1 | 3 Oct | Environment setup, tool installation, fixture/test-data preparation | All |
+| 2 | 3 Oct | Backend unit + API integration testing; database testing | Backend Testing, Database Testing |
+| 3 | 3 Oct | Web component + E2E testing | Web Testing |
+| 4 | 3 Oct | Mobile widget + integration testing | Mobile Testing |
+| 5 | 4 Oct (AM) | Cross-platform integration testing (web + mobile, full stack) | Cross-Platform Integration Testing |
+| 6 | 4 Oct (AM) | Non-functional testing pass | Performance, Accessibility, Compatibility, Security |
+| 7 | 4 Oct (PM) | Defect triage, fixes, retest, sign-off, evidence collection | All |
+| 8 | 5 Oct | Test Execution Summary, Software Testing Report (PDF), final commit, CourseWeb submission | All |
 
 ---
 
@@ -212,14 +221,19 @@ Exact dates should be filled in against the module's assessment calendar.
 | Automated DB tests run against the shared development database instead of an isolated one, corrupting dev data or producing flaky results from leftover state | Medium | High | Use Testcontainers exclusively for automated DB tests; never point them at the shared dev connection string. |
 | External dependencies (LLM provider, Maps/Distance provider) are unavailable or rate-limited during a test run | Medium | Medium | Run the Agentic AI subsystem in `mock` provider mode for all automated runs; only exercise real-provider mode in a separate, explicitly-scheduled manual smoke test. |
 | Cross-component integration defects (a component's UI silently drifting from another component's API contract after independent development) go undetected until late | High | High | Prioritise Cross-Platform Integration Testing early rather than leaving it to the end; treat it as equally mandatory as unit testing, not a "nice to have" final pass. |
-| Load testing against a resource-constrained developer machine produces misleading performance numbers | Medium | Medium | Run k6 load tests from a separate CI runner/dedicated machine, sized comparably to the intended deployment target. |
+| Load testing against a resource-constrained developer machine produces misleading performance numbers | Medium | Medium | Run k6 load tests from a separate CI runner/dedicated machine, sized comparably to the intended deployment target; otherwise record machine specs with the results. |
 | Security scanning (OWASP ZAP) is accidentally pointed at a production or shared environment | Low | Critical | Restrict ZAP scans to a dedicated, isolated test deployment; never scan production. |
+| Very short remaining schedule before the 5 Oct deadline | High | High | Members work in parallel on their own areas; prioritise one complete E2E workflow, k6, and ZAP first. |
+| A member cannot explain or reproduce AI-assisted tests in the viva | Medium | High | Every member verifies, runs, and understands their own tests; AI usage is declared per the module requirements and CLEAR framework. |
 
 ---
 
 ## 11. Deliverables
 
-1. This Test Plan (`SE3090_Test_Plan.md`).
-2. The companion Test Case Document (`SE3090_Test_Case_Document.md`), including Actual Result and Pass/Fail for every case after execution.
+1. This Test Plan (`SE3110_Test_Plan.md`).
+2. The companion Test Case Document (`SE3110_Test_Case_Document.md`), including Actual Result and Pass/Fail for every case after execution, plus the Defect / Bug Report and Test Execution Summary.
 3. Raw tool output/reports retained as evidence: xUnit/Newman run logs, Testcontainers test logs, Vitest/Playwright reports (including the Playwright HTML report for the cross-browser compatibility matrix), Flutter/Appium test logs, k6 summary output, Lighthouse reports, and the OWASP ZAP scan report.
-4. A defect log summarising any Critical/High severity issues found, their status, and resolution.
+4. A defect log summarising any Critical/High severity issues found, their status, and resolution, with retest evidence.
+5. Software Testing Report (PDF) containing the test plan, scope, execution summary, defect summary, and conclusion.
+6. Automated test source code/scripts, the GitHub repository link with per-member commit evidence, and any configuration needed to rerun the tests.
+7. AI-usage declaration per the module requirements and the CLEAR framework.
