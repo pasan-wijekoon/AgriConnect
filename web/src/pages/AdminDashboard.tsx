@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api, type Listing, type Crop, type Region, type TodayPriceCatalogItem } from '../utils/marketApi';
 import { useAuth } from '../context/AuthContext';
 import { ProductDetailModal } from '../components/ProductDetailModal';
+import { PriceSuggestionPanel } from '../components/PriceSuggestionPanel';
 import {
   ShieldCheck, CheckCircle2, XCircle, Sparkles, RefreshCw,
   MapPin, Layers, Eye, TrendingUp, Plus, Edit, Trash2
@@ -20,6 +21,7 @@ export const AdminDashboard: React.FC = () => {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [priceReviewListing, setPriceReviewListing] = useState<Listing | null>(null);
 
   // Today's Prices catalog management
   const [catalogItems, setCatalogItems] = useState<TodayPriceCatalogItem[]>([]);
@@ -287,7 +289,6 @@ export const AdminDashboard: React.FC = () => {
           <Layers size={18} />
           <span>Crops & Regions Data</span>
         </button>
-
         <button
           onClick={() => setActiveTab('catalog')}
           style={{
@@ -573,6 +574,15 @@ export const AdminDashboard: React.FC = () => {
                   >
                     Inspect Full Details
                   </button>
+                  {l.priceSuggestion && (
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 14px', fontSize: '0.8rem' }}
+                      onClick={() => setPriceReviewListing(l)}
+                    >
+                      Review price
+                    </button>
+                  )}
                   {l.status === 'PendingApproval' && (
                     <button
                       className="btn btn-primary"
@@ -795,6 +805,17 @@ export const AdminDashboard: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {priceReviewListing && (
+        <PriceSuggestionPanel
+          listing={priceReviewListing}
+          onClose={() => setPriceReviewListing(null)}
+          onUpdate={(updated) => {
+            setPriceReviewListing(updated);
+            setListings((all) => all.map((x) => (x.id === updated.id ? updated : x)));
+          }}
+        />
       )}
 
       {/* Modal */}

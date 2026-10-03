@@ -19,6 +19,7 @@ import { ShortagesPage } from './pages/ShortagesPage'
 import { AnomalyQueuePage } from './pages/AnomalyQueuePage'
 import { ReportsPage } from './pages/ReportsPage'
 import { AiSchedulingPage } from './pages/AiSchedulingPage'
+import { TodayPricesPage } from './pages/TodayPricesPage'
 import './styles/analytics.css'
 
 function Forbidden() { return <div className="glass-card"><h1>Access denied</h1><p>Your account cannot access this page.</p></div> }
@@ -47,9 +48,10 @@ export default function App() {
       <Route path="/quality/discrepancies" element={<RoleRoute roles={['Officer','Administrator']}><DiscrepancyQueuePage /></RoleRoute>} />
       <Route path="/quality/history" element={<RoleRoute roles={['Officer','Administrator']}><InspectionHistoryPage /></RoleRoute>} />
       <Route path="/quality/publish/:listingId" element={<RoleRoute roles={['Officer','Administrator']}><PublishGatePage /></RoleRoute>} />
+      <Route path="/prices/today" element={<TodayPricesPage />} />
       <Route path="/my-orders" element={<RoleRoute roles={['Buyer','Farmer']}><MyOrdersPage /></RoleRoute>} />
-      <Route path="/orders" element={<RoleRoute roles={['Buyer','Officer','Administrator']}><OrderQueuePage /></RoleRoute>} />
-      <Route path="/orders/:orderId" element={<RoleRoute roles={['Buyer','Officer','Administrator']}><OrderDetailPage /></RoleRoute>} />
+      <Route path="/orders" element={<RoleRoute roles={['Officer','Administrator']}><OrderQueuePage /></RoleRoute>} />
+      <Route path="/orders/:orderId" element={<RoleRoute roles={['Officer','Administrator']}><OrderDetailPage /></RoleRoute>} />
       <Route path="/orders/schedule" element={<RoleRoute roles={['Officer','Administrator']}><ScheduleCalendarPage /></RoleRoute>} />
       <Route element={<RoleRoute roles={['Officer','Administrator']}><AnalyticsScope /></RoleRoute>}>
         <Route path="/analytics/price-trends" element={<PriceTrendsPage />} />

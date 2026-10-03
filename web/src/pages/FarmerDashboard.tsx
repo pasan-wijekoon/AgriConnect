@@ -112,7 +112,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
         description: data.description,
         photoUrls: data.photoUrls
       });
-      showNotification('New produce listing published to marketplace!');
+      showNotification('Listing submitted. It goes live once an officer has inspected and published it.');
     }
     await fetchData();
   };

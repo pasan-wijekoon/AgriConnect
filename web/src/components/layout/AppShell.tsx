@@ -51,6 +51,12 @@ const SIDEBAR_NAV: NavSection[] = [
         roles: ['Farmer', 'Buyer', 'Officer', 'Administrator'],
         end: true,
       },
+      {
+        to: '/prices/today',
+        label: "Today's Prices",
+        icon: TrendingUp,
+        roles: ['Farmer', 'Buyer', 'Officer', 'Administrator'],
+      },
     ],
   },
   {

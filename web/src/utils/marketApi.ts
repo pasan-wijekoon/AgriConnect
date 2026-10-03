@@ -65,6 +65,33 @@ export function normalizeUser(user: User): User {
 }
 
 /** @deprecated Catalog management was retired; retained only for legacy type-checking. */
+export interface TodayPriceItem {
+  cropId: string;
+  name: string;
+  category: string;
+  unit: string;
+  region: string;
+  grade: string;
+  suggestedPriceMin: number;
+  suggestedPriceMax: number;
+  averagePrice: number;
+  confidence: number;
+  change24h: number;
+  trend: 'rising' | 'falling' | 'stable';
+  imageUrl: string;
+  reasoning: string;
+  benchmarkWholesale: number;
+}
+
+export interface TodayPricesResponse {
+  date: string;
+  totalCrops: number;
+  selectedGrade: string;
+  selectedRegion: string;
+  marketStatus: string;
+  items: TodayPriceItem[];
+}
+
 export interface TodayPriceCatalogItem { id: string; name: string; category: string; unit: string; defaultRegion: string; imageUrl?: string; displayOrder: number; isActive: boolean }
 
 export interface Photo {
@@ -362,10 +389,47 @@ export const api = {
     return request<PriceEstimateResult>(`/prices/estimate?${q.toString()}`);
   },
 
-  /** @deprecated The Today's Prices catalog is no longer part of the public product scope. */
-  getTodayPriceCatalog: (): Promise<TodayPriceCatalogItem[]> => Promise.reject(new Error('Today\'s Prices catalog retired')),
-  updateTodayPriceCatalogItem: (_id: string, _data: unknown) => Promise.reject(new Error('Today\'s Prices catalog retired')),
-  createTodayPriceCatalogItem: (_data: unknown) => Promise.reject(new Error('Today\'s Prices catalog retired')),
-  deleteTodayPriceCatalogItem: (_id: string) => Promise.reject(new Error('Today\'s Prices catalog retired')),
+  // Today's Prices discovery (Component A, Fair-Price Estimation Agent)
+  getTodayPrices: (region?: string, grade: string = 'A'): Promise<TodayPricesResponse> => {
+    const params = new URLSearchParams();
+    if (region && region !== 'All') params.append('region', region);
+    if (grade) params.append('grade', grade);
+    return request<TodayPricesResponse>(`/prices/today?${params.toString()}`);
+  },
+
+  // Admin: Today's Prices catalog management (which crops appear on the
+  // discovery page - prices themselves are always computed live)
+  getTodayPriceCatalog: () =>
+    request<TodayPriceCatalogItem[]>('/admin/today-prices-catalog'),
+
+  createTodayPriceCatalogItem: (data: {
+    name: string;
+    category: string;
+    unit?: string;
+    defaultRegion: string;
+    imageUrl?: string;
+    displayOrder?: number;
+  }) =>
+    request<TodayPriceCatalogItem>('/admin/today-prices-catalog', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateTodayPriceCatalogItem: (id: string, data: {
+    name?: string;
+    category?: string;
+    unit?: string;
+    defaultRegion?: string;
+    imageUrl?: string;
+    displayOrder?: number;
+    isActive?: boolean;
+  }) =>
+    request<TodayPriceCatalogItem>(`/admin/today-prices-catalog/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteTodayPriceCatalogItem: (id: string) =>
+    request<void>(`/admin/today-prices-catalog/${id}`, { method: 'DELETE' }),
 
 };
