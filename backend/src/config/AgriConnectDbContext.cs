@@ -56,6 +56,9 @@ public class AgriConnectDbContext : DbContext
     public DbSet<PriceSuggestion> PriceSuggestions => Set<PriceSuggestion>();
     public DbSet<TodayPriceCatalogItem> TodayPriceCatalogItems => Set<TodayPriceCatalogItem>();
 
+    // ---- Shared: produce photos stored in the database (POST /api/upload, GET /uploads/{name}) ----
+    public DbSet<UploadedImage> UploadedImages => Set<UploadedImage>();
+
     // ---- Component C — Quality Grading & Inspection (FR12–FR14) --------------
     public DbSet<Inspection> Inspections => Set<Inspection>();
     public DbSet<InspectionPhoto> InspectionPhotos => Set<InspectionPhoto>();
@@ -354,6 +357,14 @@ public class AgriConnectDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.DisplayOrder);
+        });
+
+        modelBuilder.Entity<UploadedImage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            // The public name is the lookup key for GET /uploads/{fileName}.
+            entity.HasIndex(e => e.FileName).IsUnique();
+            entity.Property(e => e.Data).HasColumnType("bytea");
         });
     }
 

@@ -143,7 +143,17 @@ public class ApiTestFactory : WebApplicationFactory<Program>
                 Role = role,
             };
             db.Users.Add(user);
-            db.SaveChanges();
+            try
+            {
+                db.SaveChanges();
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+            {
+                // Another test class created the same stable account at the same moment (xUnit runs
+                // classes in parallel): use the row that won.
+                db.ChangeTracker.Clear();
+                user = db.Users.First(u => u.Id == userId);
+            }
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));

@@ -296,6 +296,11 @@ if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains(
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         var sharedResult = await SharedReferenceSeeder.SeedAsync(db, logger);
         Console.WriteLine($"[Shared] Seeded: {sharedResult.CropsAdded} crops, {sharedResult.RegionsAdded} regions, {sharedResult.UsersAdded} users.");
+
+        // Photos uploaded before images moved into the database are copied in once (idempotent).
+        var uploadsDir = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "uploads");
+        var importedImages = await UploadedImageImporter.ImportAsync(db, uploadsDir, logger);
+        if (importedImages > 0) Console.WriteLine($"[Shared] Imported {importedImages} existing photo(s) from wwwroot/uploads into the database.");
     }
 
     // ---- Component D — demo price history, anomaly flags and supply events ----
