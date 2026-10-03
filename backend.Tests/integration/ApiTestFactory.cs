@@ -93,12 +93,14 @@ public class ApiTestFactory : WebApplicationFactory<Program>
 
     /// <summary>An <see cref="HttpClient"/> carrying a real signed JWT for the given
     /// role/user id (the dev-header bypass no longer exists), or no credentials at all
-    /// if both are omitted (for testing 401s). The token's account must exist and be
+    /// if the role is omitted (for testing 401s). The token's account must exist and be
     /// active (Program.cs checks it on every request), so a missing user row is created
     /// here; seeded fixture users are left untouched.</summary>
     public HttpClient CreateAuthedClient(string? role = null, Guid? userId = null)
     {
         var client = CreateClient();
+        // Role-only callers (the analytics tests) get one stable test account per role.
+        if (role is not null) userId ??= new Guid(System.Security.Cryptography.MD5.HashData(Encoding.UTF8.GetBytes($"agriconnect-test-{role}")));
         if (role is not null && userId is not null)
         {
             var token = IssueToken(role, userId.Value);

@@ -634,9 +634,10 @@ public class AgriConnectDbContext : DbContext
         };
         modelBuilder.Entity<Region>().HasData(regions);
 
-        // Demo users (password for all: "password")
+        // Demo users (password: "password"; the admin uses "admin123")
         // PBKDF2-HMAC-SHA256, format "{iterations}.{saltBase64}.{hashBase64}" — see AuthService.HashPassword
         var passwordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=";
+        var adminPasswordHash = "600000.EZ+jN5qodC33/GPd+dSJvg==.wsxn846JB/pixYU9C5V9hAkGzMv0yU/e8o/CYZpIsX4=";
 
         var users = new[]
         {
@@ -684,7 +685,7 @@ public class AgriConnectDbContext : DbContext
                 Id = Guid.Parse("f0000000-0000-0000-0000-000000000099"),
                 FullName = "N. Perera",
                 Email = "admin@agriconnect.lk",
-                PasswordHash = passwordHash,
+                PasswordHash = adminPasswordHash,
                 Role = "Administrator",
                 Phone = "+94112345678",
                 Region = "Nuwara Eliya",

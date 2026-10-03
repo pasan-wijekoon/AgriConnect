@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './context/AuthContext'
 import { LoginPage } from './pages/LoginPage'
@@ -18,12 +18,17 @@ import { PriceTrendsPage } from './pages/PriceTrendsPage'
 import { ShortagesPage } from './pages/ShortagesPage'
 import { AnomalyQueuePage } from './pages/AnomalyQueuePage'
 import { ReportsPage } from './pages/ReportsPage'
+import { AiSchedulingPage } from './pages/AiSchedulingPage'
+import './styles/analytics.css'
 
 function Forbidden() { return <div className="glass-card"><h1>Access denied</h1><p>Your account cannot access this page.</p></div> }
 function RoleRoute({ roles, children }: { roles: string[]; children: React.ReactNode }) {
   const { user } = useAuth()
   return user && roles.includes(user.role) ? <>{children}</> : <Forbidden />
 }
+// Component D's pages use generic class names (.card, .badge ...) defined in styles/analytics.css;
+// this wrapper scopes that CSS to the analytics routes only.
+function AnalyticsScope() { return <div className="analytics-scope"><Outlet /></div> }
 function Home() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -46,10 +51,13 @@ export default function App() {
       <Route path="/orders" element={<RoleRoute roles={['Buyer','Officer','Administrator']}><OrderQueuePage /></RoleRoute>} />
       <Route path="/orders/:orderId" element={<RoleRoute roles={['Buyer','Officer','Administrator']}><OrderDetailPage /></RoleRoute>} />
       <Route path="/orders/schedule" element={<RoleRoute roles={['Officer','Administrator']}><ScheduleCalendarPage /></RoleRoute>} />
-      <Route path="/analytics/price-trends" element={<RoleRoute roles={['Officer','Administrator']}><PriceTrendsPage /></RoleRoute>} />
-      <Route path="/analytics/shortages" element={<RoleRoute roles={['Officer','Administrator']}><ShortagesPage /></RoleRoute>} />
-      <Route path="/analytics/anomalies" element={<RoleRoute roles={['Officer','Administrator']}><AnomalyQueuePage /></RoleRoute>} />
-      <Route path="/analytics/reports" element={<RoleRoute roles={['Officer','Administrator']}><ReportsPage /></RoleRoute>} />
+      <Route element={<RoleRoute roles={['Officer','Administrator']}><AnalyticsScope /></RoleRoute>}>
+        <Route path="/analytics/price-trends" element={<PriceTrendsPage />} />
+        <Route path="/analytics/shortages" element={<ShortagesPage />} />
+        <Route path="/analytics/anomalies" element={<AnomalyQueuePage />} />
+        <Route path="/analytics/reports" element={<ReportsPage />} />
+        <Route path="/analytics/ai-scheduling" element={<AiSchedulingPage />} />
+      </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Route>
   </Routes>

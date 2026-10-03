@@ -1,12 +1,18 @@
 /// A crop or region as offered by the analytics filters.
 class NamedItem {
-  const NamedItem({required this.id, required this.name});
+  const NamedItem({required this.id, required this.name, this.hasPriceHistory = true});
 
-  factory NamedItem.fromJson(Map<String, dynamic> json) =>
-      NamedItem(id: json['id'] as String, name: json['name'] as String);
+  factory NamedItem.fromJson(Map<String, dynamic> json) => NamedItem(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        hasPriceHistory: json['hasPriceHistory'] as bool? ?? true,
+      );
 
   final String id;
   final String name;
+
+  /// False when the API has no price trend for this crop yet.
+  final bool hasPriceHistory;
 }
 
 /// One week of prices (LKR per kg) for a crop.

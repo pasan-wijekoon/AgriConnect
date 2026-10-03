@@ -135,6 +135,12 @@ const SIDEBAR_NAV: NavSection[] = [
         icon: BarChart2,
         roles: ['Officer', 'Administrator'],
       },
+      {
+        to: '/analytics/ai-scheduling',
+        label: 'AI Scheduling',
+        icon: Sparkles,
+        roles: ['Officer', 'Administrator'],
+      },
     ],
   },
   {

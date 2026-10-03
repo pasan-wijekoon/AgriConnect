@@ -4,6 +4,42 @@
    defines the same class names with different rules. Uses native CSS nesting, wrapping
    the whole original file in one selector rather than rewriting every class name. */
 .analytics-scope {
+/* The combined app is light-only, so these pages stay light too. Without this, the
+   tokens below would follow a dark OS theme while the text inherited the app shell's
+   dark grey, leaving dark text on dark cards. */
+color-scheme: light;
+color: var(--text);
+--page: #f9f9f7;
+--surface: #fcfcfb;
+--surface-raised: #ffffff;
+--text: #0b0b0b;
+--text-secondary: #52514e;
+--text-muted: #6f6d68;
+--grid: #e1e0d9;
+--baseline: #c3c2b7;
+--border: rgba(11, 11, 11, 0.1);
+--hover: rgba(11, 11, 11, 0.04);
+--brand: #2e7d32;
+--brand-strong: #1b5e20;
+--brand-soft: #e6f2e6;
+--on-brand: #ffffff;
+--series-1: #2a78d6;
+--series-2: #eb6834;
+--band: rgba(42, 120, 214, 0.16);
+--good-text: #006300;
+--critical-text: #b3261e;
+--over-low: #86b6ef;
+--over-medium: #3987e5;
+--over-high: #1c5cab;
+--short-low: #f19b9a;
+--short-medium: #e34948;
+--short-high: #a8302f;
+--neutral-cell: #f0efec;
+--cell-ink-low: #0b0b0b;
+--cell-ink-medium: #0b0b0b;
+--cell-ink-high: #ffffff;
+--shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 8px 24px rgba(11, 11, 11, 0.06);
+
 
 /* ---- Shell ------------------------------------------------------------------------ */
 
@@ -910,6 +946,198 @@ td.notes {
 .lookup .field {
   flex: 1;
   min-width: 260px;
+}
+
+/* ---- AI scheduling ------------------------------------------------------------------ */
+
+.scenario-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.scenario-block {
+  display: grid;
+  gap: 6px;
+}
+
+.scenario-note {
+  margin: 0;
+  font-size: 14px;
+}
+
+.scheduling-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .scheduling-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.scheduling-form {
+  display: grid;
+  gap: 16px;
+}
+
+.window-fields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.window-fields legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.window-fields p {
+  margin: 0;
+}
+
+.booking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.booking-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-list input {
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.booking-index {
+  width: 16px;
+  text-align: right;
+}
+
+ul.field-error {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.timeline {
+  display: grid;
+  gap: 6px;
+}
+
+.timeline-track {
+  position: relative;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.timeline-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--band);
+  border-left: 2px solid var(--series-1);
+  border-right: 2px solid var(--series-1);
+}
+
+.timeline-booking {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  background: var(--text-muted);
+  opacity: 0.55;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--surface);
+}
+
+.timeline-proposed {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: var(--on-brand);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.timeline-axis {
+  position: relative;
+  height: 18px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.timeline-axis span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.timeline-axis span:first-child {
+  transform: none;
+}
+
+.timeline-axis span:last-child {
+  transform: translateX(-100%);
+}
+
+.timeline-legend {
+  margin-top: 4px;
+}
+
+.timeline-key-window {
+  background: var(--band);
+  border: 1px solid var(--series-1);
+}
+
+.timeline-key-booking {
+  background: var(--text-muted);
+  opacity: 0.55;
+}
+
+.timeline-key-proposed {
+  background: var(--brand);
+}
+
+.proposal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.proposal-slot {
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.reasoning {
+  margin: 4px 0 0;
+  line-height: 1.55;
 }
 
 } /* end .analytics-scope */
