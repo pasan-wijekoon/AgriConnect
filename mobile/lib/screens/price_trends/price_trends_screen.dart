@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 
 import '../../models/price_trend.dart';
 import '../../providers/price_trend_provider.dart';
+import '../../services/dummy_price_trend_service.dart';
 import '../../services/price_trend_service.dart';
 
 /// Read-only weekly price trend for farmers, so they can judge whether to list now.
 /// Deliberately minimal: the React dashboard is the full analytics surface.
 class PriceTrendsScreen extends StatefulWidget {
-  const PriceTrendsScreen({super.key, required this.service, this.clock});
+  const PriceTrendsScreen({super.key, this.service, this.clock});
 
-  final PriceTrendService service;
+  final PriceTrendService? service;
   final DateTime Function()? clock;
 
   @override
@@ -20,7 +21,10 @@ class PriceTrendsScreen extends StatefulWidget {
 }
 
 class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
-  late final PriceTrendProvider _prices = PriceTrendProvider(widget.service, clock: widget.clock)..load();
+  late final PriceTrendProvider _prices = PriceTrendProvider(
+    widget.service ?? const DummyPriceTrendService(),
+    clock: widget.clock,
+  )..load();
 
   @override
   void dispose() {
@@ -53,9 +57,9 @@ class _PriceTrendsScreenState extends State<PriceTrendsScreen> {
               children: [
                 Text(
                   'Weekly average across all regions · last ${PriceTrendProvider.weeks} weeks',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 12),
                 Wrap(
@@ -144,10 +148,15 @@ class _Headline extends StatelessWidget {
             Text('Current average', style: theme.textTheme.labelLarge?.copyWith(color: muted)),
             const SizedBox(height: 4),
             Text.rich(
-              TextSpan(children: [
-                TextSpan(text: formatLkr(latest.avgPrice), style: theme.textTheme.headlineMedium),
-                TextSpan(text: ' /kg', style: theme.textTheme.titleMedium?.copyWith(color: muted)),
-              ]),
+              TextSpan(
+                children: [
+                  TextSpan(text: formatLkr(latest.avgPrice), style: theme.textTheme.headlineMedium),
+                  TextSpan(
+                    text: ' /kg',
+                    style: theme.textTheme.titleMedium?.copyWith(color: muted),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -157,14 +166,16 @@ class _Headline extends StatelessWidget {
             if (change != null) ...[
               const SizedBox(height: 8),
               // An icon, not ▲/▼ text: those glyphs are missing from some device fonts.
-              Row(children: [
-                Icon(change >= 0 ? Icons.arrow_upward : Icons.arrow_downward, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  '${change >= 0 ? 'Up' : 'Down'} ${change.abs().toStringAsFixed(1)}% vs 4 weeks ago',
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ]),
+              Row(
+                children: [
+                  Icon(change >= 0 ? Icons.arrow_upward : Icons.arrow_downward, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${change >= 0 ? 'Up' : 'Down'} ${change.abs().toStringAsFixed(1)}% vs 4 weeks ago',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+              ),
             ],
           ],
         ),
@@ -202,33 +213,29 @@ class _PriceChart extends StatelessWidget {
     final lastX = (series.length - 1).toDouble();
 
     LineChartBarData bar(List<FlSpot> spots, {Color? color, double width = 0}) => LineChartBarData(
-          spots: spots,
-          color: color ?? Colors.transparent,
-          barWidth: width,
-          isCurved: false,
-          dotData: const FlDotData(show: false),
-        );
+      spots: spots,
+      color: color ?? Colors.transparent,
+      barWidth: width,
+      isCurved: false,
+      dotData: const FlDotData(show: false),
+    );
 
     final lowBar = bar([for (var i = 0; i < series.length; i++) spot(i, series[i]?.minPrice)]);
     final highBar = bar([for (var i = 0; i < series.length; i++) spot(i, series[i]?.maxPrice)]);
     final avgBar = bar([for (var i = 0; i < series.length; i++) spot(i, series[i]?.avgPrice)], color: line, width: 2)
         .copyWith(
-      dotData: FlDotData(
-        show: true,
-        checkToShowDot: (s, _) => s.x == lastX,
-        getDotPainter: (_, _, _, _) => FlDotCirclePainter(
-          radius: 4,
-          color: line,
-          strokeWidth: 2,
-          strokeColor: theme.colorScheme.surface,
-        ),
-      ),
-    );
+          dotData: FlDotData(
+            show: true,
+            checkToShowDot: (s, _) => s.x == lastX,
+            getDotPainter: (_, _, _, _) =>
+                FlDotCirclePainter(radius: 4, color: line, strokeWidth: 2, strokeColor: theme.colorScheme.surface),
+          ),
+        );
 
     Widget axisLabel(String text, TitleMeta meta) => SideTitleWidget(
-          meta: meta,
-          child: Text(text, style: theme.textTheme.labelSmall?.copyWith(color: muted)),
-        );
+      meta: meta,
+      child: Text(text, style: theme.textTheme.labelSmall?.copyWith(color: muted)),
+    );
 
     return Card(
       child: Padding(
@@ -243,10 +250,13 @@ class _PriceChart extends StatelessWidget {
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.only(left: 4),
-              child: Wrap(spacing: 16, children: [
-                _LegendKey(color: line, label: 'Average', isLine: true),
-                _LegendKey(color: line.withValues(alpha: 0.18), label: 'Lowest–highest'),
-              ]),
+              child: Wrap(
+                spacing: 16,
+                children: [
+                  _LegendKey(color: line, label: 'Average', isLine: true),
+                  _LegendKey(color: line.withValues(alpha: 0.18), label: 'Lowest–highest'),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             Semantics(
@@ -266,7 +276,10 @@ class _PriceChart extends StatelessWidget {
                       horizontalInterval: step,
                       getDrawingHorizontalLine: (_) => FlLine(color: grid, strokeWidth: 1),
                     ),
-                    borderData: FlBorderData(show: true, border: Border(bottom: BorderSide(color: baseline))),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border(bottom: BorderSide(color: baseline)),
+                    ),
                     titlesData: FlTitlesData(
                       topTitles: const AxisTitles(),
                       rightTitles: const AxisTitles(),
@@ -310,8 +323,7 @@ class _PriceChart extends StatelessWidget {
                         fitInsideHorizontally: true,
                         fitInsideVertically: true,
                         getTooltipItems: (spots) => [
-                          for (final s in spots)
-                            s.barIndex == 2 ? _tooltip(series[s.x.round()]!, theme) : null,
+                          for (final s in spots) s.barIndex == 2 ? _tooltip(series[s.x.round()]!, theme) : null,
                         ],
                       ),
                     ),
@@ -333,7 +345,8 @@ class _PriceChart extends StatelessWidget {
       textAlign: TextAlign.left,
       children: [
         TextSpan(
-          text: '\nWeek of ${formatDay(p.period)}\n'
+          text:
+              '\nWeek of ${formatDay(p.period)}\n'
               '${p.minPrice.toStringAsFixed(0)}–${p.maxPrice.toStringAsFixed(0)} · ${p.sampleCount} listings',
           style: theme.textTheme.bodySmall!.copyWith(color: ink.withValues(alpha: 0.8)),
         ),
@@ -432,8 +445,12 @@ class _Message extends StatelessWidget {
       ],
     );
     return compact
-        ? Card(child: Padding(padding: const EdgeInsets.all(16), child: content))
-        : Center(child: Padding(padding: const EdgeInsets.all(24), child: content));
+        ? Card(
+            child: Padding(padding: const EdgeInsets.all(16), child: content),
+          )
+        : Center(
+            child: Padding(padding: const EdgeInsets.all(24), child: content),
+          );
   }
 }
 

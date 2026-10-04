@@ -15,6 +15,7 @@ class ApiService {
   }
 
   final String baseUrl;
+  final http.Client? client;
 
   /// Supplies the current bearer token for every request. The backend now
   /// requires authentication on all listing/price endpoints ([Authorize] in
@@ -23,9 +24,21 @@ class ApiService {
   /// keeps working across login/logout without reconstructing ApiService.
   final String? Function() getToken;
 
-  ApiService({String? baseUrl, String? Function()? getToken})
+  ApiService({String? baseUrl, String? Function()? getToken, this.client})
       : baseUrl = baseUrl ?? defaultBaseUrl,
         getToken = getToken ?? (() => null);
+
+  Future<http.Response> _get(Uri uri, {Map<String, String>? headers}) =>
+      client?.get(uri, headers: headers) ?? http.get(uri, headers: headers);
+
+  Future<http.Response> _post(Uri uri, {Map<String, String>? headers, Object? body}) =>
+      client?.post(uri, headers: headers, body: body) ?? http.post(uri, headers: headers, body: body);
+
+  Future<http.Response> _put(Uri uri, {Map<String, String>? headers, Object? body}) =>
+      client?.put(uri, headers: headers, body: body) ?? http.put(uri, headers: headers, body: body);
+
+  Future<http.Response> _delete(Uri uri, {Map<String, String>? headers}) =>
+      client?.delete(uri, headers: headers) ?? http.delete(uri, headers: headers);
 
   Map<String, String> get _headers {
     final headers = {
@@ -42,7 +55,7 @@ class ApiService {
   // ── Crops & Regions Reference Data ────────────────────────
   Future<List<Crop>> getCrops() async {
     try {
-      final res = await http.get(Uri.parse('$baseUrl/crops'), headers: _headers);
+      final res = await _get(Uri.parse('$baseUrl/crops'), headers: _headers);
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
         return data.map((item) => Crop.fromJson(item as Map<String, dynamic>)).toList();
@@ -56,7 +69,7 @@ class ApiService {
 
   Future<List<Region>> getRegions() async {
     try {
-      final res = await http.get(Uri.parse('$baseUrl/regions'), headers: _headers);
+      final res = await _get(Uri.parse('$baseUrl/regions'), headers: _headers);
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
         return data.map((item) => Region.fromJson(item as Map<String, dynamic>)).toList();
@@ -98,7 +111,7 @@ class ApiService {
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
     final uri = Uri.parse('$baseUrl/listings').replace(queryParameters: queryParams);
-    final res = await http.get(uri, headers: _headers);
+    final res = await _get(uri, headers: _headers);
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
@@ -108,7 +121,7 @@ class ApiService {
   }
 
   Future<Listing> getListingById(String id) async {
-    final res = await http.get(Uri.parse('$baseUrl/listings/$id'), headers: _headers);
+    final res = await _get(Uri.parse('$baseUrl/listings/$id'), headers: _headers);
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       return Listing.fromJson(data);
@@ -121,7 +134,7 @@ class ApiService {
   // models/listing_inspection_status.dart for why this isn't folded into the
   // Listing model itself.
   Future<Map<String, ListingInspectionStatus>> getMyListingsInspectionStatus() async {
-    final res = await http.get(Uri.parse('$baseUrl/listings/my-listings'), headers: _headers);
+    final res = await _get(Uri.parse('$baseUrl/listings/my-listings'), headers: _headers);
     if (res.statusCode == 200) {
       final List<dynamic> data = jsonDecode(res.body);
       final entries = data.map((item) {
@@ -134,7 +147,7 @@ class ApiService {
   }
 
   Future<List<ListingInspectionRecord>> getListingInspections(String listingId) async {
-    final res = await http.get(Uri.parse('$baseUrl/listings/$listingId/inspections'), headers: _headers);
+    final res = await _get(Uri.parse('$baseUrl/listings/$listingId/inspections'), headers: _headers);
     if (res.statusCode == 200) {
       final List<dynamic> data = jsonDecode(res.body);
       return data.map((item) => ListingInspectionRecord.fromJson(item as Map<String, dynamic>)).toList();
@@ -167,7 +180,7 @@ class ApiService {
           : ['https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800'],
     });
 
-    final res = await http.post(
+    final res = await _post(
       Uri.parse('$baseUrl/listings'),
       headers: _headers,
       body: body,
@@ -202,7 +215,7 @@ class ApiService {
       if (minPrice != null) 'minPrice': minPrice,
     });
 
-    final res = await http.put(
+    final res = await _put(
       Uri.parse('$baseUrl/listings/$id'),
       headers: _headers,
       body: body,
@@ -216,7 +229,7 @@ class ApiService {
   }
 
   Future<void> withdrawListing(String id) async {
-    final res = await http.delete(
+    final res = await _delete(
       Uri.parse('$baseUrl/listings/$id'),
       headers: _headers,
     );
@@ -227,7 +240,7 @@ class ApiService {
   }
 
   Future<PriceSuggestion> getPriceSuggestion(String listingId) async {
-    final res = await http.get(
+    final res = await _get(
       Uri.parse('$baseUrl/listings/$listingId/price-suggestion'),
       headers: _headers,
     );
@@ -248,7 +261,7 @@ class ApiService {
         request.headers['Authorization'] = 'Bearer $token';
       }
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
-      final streamedResponse = await request.send();
+      final streamedResponse = await (client?.send(request) ?? request.send());
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
@@ -295,7 +308,7 @@ class ApiService {
       if (regionName != null) queryParams['regionName'] = regionName;
 
       final uri = Uri.parse('$baseUrl/prices/estimate').replace(queryParameters: queryParams);
-      final res = await http.get(uri, headers: _headers);
+      final res = await _get(uri, headers: _headers);
 
       if (res.statusCode == 200) {
         return jsonDecode(res.body) as Map<String, dynamic>;
