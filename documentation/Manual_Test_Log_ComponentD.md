@@ -138,6 +138,8 @@ Click Authorize and paste a login token for the role, or use the role picker's h
 | DEF-D-01 | D-M-61 | Overpriced listing never reached the Anomaly Queue | High | Create a listing with a very high price, then check the Prices to check list | `testing-evidence/backend/defect-D-01-*.trx` | Fixed (commit `079d5f2`) | Passed |
 | DEF-D-02 | D-M-30 | Shortages heatmap: district names and "No event" text overlap the crop labels | Medium | Open Shortages as an officer in the dark app shell | `testing-evidence/manual/D-M-30.png` | Fixed (analytics.css) | Retest: pending |
 | DEF-D-03 | D-M-30, D-M-40 | Analytics tables, tile numbers and card titles are near-invisible (light text on white cards) | Medium | Open Shortages and the Anomaly Queue | `testing-evidence/manual/D-M-40.png` | Fixed (analytics.css) | Retest: pending |
+| DEF-D-04 | D-M-62 | Raising a listing's price after it was created never reached the Anomaly Queue (the check only ran at creation) | High | Farmer edits a published listing's floor price to a very high value; check the Prices to check list | `testing-evidence/flow/price-edit-before-fix.txt` | Fixed | Passed (`price-edit-after-fix.txt`, TC-D-25, TC-D-53) |
+| DEF-D-05 | D-M-60 | An unapproved, absurdly priced listing inflated the AI "fair" price of the next listing (fair range LKR 12,723-16,193/kg for carrots), hiding anomalies | High | Create a Carrots listing at a price of 50,000, then create another Carrots listing in the same region and read its price suggestion | `testing-evidence/backend/defect-D-05-before.trx` | Fixed | Passed (`defect-D-05-after.trx`, TC-D-54) |
 | | | | | | | | |
 
 ## 11. Summary (fill in at the end)

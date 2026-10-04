@@ -14,8 +14,12 @@ namespace backend.Tests.integration;
 /// never receive a real listing. Needs the AI agent reachable (see AgenticAi:BaseUrl).
 /// Test ids TC-D-50.. match the Test Case Document.
 /// </summary>
-public class ListingAnomalyIntegrationTests : IClassFixture<ApiTestFactory>
+public class ListingAnomalyIntegrationTests : IClassFixture<ApiTestFactory>, IAsyncLifetime
 {
+    // Every listing a test creates is withdrawn afterwards, and its flag dismissed, so repeated
+    // runs do not fill the farmer's My Listings page and the officer's queue with test rows.
+    private readonly List<Guid> _created = [];
+
     private static readonly Guid SeededFarmer = Guid.Parse("f0000000-0000-0000-0000-000000000001");
     private readonly ApiTestFactory _factory;
 
@@ -48,7 +52,26 @@ public class ListingAnomalyIntegrationTests : IClassFixture<ApiTestFactory>
             photoUrls = new[] { "https://example.com/test.jpg" },
         });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        var id = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        _created.Add(id);
+        return id;
+    }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public async Task DisposeAsync()
+    {
+        using var farmer = _factory.CreateAuthedClient(Roles.Farmer, SeededFarmer);
+        using var officer = _factory.CreateAuthedClient(Roles.Officer);
+        foreach (var id in _created)
+        {
+            if (await FlagForAsync(id) is { } flag)
+            {
+                await officer.SendAsync(new HttpRequestMessage(HttpMethod.Patch, $"/api/analytics/anomalies/{flag.GetProperty("id").GetGuid()}")
+                { Content = JsonContent.Create(new { status = "Dismissed" }) });
+            }
+            await farmer.DeleteAsync($"/api/listings/{id}");
+        }
     }
 
     private async Task<JsonElement?> FlagForAsync(Guid listingId)
@@ -84,6 +107,40 @@ public class ListingAnomalyIntegrationTests : IClassFixture<ApiTestFactory>
         var listingId = await CreateListingAsync(minPrice: null);
 
         Assert.Null(await FlagForAsync(listingId));
+    }
+
+    [Fact] // TC-D-53 — DEF-D-04: raising the price AFTER listing must be checked too
+    public async Task RaisingTheAskingPriceLater_AlsoReachesTheAnomalyQueue_WithoutAddingASecondFlag()
+    {
+        var listingId = await CreateListingAsync(minPrice: null);
+        Assert.Null(await FlagForAsync(listingId));
+        using var farmer = _factory.CreateAuthedClient(Roles.Farmer, SeededFarmer);
+
+        var first = await farmer.PutAsJsonAsync($"/api/listings/{listingId}", new { minPrice = 50_000m });
+        var flagged = await FlagForAsync(listingId);
+        var second = await farmer.PutAsJsonAsync($"/api/listings/{listingId}", new { minPrice = 60_000m });
+        var refreshed = await FlagForAsync(listingId);
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        Assert.NotNull(flagged);
+        Assert.Equal(50_000m, flagged.Value.GetProperty("listingPrice").GetDecimal());
+        Assert.Equal(flagged.Value.GetProperty("id").GetGuid(), refreshed!.Value.GetProperty("id").GetGuid());
+        Assert.Equal(60_000m, refreshed.Value.GetProperty("listingPrice").GetDecimal());
+    }
+
+    [Fact] // TC-D-54 — DEF-D-05: an unapproved, absurdly priced listing must not drag up the "fair" price of the next one
+    public async Task AnOverpricedUnapprovedListing_DoesNotInflateTheFairPriceOfTheNextListing()
+    {
+        await CreateListingAsync(minPrice: 50_000m);   // stays PendingApproval, never published
+        var next = await CreateListingAsync(minPrice: null);
+        using var farmer = _factory.CreateAuthedClient(Roles.Farmer, SeededFarmer);
+
+        var suggestion = await farmer.GetFromJsonAsync<JsonElement>($"/api/listings/{next}/price-suggestion");
+
+        // Carrots sell for a few hundred rupees per kg; a range in the thousands means the 50,000 leaked in.
+        Assert.True(suggestion.GetProperty("suggestedPriceMax").GetDecimal() < 1_000m,
+            $"fair range was {suggestion.GetProperty("suggestedPriceMin").GetDecimal()}-{suggestion.GetProperty("suggestedPriceMax").GetDecimal()}");
     }
 
     [Fact] // TC-D-52 — the flag is visible to staff only

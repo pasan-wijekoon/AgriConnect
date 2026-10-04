@@ -1,0 +1,92 @@
+[
+  {
+    "step": "Buyer sees a published listing",
+    "pass": true,
+    "detail": "Carrots \u00b7 Kandy \u00b7 500.0 kg"
+  },
+  {
+    "step": "Buyer places an order for 50 kg",
+    "pass": true,
+    "detail": "status 201, order status 'Pending'"
+  },
+  {
+    "step": "Order appears in the buyer's My Orders",
+    "pass": true,
+    "detail": "1 order(s)"
+  },
+  {
+    "step": "Another farmer cannot open the order (ownership)",
+    "pass": true,
+    "detail": "status 404"
+  },
+  {
+    "step": "Ordering more than the stock is refused",
+    "pass": true,
+    "detail": "status 409"
+  },
+  {
+    "step": "Ordering 0 kg is refused",
+    "pass": true,
+    "detail": "status 400"
+  },
+  {
+    "step": "Buyer cannot approve their own order",
+    "pass": true,
+    "detail": "status 403"
+  },
+  {
+    "step": "Officer sees it in the Orders queue",
+    "pass": true,
+    "detail": "1 pending"
+  },
+  {
+    "step": "Officer approves the order",
+    "pass": true,
+    "detail": "status 200, now 'Approved'"
+  },
+  {
+    "step": "A pickup slot was proposed automatically",
+    "pass": true,
+    "detail": "status 200, slot status 'Proposed'"
+  },
+  {
+    "step": "Buyer cannot approve the pickup slot",
+    "pass": true,
+    "detail": "status 403"
+  },
+  {
+    "step": "Officer approves the pickup slot",
+    "pass": true,
+    "detail": "status 200, slot now 'Confirmed'"
+  },
+  {
+    "step": "Order becomes Scheduled",
+    "pass": true,
+    "detail": "order status 'Scheduled'"
+  },
+  {
+    "step": "Buyer can see the confirmed pickup slot",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "step": "Officer marks the order Completed",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "step": "A completed order cannot be cancelled",
+    "pass": true,
+    "detail": "status 409"
+  },
+  {
+    "step": "Buyer cancels a pending order",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "step": "Cancelling released the reserved stock",
+    "pass": true,
+    "detail": "500.0 -> 500.0 kg"
+  }
+]

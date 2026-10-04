@@ -302,6 +302,17 @@ public class ListingService
         listing.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
+        // A farmer can list at a fair price and then raise it, so a changed price is checked
+        // against the AI fair range again, not only the price the listing was created with.
+        if (dto.MinPrice.HasValue)
+        {
+            var suggestion = await _db.PriceSuggestions.AsNoTracking().FirstOrDefaultAsync(p => p.ListingId == id);
+            if (suggestion is not null)
+            {
+                await FlagIfPriceAnomalousAsync(listing, suggestion);
+            }
+        }
+
         return await GetListingById(id);
     }
 
@@ -410,11 +421,15 @@ public class ListingService
             .FirstAsync(l => l.Id == listingId);
 
         // Recent local sale data for the same crop/region, blended into the
-        // agent's market lookup alongside live wholesale benchmarks.
+        // agent's market lookup alongside live wholesale benchmarks. Only listings an
+        // officer has approved count: a pending, rejected or withdrawn asking price is
+        // unverified, and one absurd price would otherwise raise the "fair" price of
+        // every later listing and hide exactly the anomalies Component D looks for.
         var recentPrices = await _db.Listings
             .Where(l => l.CropId == listing.CropId
                      && l.RegionId == listing.RegionId
                      && l.MinPrice.HasValue
+                     && (l.Status == ListingStatus.Published || l.Status == ListingStatus.SoldOut)
                      && l.Id != listingId)
             .OrderByDescending(l => l.CreatedAt)
             .Take(20)

@@ -259,6 +259,22 @@ public class AnalyticsServicesTests
         Assert.Equal(1, await db.PriceAnomalyFlags.CountAsync());
     }
 
+    [Fact] // TC-D-25 — a farmer who raises the price again must not create a second flag, and the officer must see the new price
+    public async Task EvaluateListingAsync_WhenTheListingIsPricedAgain_UpdatesItsOpenFlag()
+    {
+        await using var db = NewDb();
+        var service = NewAnomalyService(db);
+        var listingId = Guid.NewGuid();
+
+        var first = await service.EvaluateListingAsync(listingId, Crop, RegionA, 200m, 80m, 120m);
+        var second = await service.EvaluateListingAsync(listingId, Crop, RegionA, 300m, 80m, 120m);
+
+        var only = await db.PriceAnomalyFlags.SingleAsync();
+        Assert.Equal(first!.Id, second!.Id);
+        Assert.Equal(300m, only.ListingPrice);
+        Assert.Equal(200m, only.DeviationPercent);   // (300 - 100) / 100
+    }
+
     [Fact] // TC-D-17 — the deviation column is numeric(5,2); an extreme price must not overflow it
     public async Task EvaluateListingAsync_ClampsAnExtremeDeviationToWhatTheColumnCanStore()
     {
