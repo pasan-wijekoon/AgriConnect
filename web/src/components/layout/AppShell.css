@@ -206,7 +206,12 @@ button:active:not(:disabled) { transform: translateY(1px); }
   .app-sidebar-link.active { box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 25%, transparent); }
   .app-sidebar-link span { font-size: 12px; }
   .app-header-user-info { display: none; }
-  .app-header-theme-toggle { margin-right: 8px; }
+  .app-header { padding: 0 12px; gap: 6px; }
+  .app-header-brand { min-width: 0; gap: 8px; font-size: 15px; }
+  .app-header-brand-icon { flex-shrink: 0; }
+  .app-header-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app-header-user { gap: 6px; flex-shrink: 0; }
+  .app-header-theme-toggle { margin-right: 4px; flex-shrink: 0; }
   .page-header { flex-direction: column; margin-bottom: 20px; }
   .page-actions { width: 100%; }
   .page-actions > * { flex: 1 1 auto; }

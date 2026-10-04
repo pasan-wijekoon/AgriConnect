@@ -13,6 +13,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
   const [listings, setListings] = useState<Listing[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +30,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
 
   const fetchListings = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [regionsRes, listingsRes] = await Promise.all([
         api.getRegions(),
@@ -47,6 +49,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
       setListings(listingsRes.items);
     } catch (err) {
       console.error('Failed to load marketplace listings', err);
+      setLoadError(err instanceof Error && err.message ? err.message : 'Could not reach the server.');
     } finally {
       setLoading(false);
     }
@@ -269,6 +272,18 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
         <div style={{ textAlign: 'center', padding: '5rem 1rem', color: 'var(--text-muted)' }}>
           <RefreshCw size={36} className="animate-spin" style={{ color: 'var(--accent)', marginBottom: '14px' }} />
           <div style={{ fontSize: '1rem', fontWeight: 600 }}>Loading published produce from database...</div>
+        </div>
+      ) : loadError ? (
+        <div className="glass-card" role="alert" style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text)' }}>
+            Couldn't load produce
+          </h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '6px auto 18px', maxWidth: '420px' }}>
+            {loadError}
+          </p>
+          <button className="btn btn-secondary" onClick={fetchListings}>
+            <RefreshCw size={14} /> Retry
+          </button>
         </div>
       ) : filteredListings.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '5rem 2rem' }}>

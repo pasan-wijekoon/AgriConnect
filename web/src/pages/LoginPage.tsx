@@ -223,9 +223,9 @@ export const LoginPage: React.FC = () => {
           /* Sign In Form */
           <form onSubmit={handleLoginSubmit}>
             <div className="form-group">
-              <label className="form-label">Email Address</label>
+              <label className="form-label" htmlFor="login-email">Email Address</label>
               <div style={{ position: 'relative' }}>
-                <input
+                <input id="login-email"
                   type="email"
                   className="form-input"
                   style={{ width: '100%', paddingLeft: '38px' }}
@@ -239,9 +239,9 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Password</label>
+              <label className="form-label" htmlFor="login-password">Password</label>
               <div style={{ position: 'relative' }}>
-                <input
+                <input id="login-password"
                   type="password"
                   className="form-input"
                   style={{ width: '100%', paddingLeft: '38px' }}
@@ -267,8 +267,8 @@ export const LoginPage: React.FC = () => {
           /* Register Form — all fields required with red star */
           <form onSubmit={handleRegisterSubmit}>
             <div className="form-group">
-              <label className="form-label">Full Name {requiredStar}</label>
-              <input
+              <label className="form-label" htmlFor="reg-full-name">Full Name {requiredStar}</label>
+              <input id="reg-full-name"
                 type="text"
                 className="form-input"
                 style={{ width: '100%', borderColor: fieldErrors.fullName ? 'var(--danger)' : undefined }}
@@ -281,8 +281,8 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Select Account Role {requiredStar}</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div className="form-label" id="reg-role-label">Select Account Role {requiredStar}</div>
+              <div role="group" aria-labelledby="reg-role-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setRegRole('Farmer')}
@@ -303,8 +303,8 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Email Address {requiredStar}</label>
-              <input
+              <label className="form-label" htmlFor="reg-email">Email Address {requiredStar}</label>
+              <input id="reg-email"
                 type="email"
                 className="form-input"
                 style={{ width: '100%', borderColor: fieldErrors.email ? 'var(--danger)' : undefined }}
@@ -317,8 +317,8 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Phone Number {requiredStar}</label>
-              <input
+              <label className="form-label" htmlFor="reg-phone">Phone Number {requiredStar}</label>
+              <input id="reg-phone"
                 type="tel"
                 className="form-input"
                 style={{ width: '100%', borderColor: fieldErrors.phone ? 'var(--danger)' : undefined }}
@@ -335,8 +335,8 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Password {requiredStar}</label>
-              <input
+              <label className="form-label" htmlFor="reg-password">Password {requiredStar}</label>
+              <input id="reg-password"
                 type="password"
                 className="form-input"
                 style={{ width: '100%', borderColor: fieldErrors.password ? 'var(--danger)' : undefined }}
@@ -350,8 +350,8 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">District {requiredStar}</label>
-              <select
+              <label className="form-label" htmlFor="reg-district">District {requiredStar}</label>
+              <select id="reg-district"
                 className="form-select"
                 style={{ width: '100%', borderColor: fieldErrors.region ? 'var(--danger)' : undefined }}
                 value={region}

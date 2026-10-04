@@ -25,13 +25,21 @@ export function NotificationBell({ theme }: { theme: 'light' | 'dark' }) {
   const [items, setItems] = useState<NotificationResponse[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const inFlightRef = useRef(false)
 
   const refreshUnread = useCallback(() => {
+    // One request at a time: overlapping triggers (StrictMode double-mount, re-mounts)
+    // share the call already on the wire instead of firing identical ones.
+    if (inFlightRef.current) return
+    inFlightRef.current = true
     ordersApi
       .unreadNotificationCount()
       .then((r) => setUnread(r.count))
       .catch(() => {
         // The badge is best-effort; the inbox itself reports real errors.
+      })
+      .finally(() => {
+        inFlightRef.current = false
       })
   }, [])
 

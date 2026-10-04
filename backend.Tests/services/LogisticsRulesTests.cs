@@ -13,8 +13,7 @@ namespace backend.Tests.services;
 /// </summary>
 public class LogisticsRulesTests
 {
-    private const string ConnectionString =
-        "Host=localhost;Database=agriconnect;Username=postgres;Password=postgres";
+    private static readonly string ConnectionString = TestDatabase.ConnectionString;
 
     private static AgriConnectDbContext NewInMemoryDb() =>
         new(new DbContextOptionsBuilder<AgriConnectDbContext>()

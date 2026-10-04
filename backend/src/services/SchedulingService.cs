@@ -80,7 +80,9 @@ public class SchedulingService(
 
         var now = DateTimeOffset.UtcNow;
         var preferredWindow = request.PreferredWindow is { } w
-            ? new SchedulingWindow(w.Start, w.End)
+            // Npgsql only writes/compares timestamptz with a zero offset, so a window sent
+            // in another time zone (e.g. +05:30) is normalised to UTC (same instant) first.
+            ? new SchedulingWindow(w.Start.ToUniversalTime(), w.End.ToUniversalTime())
             : new SchedulingWindow(now.AddDays(1), now.AddDays(1).AddHours(1));
 
         var centreId = request.CollectionCentreId;

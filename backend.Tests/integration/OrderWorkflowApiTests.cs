@@ -75,6 +75,26 @@ public class OrderWorkflowApiTests : IClassFixture<ApiTestFactory>
     }
 
     [Fact]
+    public async Task RequestRevision_WithWindowInANonUtcTimeZone_IsAcceptedAndStoredAsTheSameInstant()
+    {
+        var order = await PlaceOrderAsync();
+        await ApproveAsync(order.Id);
+
+        // Same instant expressed at +05:30 (Sri Lanka) - Npgsql rejects non-zero offsets
+        // for timestamptz unless the service normalises them to UTC first.
+        var startUtc = FarFutureSlot();
+        var startLocal = startUtc.ToOffset(TimeSpan.FromHours(5.5));
+        using var officer = _factory.CreateAuthedClient(Roles.Officer, KandyOfficer);
+        var response = await officer.PutAsJsonAsync($"/api/orders/{order.Id}/schedule/decision",
+            new ScheduleDecisionRequest(ScheduleDecision.RequestRevision, null,
+                new ScheduleWindowDto(startLocal, startLocal.AddHours(1))));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var schedule = await response.Content.ReadFromJsonAsync<ScheduleResponse>(ApiTestFactory.JsonOptions);
+        Assert.Equal(startUtc, schedule!.SlotStart);
+    }
+
+    [Fact]
     public async Task ApprovingTheProposal_ConfirmsTheScheduleAndMovesOrderToScheduled()
     {
         var order = await PlaceOrderAsync();
