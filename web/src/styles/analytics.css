@@ -323,6 +323,7 @@ color: var(--text);
   font-size: 24px;
   font-weight: 650;
   margin-top: 2px;
+  color: var(--text); /* the UI library's own .stat-value sets light text (DEF-D-03) */
 }
 
 .stat-value .unit {
@@ -1138,6 +1139,34 @@ ul.field-error {
 .reasoning {
   margin: 4px 0 0;
   line-height: 1.55;
+}
+
+/* ---- Dark app shell compatibility (DEF-D-02, DEF-D-03) ---------------------------------
+   The app shell is dark, and index.css sets light text directly on td, th and h1-h3
+   (and a dark background on th). Direct rules beat the dark text these light cards
+   inherit, so table rows, tile numbers and card titles became unreadable. :where()
+   keeps this at one class of specificity, so the heatmap's own colours still win. */
+
+:where(.card, .stat, .drawer) :where(h2, h3, h4, td) {
+  color: var(--text);
+}
+
+:where(.card, .stat, .drawer) th {
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+/* 25 districts do not fit a narrow content area: scroll sideways instead of crushing
+   the columns, and stand the district names upright so they cannot overlap. */
+.heatmap {
+  min-width: 1700px;
+}
+
+.heatmap thead th {
+  height: 120px;
+  vertical-align: bottom;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
 }
 
 } /* end .analytics-scope */
