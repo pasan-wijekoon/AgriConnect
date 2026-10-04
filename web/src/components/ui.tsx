@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import type { AnomalyStatus } from '../utils/anomalies.ts'
+import { statusLabel, type AnomalyStatus } from '../utils/anomalies.ts'
 
 export function PageHeader({ title, description, actions }: { title: string; description: string; actions?: ReactNode }) {
   return (
@@ -91,7 +91,7 @@ export function StatusBadge({ status }: { status: AnomalyStatus }) {
   return (
     <span className={`badge badge-${status.toLowerCase()}`}>
       <Icon name={statusIcon[status]} />
-      {status}
+      {statusLabel(status)}
     </span>
   )
 }

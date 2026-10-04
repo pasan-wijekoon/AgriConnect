@@ -63,20 +63,25 @@ Open **Shortages** (`/analytics/shortages`). Role picker: Officer.
 | D-M-33 | Officer | Pick a filter combination with no events. | A "No events" empty state is shown. | | | |
 | D-M-34 | Farmer | Set the role picker to Farmer and open Shortages. | Access is refused with a clear message. The shortage data is not shown. | | | |
 
-## 5. Anomaly Queue (FR16) — web
+## 5. Prices to check — the Anomaly Queue (FR16) — web
 
-Open **Anomaly Queue** (`/analytics/anomalies`). Role picker: Officer.
+Open **Anomaly Queue** in the menu (`/analytics/anomalies`). The page title is **Prices to check**. Role: Officer.
+Status words: **To check** (Open), **Checked** (Reviewed), **Ignored** (Dismissed).
 
 | ID | Role | Steps | Expected result | Actual result | Status | Evidence |
 |---|---|---|---|---|---|---|
-| D-M-40 | Officer | Open the Anomaly Queue. | The "Anomaly review queue" lists flags, newest first, with the crop, listing price and deviation %. | | | |
-| D-M-41 | Officer | Use the Status filter (Open / Reviewed / Dismissed) and the "All crops" filter. | The list filters correctly and the count updates. | | | |
-| D-M-42 | Officer | Open one flag's details. | "Price context", "Likely causes" and "Other evidence" are shown and make sense for that flag. | | | |
-| D-M-43 | Officer | Mark an **Open** flag as **Reviewed**. | The flag leaves the Open list and appears under Reviewed. A reload keeps it. | | | |
-| D-M-44 | Officer | Mark another Open flag as **Dismissed**. | The flag appears under Dismissed. A reload keeps it. | | | |
-| D-M-45 | Officer | Try to move a Reviewed flag back to Open. | This is not possible (flags never go back to Open). | | | |
-| D-M-46 | Officer | Use the pager (Pages) if there is more than one page. | Next and previous pages work. No flag is repeated or lost between pages. | | | |
-| D-M-47 | Farmer | Set the role picker to Farmer and open the Anomaly Queue. | Access is refused with a clear message. | | | |
+| D-M-40 | Officer | Open the Anomaly Queue. | "Prices to check" lists prices, newest first, with Date, Produce, Asking price, "Compared with fair price" (e.g. "52.7% too high") and Status. All text is easy to read. | | | |
+| D-M-41 | Officer | Use the tabs (To check / Checked / Ignored / All) and the Crop filter. | The list filters correctly and the tab counts update. | | | |
+| D-M-42 | Officer | Click **See details** on one row. | A "Price check" panel opens with: a plain sentence ("The farmer is asking LKR … The AI fair price is about LKR … That is …% too high"), a green **What to do** box, **Compare the prices** bars, **Why this might have happened**, and **Other checks**. | | | |
+| D-M-43 | Officer | In the panel, check the numbers: asking price, AI fair price, usual weekly price. | The AI fair price is the asking price divided by (1 + deviation). For LKR 168 and 52.7%, it is about LKR 110.02. The longest bar is the highest price. | | | |
+| D-M-44 | Officer | Open a price that is too **high** (e.g. Tomatoes · Matale), then one that is too **low** (Onions · Nuwara Eliya). | High: "Typing mistake" is shown first, with advice to confirm the price with the farmer. Low (30%): "Needs to sell fast". The wording says "too high" or "too low" correctly. | | | |
+| D-M-45 | Officer | Look at **Other checks** for a listing that has no inspection and no orders. | "Not inspected yet." and "No orders yet." No developer wording such as "Component". | | | |
+| D-M-46 | Officer | Click **Mark as checked** on a "To check" price. | A message "…: marked as checked." The price leaves To check and appears under Checked, and a reload keeps it. | | | |
+| D-M-47 | Officer | Click **Ignore** on another price. | "…: marked as ignored." It appears under Ignored, and a reload keeps it. | | | |
+| D-M-48 | Officer | Open a Checked or Ignored price. | The panel says "This price was already checked/ignored." and has no action buttons. It cannot go back to To check. | | | |
+| D-M-49 | Officer | Use the pager if there is more than one page. | Next and previous pages work. No price is repeated or lost between pages. | | | |
+| D-M-4A | Farmer | Set the role to Farmer and open the Anomaly Queue. | Access is refused with a clear message. | | | |
+| D-M-4B | Officer | Create an inspection and an order for a flagged listing, then open its details. | "Other checks" shows the grade ("Inspected on …: Grade A confirmed.") and the orders ("2 orders, 60 kg in total. Latest order: …"). | | | |
 
 ## 6. Reports (FR18) and AI Scheduling
 
@@ -97,7 +102,7 @@ Open **Anomaly Queue** (`/analytics/anomalies`). Role picker: Officer.
 | ID | Role | Steps | Expected result | Actual result | Status | Evidence |
 |---|---|---|---|---|---|---|
 | D-M-60 | Farmer | Log in as the farmer. Create a listing for Carrots, 100 kg, with a very high floor price (e.g. 50000). Submit. | The listing is created and shows "Pending approval". | | | |
-| D-M-61 | Officer | Open the Anomaly Queue and filter by Carrots and Status Open. | A **new** Open flag for that listing is at the top, with a large positive deviation (DEF-D-01 fix). | | | |
+| D-M-61 | Officer | Open the Anomaly Queue and filter by Carrots on the To check tab. | A **new** "To check" price for that listing is at the top, with a large positive deviation (DEF-D-01 fix). | | | |
 | D-M-62 | Farmer | Create another listing with **no** floor price. | The listing is created. No anomaly flag is created for it. | | | |
 | D-M-63 | Farmer | Create a listing at a price close to the AI fair range shown in the form. | The listing is created. No anomaly flag is created. | | | |
 
@@ -130,7 +135,7 @@ Click Authorize and paste a login token for the role, or use the role picker's h
 
 | Defect ID | Test ID | Description | Severity (Critical / High / Medium / Low) | Steps to reproduce | Evidence | Status | Retest result |
 |---|---|---|---|---|---|---|---|
-| DEF-D-01 | D-M-61 | Overpriced listing never reached the Anomaly Queue | High | Create a listing with a very high price, then check the queue | `testing-evidence/backend/defect-D-01-*.trx` | Fixed (commit `079d5f2`) | Passed |
+| DEF-D-01 | D-M-61 | Overpriced listing never reached the Anomaly Queue | High | Create a listing with a very high price, then check the Prices to check list | `testing-evidence/backend/defect-D-01-*.trx` | Fixed (commit `079d5f2`) | Passed |
 | DEF-D-02 | D-M-30 | Shortages heatmap: district names and "No event" text overlap the crop labels | Medium | Open Shortages as an officer in the dark app shell | `testing-evidence/manual/D-M-30.png` | Fixed (analytics.css) | Retest: pending |
 | DEF-D-03 | D-M-30, D-M-40 | Analytics tables, tile numbers and card titles are near-invisible (light text on white cards) | Medium | Open Shortages and the Anomaly Queue | `testing-evidence/manual/D-M-40.png` | Fixed (analytics.css) | Retest: pending |
 | | | | | | | | |
@@ -142,12 +147,12 @@ Click Authorize and paste a login token for the role, or use the role picker's h
 | 2 Access and navigation | 5 | | | |
 | 3 Price Trends | 11 | | | |
 | 4 Shortages | 5 | | | |
-| 5 Anomaly Queue | 8 | | | |
+| 5 Prices to check (Anomaly Queue) | 12 | | | |
 | 6 Reports and AI Scheduling | 9 | | | |
 | 7 Cross-component | 4 | | | |
 | 8 Mobile | 4 | | | |
 | 9 API (Swagger) | 7 | | | |
-| **Total** | **53** | | | |
+| **Total** | **57** | | | |
 
 Conclusion: ______________________________________________
 

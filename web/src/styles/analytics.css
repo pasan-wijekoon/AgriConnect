@@ -1147,7 +1147,7 @@ ul.field-error {
    inherit, so table rows, tile numbers and card titles became unreadable. :where()
    keeps this at one class of specificity, so the heatmap's own colours still win. */
 
-:where(.card, .stat, .drawer) :where(h2, h3, h4, td) {
+:where(.card, .stat, .drawer) :where(h2, h3, h4, td, strong) {
   color: var(--text);
 }
 
@@ -1167,6 +1167,68 @@ ul.field-error {
   vertical-align: bottom;
   white-space: nowrap;
   writing-mode: vertical-rl;
+}
+
+/* ---- Price check panel (officer-friendly anomaly details) ------------------------------ */
+
+.verdict-text {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.advice {
+  background: var(--brand-soft);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.advice strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--brand-strong);
+}
+
+.advice p {
+  margin: 0;
+}
+
+.compare {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compare-row {
+  display: grid;
+  gap: 4px;
+}
+
+.compare-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.compare-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--grid);
+  overflow: hidden;
+}
+
+.compare-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--series-1);
+}
+
+.compare-bar.is-asking {
+  background: var(--series-2);
 }
 
 } /* end .analytics-scope */
