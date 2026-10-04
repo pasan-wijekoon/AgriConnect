@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/StateViews'
 import { Card } from '../../components/ui/Card'
 import { ApiError, ordersApi, type OrderResponse, type OrderStatus } from '../../utils/ordersApi'
+import { needsAction, QUEUE_SORT_LABELS, sortOrders, type QueueSort } from '../../utils/orderQueue'
 import './OrderQueuePage.css'
 
 const STATUS_OPTIONS: (OrderStatus | 'All')[] = ['All', 'Pending', 'Approved', 'Scheduled', 'Completed', 'Cancelled']
@@ -26,6 +27,8 @@ type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { ki
 export function OrderQueuePage() {
   const [status, setStatus] = useState<OrderStatus | 'All'>('All')
   const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<QueueSort>('newest')
+  const [onlyNeedsAction, setOnlyNeedsAction] = useState(false)
   const [page, setPage] = useState(1)
   const [orders, setOrders] = useState<OrderResponse[]>([])
   const [counts, setCounts] = useState<Partial<Record<OrderStatus, number>>>({})
@@ -72,13 +75,17 @@ export function OrderQueuePage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return orders
-    return orders.filter((o) =>
-      [o.cropName, o.buyerName, o.farmerName, o.collectionCentreName, o.regionName, o.id]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q)),
+    const now = Date.now()
+    const matching = orders.filter(
+      (o) =>
+        (!onlyNeedsAction || needsAction(o, now)) &&
+        (!q ||
+          [o.cropName, o.buyerName, o.farmerName, o.collectionCentreName, o.regionName, o.id]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(q))),
     )
-  }, [orders, query])
+    return sortOrders(matching, sort)
+  }, [orders, query, sort, onlyNeedsAction])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -123,6 +130,36 @@ export function OrderQueuePage() {
             ))}
           </select>
         </label>
+        <label>
+          Sort by
+          <select
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value as QueueSort)
+              setPage(1)
+            }}
+          >
+            {(Object.keys(QUEUE_SORT_LABELS) as QueueSort[]).map((option) => (
+              <option key={option} value={option}>
+                {QUEUE_SORT_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="order-queue-toggle">
+          <span>Show</span>
+          <span className="order-queue-toggle-row">
+            <input
+              type="checkbox"
+              checked={onlyNeedsAction}
+              onChange={(e) => {
+                setOnlyNeedsAction(e.target.checked)
+                setPage(1)
+              }}
+            />
+            Needs action only
+          </span>
+        </label>
         <label className="order-queue-search">
           Search
           <input
@@ -146,7 +183,7 @@ export function OrderQueuePage() {
           <EmptyState
             title="No Orders Found"
             description={
-              status === 'All' && !query
+              status === 'All' && !query && !onlyNeedsAction
                 ? 'Orders placed for your centre will appear here.'
                 : 'There are no orders matching your current filters.'
             }

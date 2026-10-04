@@ -2,7 +2,10 @@ using AgriConnect.Api.Models;
 
 namespace AgriConnect.Api.Dtos;
 
-public record CreateOrderRequest(Guid ListingId, decimal Quantity, DeliveryPreference DeliveryPreference);
+/// <param name="BuyerLat">Optional approximate buyer location; both values or neither.</param>
+public record CreateOrderRequest(
+    Guid ListingId, decimal Quantity, DeliveryPreference DeliveryPreference,
+    decimal? BuyerLat = null, decimal? BuyerLng = null);
 
 public record OrderResponse(
     Guid Id,
@@ -30,6 +33,11 @@ public record OrderResponse(
     DateTimeOffset? SlotEnd = null);
 
 public record OrderStatusUpdateRequest(OrderStatus Status);
+
+/// <summary>One entry of an order's activity timeline (FR11), built from the audit log (FR20).</summary>
+/// <param name="Explanation">Why the nearest centre was suggested (only on that entry).</param>
+public record OrderActivityItem(
+    DateTimeOffset Timestamp, string Action, string Summary, string ActorName, string? Explanation = null);
 
 public record OrderCancelRequest(string? Reason);
 

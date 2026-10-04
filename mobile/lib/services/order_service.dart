@@ -16,6 +16,8 @@ class OrderService {
     required String listingId,
     required double quantity,
     required DeliveryPreference deliveryPreference,
+    double? buyerLat,
+    double? buyerLng,
   }) =>
       _api.request(
         'POST',
@@ -24,6 +26,11 @@ class OrderService {
           'listingId': listingId,
           'quantity': quantity,
           'deliveryPreference': deliveryPreferenceToJson(deliveryPreference),
+          // Optional approximate location (both or neither) for the nearest-centre suggestion.
+          if (buyerLat != null && buyerLng != null) ...{
+            'buyerLat': buyerLat,
+            'buyerLng': buyerLng,
+          },
         },
         decode: (json) => Order.fromJson(json as Map<String, dynamic>),
       );

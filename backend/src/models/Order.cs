@@ -33,6 +33,15 @@ public class Order
 
     public DateTimeOffset UpdatedAt { get; set; }
 
+    /// <summary>Approximate buyer location (rounded to 2 decimal places, about 1 km), optionally
+    /// supplied when ordering so the Buyer-Farmer Matching Agent can suggest the nearest
+    /// collection centre when the order is approved. Never returned by the API.</summary>
+    [Column(TypeName = "numeric(5,2)")]
+    public decimal? BuyerLatitude { get; set; }
+
+    [Column(TypeName = "numeric(5,2)")]
+    public decimal? BuyerLongitude { get; set; }
+
     /// <summary>1-1 with the reservation created when the order is placed (FR9).</summary>
     public StockReservation? StockReservation { get; set; }
 

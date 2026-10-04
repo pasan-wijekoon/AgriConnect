@@ -10,7 +10,14 @@ here commits anything.
 
 from __future__ import annotations
 
+import re
+
 MAX_NOTES_LENGTH = 2000
+MAX_EXPLANATION_LENGTH = 600
+
+# A capitalised run of words ending in "Centre" (optionally "Collection Centre"), e.g.
+# "Kandy Central Collection Centre": how an LLM would name a centre in prose.
+_CENTRE_NAME = re.compile(r"\b([A-Z][\w'-]*(?: [A-Z][\w'-]*)*(?: Collection)? Centre)\b")
 
 
 class MatchValidationError(ValueError):
@@ -39,3 +46,26 @@ def validate_match_response(
 
     if len(notes) > MAX_NOTES_LENGTH:
         raise MatchValidationError(f"notes exceeds the maximum length of {MAX_NOTES_LENGTH} characters.")
+
+
+def validate_explanation(explanation: str, chosen_centre_name: str, candidate_names: set[str]) -> None:
+    """Checks an LLM-written explanation of the (already decided) match before it is used.
+
+    The LLM only narrates; it must name the centre that was actually chosen and must not
+    introduce a centre that was never a candidate. Anything else raises, and the caller
+    falls back to the deterministic notes.
+    """
+    if not explanation or not explanation.strip():
+        raise MatchValidationError("explanation must not be empty.")
+
+    if len(explanation) > MAX_EXPLANATION_LENGTH:
+        raise MatchValidationError(f"explanation exceeds the maximum length of {MAX_EXPLANATION_LENGTH} characters.")
+
+    lowered = explanation.lower()
+    if chosen_centre_name.lower() not in lowered:
+        raise MatchValidationError("explanation does not mention the matched centre.")
+
+    known = [name.lower() for name in candidate_names]
+    for mentioned in _CENTRE_NAME.findall(explanation):
+        if not any(mentioned.lower() in name or name in mentioned.lower() for name in known):
+            raise MatchValidationError(f"explanation mentions {mentioned!r}, which was not a candidate centre.")

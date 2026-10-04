@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/listing.dart';
@@ -28,6 +29,13 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
   DeliveryPreference _deliveryPreference = DeliveryPreference.pickup;
   String? _submitError;
 
+  // Optional, approximate (2 decimal places, about 1 km) location so the system can
+  // suggest the nearest collection centre when the order is approved.
+  double? _buyerLat;
+  double? _buyerLng;
+  bool _locating = false;
+  String? _locationNote;
+
   Listing get listing => widget.listing;
 
   @override
@@ -37,6 +45,46 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
   }
 
   double? get _quantity => double.tryParse(_quantityController.text.trim());
+
+  double _round2(double value) => (value * 100).roundToDouble() / 100;
+
+  Future<void> _shareLocation() async {
+    setState(() {
+      _locating = true;
+      _locationNote = null;
+    });
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw Exception('Location services are turned off.');
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('Location permission was denied.');
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _buyerLat = _round2(position.latitude);
+        _buyerLng = _round2(position.longitude);
+        _locating = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _locating = false;
+        _locationNote = 'We could not get your location. You can still place the order.';
+      });
+    }
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -48,6 +96,8 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
       listingId: listing.id,
       quantity: _quantity!,
       deliveryPreference: _deliveryPreference,
+      buyerLat: _buyerLat,
+      buyerLng: _buyerLng,
     );
 
     if (!mounted) return;
@@ -104,7 +154,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Up to ${listing.quantity.toStringAsFixed(0)} ${listing.unit} listed',
+                              '${listing.availableQuantity.toStringAsFixed(0)} ${listing.unit} available now',
                               style: const TextStyle(fontSize: 13),
                             ),
                           ],
@@ -124,14 +174,14 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   suffixText: listing.unit,
-                  helperText: 'Max ${listing.quantity.toStringAsFixed(0)} ${listing.unit}',
+                  helperText: 'Max ${listing.availableQuantity.toStringAsFixed(0)} ${listing.unit}',
                 ),
                 validator: (value) {
                   final parsed = double.tryParse(value?.trim() ?? '');
                   if (parsed == null) return 'Enter a valid quantity.';
                   if (parsed <= 0) return 'Quantity must be greater than 0.';
-                  if (parsed > listing.quantity) {
-                    return 'Only ${listing.quantity.toStringAsFixed(0)} ${listing.unit} listed.';
+                  if (parsed > listing.availableQuantity) {
+                    return 'Only ${listing.availableQuantity.toStringAsFixed(0)} ${listing.unit} available right now.';
                   }
                   return null;
                 },
@@ -144,7 +194,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                     ActionChip(
                       label: Text(fraction == 1.0 ? 'All' : '${(fraction * 100).round()}%'),
                       onPressed: () => setState(() {
-                        final value = listing.quantity * fraction;
+                        final value = listing.availableQuantity * fraction;
                         _quantityController.text =
                             value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(1);
                       }),
@@ -170,6 +220,40 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                 selected: {_deliveryPreference},
                 onSelectionChanged: (s) => setState(() => _deliveryPreference = s.first),
               ),
+              const SizedBox(height: 16),
+              if (_buyerLat != null)
+                Row(
+                  children: [
+                    const Icon(Icons.place_outlined, size: 18, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    const Expanded(
+                      child: Text(
+                        'Approximate location shared. It helps suggest the nearest collection centre.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => setState(() {
+                        _buyerLat = null;
+                        _buyerLng = null;
+                      }),
+                      child: const Text('Remove'),
+                    ),
+                  ],
+                )
+              else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: _locating ? null : _shareLocation,
+                    icon: const Icon(Icons.my_location, size: 18),
+                    label: Text(_locating ? 'Locating…' : 'Use my approximate location (optional)'),
+                  ),
+                ),
+              if (_locationNote != null) ...[
+                const SizedBox(height: 6),
+                Text(_locationNote!, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              ],
               const SizedBox(height: 16),
               InfoBanner.info(
                 message: 'A collection-centre officer will review your order and confirm a pickup slot at the '

@@ -55,6 +55,8 @@ class OrderProvider extends ChangeNotifier {
     required String listingId,
     required double quantity,
     required DeliveryPreference deliveryPreference,
+    double? buyerLat,
+    double? buyerLng,
   }) async {
     _submitting = true;
     _error = null;
@@ -65,6 +67,8 @@ class OrderProvider extends ChangeNotifier {
         listingId: listingId,
         quantity: quantity,
         deliveryPreference: deliveryPreference,
+        buyerLat: buyerLat,
+        buyerLng: buyerLng,
       );
       _orders = [order, ..._orders];
       return order;

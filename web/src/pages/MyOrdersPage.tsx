@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { OrderActivity } from '../components/orders/OrderActivity'
 import { ApiError, ordersApi, type OrderResponse, type OrderStatus } from '../utils/ordersApi'
 import '../styles/my-orders.css'
 
@@ -227,6 +228,14 @@ export function MyOrdersPage() {
                 )}
               </div>
             )}
+
+            <div className="mo-activity">
+              <h3>Activity</h3>
+              <OrderActivity
+                orderId={selected.id}
+                refreshKey={`${selected.updatedAt}|${selected.scheduleStatus ?? ''}|${selected.slotStart ?? ''}`}
+              />
+            </div>
 
             {notice && <p className="mo-banner mo-banner-error" role="alert">{notice}</p>}
 

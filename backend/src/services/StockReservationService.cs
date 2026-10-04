@@ -41,18 +41,11 @@ public class StockReservationService(AgriConnectDbContext db, IConfiguration con
             {
                 var now = DateTimeOffset.UtcNow;
 
-                // A Pending order holds stock only until its reservation expires; once an
-                // Officer has approved it (Approved/Scheduled/Completed) the stock stays
-                // committed regardless of ExpiresAt - Listing.Quantity is never
-                // decremented, so this sum is the only thing keeping it from being resold.
-                var activeReserved = await db.StockReservations
+                // What counts as "held" lives in ReservationQueries (shared with the
+                // listing queries that show the available quantity to clients).
+                var activeReserved = await ReservationQueries.ActiveReservations(db, now)
                     .Where(r => r.ListingId == order.ListingId)
-                    .Join(db.Orders, r => r.OrderId, o => o.Id, (r, o) => new { r.ReservedQuantity, r.ExpiresAt, o.Status })
-                    .Where(x => x.Status == OrderStatus.Approved
-                                || x.Status == OrderStatus.Scheduled
-                                || x.Status == OrderStatus.Completed
-                                || (x.Status == OrderStatus.Pending && x.ExpiresAt > now))
-                    .SumAsync(x => (decimal?)x.ReservedQuantity, cancellationToken) ?? 0m;
+                    .SumAsync(r => (decimal?)r.ReservedQuantity, cancellationToken) ?? 0m;
 
                 if (activeReserved + order.Quantity > availableQuantity)
                 {

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { OrderResponse } from '../../utils/ordersApi'
+import { orderFlag } from '../../utils/orderQueue'
 import { OrderStatusBadge } from './OrderStatusBadge'
 import './OrderTable.css'
 
@@ -9,6 +10,7 @@ import './OrderTable.css'
  * is exactly one place that renders an order row, not two.
  */
 export function OrderTable({ orders }: { orders: OrderResponse[] }) {
+  const now = Date.now()
   return (
     <table className="order-table">
       <thead>
@@ -46,6 +48,10 @@ export function OrderTable({ orders }: { orders: OrderResponse[] }) {
             </td>
             <td data-label="Status">
               <OrderStatusBadge status={order.status} />
+              {(() => {
+                const flag = orderFlag(order, now)
+                return flag && <span className={`order-table-flag order-table-flag-${flag.tone}`}>{flag.label}</span>
+              })()}
             </td>
             <td data-label="Placed">{new Date(order.createdAt).toLocaleDateString()}</td>
             <td data-label="" className="order-table-actions">

@@ -35,4 +35,12 @@ public class StockReservation
     /// defines this column but does not state who acts on expiry).
     /// </summary>
     public DateTimeOffset ExpiresAt { get; set; }
+
+    /// <summary>When the buyer was warned that this reservation is about to expire (sent at
+    /// most once; null = not yet sent). Set by ReservationExpirySweepService.</summary>
+    public DateTimeOffset? BuyerReminderSentAt { get; set; }
+
+    /// <summary>When the centre's officers were reminded that this order has been Pending
+    /// for a long time (sent at most once; null = not yet sent).</summary>
+    public DateTimeOffset? OfficerReminderSentAt { get; set; }
 }

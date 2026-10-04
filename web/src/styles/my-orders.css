@@ -308,6 +308,18 @@
   font-size: 0.88rem;
 }
 
+.mo-activity {
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.mo-activity h3 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
 .mo-cancel {
   width: 100%;
   padding: 11px;

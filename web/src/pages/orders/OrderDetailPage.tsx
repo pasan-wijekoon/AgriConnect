@@ -5,12 +5,14 @@ import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { ErrorState, LoadingState } from '../../components/ui/StateViews'
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge'
+import { OrderActivity } from '../../components/orders/OrderActivity'
 import { ScheduleProposalReview } from '../../components/orders/ScheduleProposalReview'
 import { ScheduleWindowModal, type ScheduleWindowValue } from '../../components/orders/ScheduleWindowModal'
 import {
   ApiError,
   ordersApi,
   type CollectionCentreResponse,
+  type OrderActivityItem,
   type OrderResponse,
   type OrderStatus,
   type ScheduleResponse,
@@ -61,6 +63,7 @@ export function OrderDetailPage() {
   const [actionBusy, setActionBusy] = useState(false)
   const [dialog, setDialog] = useState<Dialog>(null)
   const [dialogError, setDialogError] = useState<string | null>(null)
+  const [activity, setActivity] = useState<OrderActivityItem[]>([])
 
   const load = async () => {
     if (!orderId) return
@@ -103,6 +106,8 @@ export function OrderDetailPage() {
   if (error) return <ErrorState message={error} onRetry={load} />
   if (!order) return <ErrorState message="Order not found." />
 
+  // The newest "nearest centre suggested" entry explains the current proposal's centre.
+  const matchExplanation = [...activity].reverse().find((a) => a.action === 'BuyerFarmerMatch')?.explanation ?? null
   const officerActions = OFFICER_STATUS_ACTIONS[order.status]
   const canCancel = !['Completed', 'Cancelled'].includes(order.status)
   // No schedule yet, or the previous one was rejected (Cancelled) — either way
@@ -269,14 +274,36 @@ export function OrderDetailPage() {
         {schedule && (
           <Card>
             <ScheduleProposalReview
+              key={`${schedule.slotStart}|${schedule.status}`}
               schedule={schedule}
               busy={actionBusy}
               onApprove={() => runAction(() => ordersApi.decideSchedule(order.id, 'Approve'), 'Schedule confirmed.')}
               onReject={() => runAction(() => ordersApi.decideSchedule(order.id, 'Reject'), 'Proposal rejected. You can propose a new slot.')}
               onRequestRevision={() => { setDialogError(null); setDialog('revise') }}
+              matchExplanation={matchExplanation}
+              onLoadAlternatives={() => ordersApi.scheduleAlternatives(order.id)}
+              onUseAlternative={(window) =>
+                runAction(
+                  () =>
+                    ordersApi.decideSchedule(order.id, 'RequestRevision', {
+                      reason: 'Alternative slot chosen by the officer',
+                      preferredWindow: window,
+                    }),
+                  'A revised slot was proposed — review it below.',
+                )
+              }
             />
           </Card>
         )}
+
+        <Card>
+          <h3 className="order-detail-section-title">Activity</h3>
+          <OrderActivity
+            orderId={order.id}
+            refreshKey={`${order.updatedAt}|${schedule?.status ?? ''}|${schedule?.slotStart ?? ''}`}
+            onLoaded={setActivity}
+          />
+        </Card>
       </div>
 
       {dialog === 'propose' && (

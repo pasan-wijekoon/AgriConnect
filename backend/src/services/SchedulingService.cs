@@ -156,7 +156,7 @@ public class SchedulingService(
 
                     matchedCentreId = match.MatchedCentreId;
                     auditLog.Log(actorId, "BuyerFarmerMatch", "Order", orderId,
-                        new { match.MatchedCentreId, match.MatchConfidence, match.Notes, match.Degraded });
+                        new { match.MatchedCentreId, match.MatchConfidence, match.Notes, match.Degraded, match.Explanation });
                 }
                 // match is null: the agent call itself didn't succeed — fall
                 // through to the region-based fallback below, same as if no
@@ -185,12 +185,7 @@ public class SchedulingService(
                 SchedulingOperationError.InvalidRequest, "Proposed window cannot be in the past.");
         }
 
-        var existingBookings = await db.PickupSchedules
-            .Where(p => p.CollectionCentreId == centreId
-                        && p.Status == ScheduleStatus.Confirmed
-                        && p.OrderId != orderId)
-            .Select(p => new ExistingBooking(p.SlotStart, p.SlotEnd))
-            .ToListAsync(ct);
+        var existingBookings = await ConfirmedBookingsAsync(centreId.Value, orderId, ct);
 
         var proposal = await schedulingPort.ProposeSlotAsync(
             orderId, centreId.Value, preferredWindow, existingBookings, ct);
@@ -246,6 +241,96 @@ public class SchedulingService(
         await db.SaveChangesAsync(ct);
 
         return SchedulingOperationResult<ScheduleResponse>.Ok(ToResponse(schedule, proposal.ConflictChecked));
+    }
+
+    /// <summary>Confirmed bookings at a centre, excluding the order being scheduled.</summary>
+    private async Task<List<ExistingBooking>> ConfirmedBookingsAsync(Guid centreId, Guid orderId, CancellationToken ct) =>
+        await db.PickupSchedules
+            .AsNoTracking()
+            .Where(p => p.CollectionCentreId == centreId
+                        && p.Status == ScheduleStatus.Confirmed
+                        && p.OrderId != orderId)
+            .Select(p => new ExistingBooking(p.SlotStart, p.SlotEnd))
+            .ToListAsync(ct);
+
+    /// <summary>How many alternative slots an Officer is offered at most.</summary>
+    public const int MaxAlternatives = 3;
+
+    /// <summary>How many following days are tried to find <see cref="MaxAlternatives"/> usable slots.</summary>
+    private const int AlternativeDaysToTry = 5;
+
+    /// <summary>
+    /// Up to three other pickup windows an Officer could swap the pending proposal for: the
+    /// same time of day on the following days, each checked by the scheduling agent
+    /// (<see cref="ILogisticsSchedulingPort"/>) and against the centre's capacity. Read-only:
+    /// nothing is saved and no status changes. The Officer picks one through the normal
+    /// "Request revision" decision, so a human still approves the final slot (CLAUDE.md §17).
+    /// </summary>
+    public async Task<SchedulingOperationResult<IReadOnlyList<ScheduleWindowDto>>> GetAlternativesAsync(
+        Guid orderId, Guid actorId, CancellationToken ct = default)
+    {
+        var order = await db.Orders.AsNoTracking()
+            .Include(o => o.PickupSchedule)
+            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+
+        if (order is null || !await (await OfficerScope.ForAsync(db, actorId, ct)).CanAccessAsync(db, orderId, ct))
+        {
+            return SchedulingOperationResult<IReadOnlyList<ScheduleWindowDto>>.Fail(
+                SchedulingOperationError.NotFound, "Order not found.");
+        }
+
+        if (order.Status != OrderStatus.Approved || order.PickupSchedule is not { Status: ScheduleStatus.Proposed } current)
+        {
+            return SchedulingOperationResult<IReadOnlyList<ScheduleWindowDto>>.Fail(
+                SchedulingOperationError.Conflict,
+                "Alternative slots are only offered while a proposed pickup slot is waiting for review.");
+        }
+
+        var centre = await db.CollectionCentres.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == current.CollectionCentreId, ct);
+        if (centre is null)
+        {
+            return SchedulingOperationResult<IReadOnlyList<ScheduleWindowDto>>.Fail(
+                SchedulingOperationError.NotFound, "Collection centre not found.");
+        }
+
+        var existingBookings = await ConfirmedBookingsAsync(centre.Id, orderId, ct);
+        var duration = current.SlotEnd - current.SlotStart;
+        var now = DateTimeOffset.UtcNow;
+
+        var candidateStarts = Enumerable.Range(1, AlternativeDaysToTry)
+            .Select(day => current.SlotStart.AddDays(day))
+            .Where(start => start > now)
+            .ToList();
+
+        // The agent is called once per candidate day, in parallel; one that fails or
+        // times out simply isn't offered.
+        var proposals = await Task.WhenAll(candidateStarts.Select(async start =>
+        {
+            try
+            {
+                return await schedulingPort.ProposeSlotAsync(
+                    orderId, centre.Id, new SchedulingWindow(start, start + duration), existingBookings, ct);
+            }
+            catch (Exception) when (!ct.IsCancellationRequested)
+            {
+                return null;
+            }
+        }));
+
+        IReadOnlyList<ScheduleWindowDto> alternatives = proposals
+            .OfType<SchedulingProposal>()
+            .Where(p => p.ProposedSlotEnd > p.ProposedSlotStart
+                        && p.ProposedSlotStart != current.SlotStart
+                        && existingBookings.Count(b => b.Start < p.ProposedSlotEnd && b.End > p.ProposedSlotStart) < centre.Capacity)
+            .GroupBy(p => p.ProposedSlotStart)
+            .Select(g => g.First())
+            .OrderBy(p => p.ProposedSlotStart)
+            .Take(MaxAlternatives)
+            .Select(p => new ScheduleWindowDto(p.ProposedSlotStart, p.ProposedSlotEnd))
+            .ToList();
+
+        return SchedulingOperationResult<IReadOnlyList<ScheduleWindowDto>>.Ok(alternatives);
     }
 
     /// <summary>Same posture as OrderService's identically-named helper: best-effort,

@@ -41,6 +41,16 @@ public class ReservationExpirySweepService(
                         "[ReservationExpirySweep] Cancelled {Count} orders with expired reservations.",
                         cancelledCount);
                 }
+
+                var reminders = await SendRemindersAsync(
+                    db, notifications,
+                    buyerLeadTime: TimeSpan.FromHours(configuration.GetValue("Orders:ReservationReminderHours", 6d)),
+                    officerPendingAfter: TimeSpan.FromHours(configuration.GetValue("Orders:OfficerPendingReminderHours", 24d)),
+                    stoppingToken);
+                if (reminders > 0)
+                {
+                    logger.LogInformation("[ReservationExpirySweep] Sent {Count} reminders.", reminders);
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -102,5 +112,103 @@ public class ReservationExpirySweepService(
         }
 
         return expiredOrders.Count;
+    }
+
+    /// <summary>
+    /// Reminders for orders still waiting for approval (FR22), each sent at most once:
+    /// the Buyer is warned when the reservation is about to expire, and the centre's
+    /// Officers are reminded when an order has been Pending for a long time. Sent-at
+    /// timestamps on the reservation prevent repeats on the next sweep. Static and
+    /// taking the DbContext, like <see cref="SweepExpiredReservationsAsync"/>, so it is
+    /// testable without the background timer. Returns the number of notifications queued.
+    /// </summary>
+    public static async Task<int> SendRemindersAsync(
+        AgriConnectDbContext db,
+        NotificationService notifications,
+        TimeSpan buyerLeadTime,
+        TimeSpan officerPendingAfter,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var sent = 0;
+
+        // 1) Buyer: the reservation is still live but ends soon.
+        var expiringSoon = await db.StockReservations
+            .Include(r => r.Order)
+            .Where(r => r.Order!.Status == OrderStatus.Pending
+                        && r.ExpiresAt > now
+                        && r.ExpiresAt <= now + buyerLeadTime
+                        && r.BuyerReminderSentAt == null)
+            .ToListAsync(cancellationToken);
+
+        // 2) Officers: Pending for a long time, reservation still live.
+        var waitingLong = await db.StockReservations
+            .Include(r => r.Order)
+            .Where(r => r.Order!.Status == OrderStatus.Pending
+                        && r.ExpiresAt > now
+                        && r.Order.CreatedAt <= now - officerPendingAfter
+                        && r.OfficerReminderSentAt == null)
+            .ToListAsync(cancellationToken);
+
+        if (expiringSoon.Count == 0 && waitingLong.Count == 0)
+        {
+            return 0;
+        }
+
+        var listingIds = expiringSoon.Concat(waitingLong).Select(r => r.ListingId).Distinct().ToList();
+        var listings = await db.Listings.AsNoTracking()
+            .Where(l => listingIds.Contains(l.Id))
+            .Select(l => new { l.Id, l.RegionId, l.Unit, CropName = l.Crop.Name })
+            .ToDictionaryAsync(l => l.Id, cancellationToken);
+
+        string Describe(StockReservation r)
+        {
+            var quantity = r.Order!.Quantity.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+            return listings.TryGetValue(r.ListingId, out var l)
+                ? $"{quantity} {l.Unit} of {l.CropName}"
+                : $"{quantity} of produce";
+        }
+
+        foreach (var reservation in expiringSoon)
+        {
+            notifications.Notify(
+                reservation.Order!.BuyerId,
+                "ReservationExpiring",
+                $"Your order for {Describe(reservation)} has not been approved yet. Its stock reservation ends at {reservation.ExpiresAt.UtcDateTime:d MMM, HH:mm} UTC, after which the order is cancelled.",
+                title: "Reservation ending soon");
+            reservation.BuyerReminderSentAt = now;
+            sent++;
+        }
+
+        foreach (var reservation in waitingLong)
+        {
+            var regionId = listings.TryGetValue(reservation.ListingId, out var l) ? l.RegionId : (Guid?)null;
+            var centreIds = regionId is null
+                ? new List<Guid>()
+                : await db.CollectionCentres.AsNoTracking()
+                    .Where(c => c.RegionId == regionId.Value).Select(c => c.Id).ToListAsync(cancellationToken);
+
+            var officerIds = await db.Users.AsNoTracking()
+                .Where(u => u.Role == Roles.Officer && u.IsActive
+                            && u.CollectionCentreId != null && centreIds.Contains(u.CollectionCentreId.Value))
+                .Select(u => u.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var officerId in officerIds)
+            {
+                notifications.Notify(
+                    officerId,
+                    "OrderAwaitingApproval",
+                    $"Order #{reservation.OrderId.ToString()[..8]} ({Describe(reservation)}) has been waiting for approval for over {officerPendingAfter.TotalHours:0.#} hours.",
+                    title: "Order waiting for approval");
+                sent++;
+            }
+
+            // Marked even when no officer is bound to the centre, so it is not re-evaluated every sweep.
+            reservation.OfficerReminderSentAt = now;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return sent;
     }
 }

@@ -53,10 +53,23 @@ export interface PagedResult<T> {
   totalCount: number
 }
 
+/** One entry of an order's activity timeline (FR11/FR20). */
+export interface OrderActivityItem {
+  timestamp: string
+  action: string
+  summary: string
+  actorName: string
+  /** Why the nearest centre was suggested (only on that entry). */
+  explanation?: string | null
+}
+
 export interface CreateOrderRequest {
   listingId: string
   quantity: number
   deliveryPreference: DeliveryPreference
+  /** Optional approximate buyer location (both or neither); lets the system suggest the nearest centre. */
+  buyerLat?: number
+  buyerLng?: number
 }
 
 export interface ScheduleResponse {
@@ -155,6 +168,8 @@ export const ordersApi = {
 
   getById: (id: string) => request<OrderResponse>(`/api/orders/${id}`),
 
+  activity: (id: string) => request<OrderActivityItem[]>(`/api/orders/${id}/activity`),
+
   updateStatus: (id: string, status: OrderStatus) =>
     request<OrderResponse>(`/api/orders/${id}/status`, {
       method: 'PUT',
@@ -175,6 +190,10 @@ export const ordersApi = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+
+  /** Up to three other windows an Officer could swap the pending proposal for (read-only). */
+  scheduleAlternatives: (orderId: string) =>
+    request<{ start: string; end: string }[]>(`/api/orders/${orderId}/schedule/alternatives`),
 
   decideSchedule: (
     orderId: string,

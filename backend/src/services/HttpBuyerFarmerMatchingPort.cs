@@ -42,7 +42,7 @@ public class HttpBuyerFarmerMatchingPort(HttpClient http, IConfiguration configu
 
     private record MatchResponseBody(
         string OrderId, string? MatchedCentreId, double MatchConfidence, string Notes,
-        int CandidatesConsidered, bool Degraded);
+        int CandidatesConsidered, bool Degraded, string? Explanation = null);
 
     public async Task<MatchResult?> MatchAsync(
         Guid orderId,
@@ -53,7 +53,9 @@ public class HttpBuyerFarmerMatchingPort(HttpClient http, IConfiguration configu
         IReadOnlyList<MatchCandidateCentre> candidateCentres,
         CancellationToken cancellationToken = default)
     {
-        var timeoutSeconds = configuration.GetValue("AgenticAi:TimeoutSeconds", 5);
+        // Longer than the other agent calls: the agent looks up road distances for every
+        // candidate centre and may ask an LLM to word the explanation.
+        var timeoutSeconds = configuration.GetValue("AgenticAi:MatchingTimeoutSeconds", 20);
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
@@ -95,7 +97,8 @@ public class HttpBuyerFarmerMatchingPort(HttpClient http, IConfiguration configu
 
             Guid? matchedCentreId = Guid.TryParse(payload.MatchedCentreId, out var parsed) ? parsed : null;
             return new MatchResult(
-                matchedCentreId, payload.MatchConfidence, payload.Notes, payload.CandidatesConsidered, payload.Degraded);
+                matchedCentreId, payload.MatchConfidence, payload.Notes, payload.CandidatesConsidered, payload.Degraded,
+                payload.Explanation);
         }
         catch (Exception ex) when (
             ex is HttpRequestException or JsonException

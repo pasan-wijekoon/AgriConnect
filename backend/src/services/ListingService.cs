@@ -163,9 +163,12 @@ public class ListingService
             .Take(query.PageSize)
             .ToListAsync();
 
+        var browseItems = items.Select(MapToDto).ToList();
+        await FillAvailableQuantityAsync(browseItems);
+
         return new ListingPagedResult<ListingResponseDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = browseItems,
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize
@@ -208,9 +211,12 @@ public class ListingService
             .Take(query.PageSize)
             .ToListAsync();
 
+        var farmerItems = items.Select(MapToDto).ToList();
+        await FillAvailableQuantityAsync(farmerItems);
+
         return new ListingPagedResult<ListingResponseDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = farmerItems,
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize
@@ -228,7 +234,9 @@ public class ListingService
             .FirstOrDefaultAsync(l => l.Id == id)
             ?? throw new KeyNotFoundException("Listing not found.");
 
-        return MapToDto(listing);
+        var dto = MapToDto(listing);
+        await FillAvailableQuantityAsync([dto]);
+        return dto;
     }
 
     // ── Update Listing (FR7) ──────────────────────────────────
@@ -591,6 +599,18 @@ public class ListingService
     }
 
     // ── Mapping Helper ────────────────────────────────────────
+    /// <summary>Sets <see cref="ListingResponseDto.AvailableQuantity"/> from the stock currently
+    /// held by order reservations (FR9) — one grouped query for the whole page.</summary>
+    private async Task FillAvailableQuantityAsync(IReadOnlyCollection<ListingResponseDto> dtos)
+    {
+        var reserved = await ReservationQueries.ActiveReservedByListingAsync(
+            _db, dtos.Select(d => d.Id).ToList(), DateTimeOffset.UtcNow);
+        foreach (var dto in dtos)
+        {
+            dto.AvailableQuantity = Math.Max(0m, dto.Quantity - reserved.GetValueOrDefault(dto.Id));
+        }
+    }
+
     private static ListingResponseDto MapToDto(Listing l)
     {
         return new ListingResponseDto
@@ -601,6 +621,7 @@ public class ListingService
             CropCategory = l.Crop.Category,
             RegionName = l.Region.Name,
             Quantity = l.Quantity,
+            AvailableQuantity = l.Quantity,   // refined by FillAvailableQuantityAsync where reservations are known
             Unit = l.Unit,
             ClaimedGrade = l.ClaimedGrade,
             PickupWindowStart = l.PickupWindowStart,

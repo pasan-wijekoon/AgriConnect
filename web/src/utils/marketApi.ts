@@ -154,6 +154,8 @@ export interface Listing {
   cropCategory: string;
   regionName: string;
   quantity: number;
+  /** Quantity still orderable now (total minus stock held by active orders). */
+  availableQuantity?: number;
   unit: string;
   claimedGrade: string;
   pickupWindowStart: string;

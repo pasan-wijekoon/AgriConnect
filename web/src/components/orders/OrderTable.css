@@ -98,3 +98,22 @@
   color: var(--color-proposed);
   font-weight: 600;
 }
+
+.order-table-flag {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.order-table-flag-info {
+  color: var(--color-text-secondary);
+}
+
+.order-table-flag-warn {
+  color: #b45309;
+}
+
+.order-table-flag-danger {
+  color: #b91c1c;
+}

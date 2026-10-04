@@ -68,6 +68,15 @@ public class OrderService(
                 OrderOperationError.InvalidRequest, "Quantity must be greater than zero.");
         }
 
+        if (request.BuyerLat.HasValue != request.BuyerLng.HasValue
+            || request.BuyerLat is < -90 or > 90
+            || request.BuyerLng is < -180 or > 180)
+        {
+            return OrderOperationResult<OrderResponse>.Fail(
+                OrderOperationError.InvalidRequest,
+                "Buyer location must include both a latitude (-90 to 90) and a longitude (-180 to 180), or neither.");
+        }
+
         var availability = await listingPort.GetAvailabilityAsync(request.ListingId, ct);
         if (availability is null)
         {
@@ -89,6 +98,9 @@ public class OrderService(
             Quantity = request.Quantity,
             Status = OrderStatus.Pending,
             DeliveryPreference = request.DeliveryPreference,
+            // About 1 km is plenty to pick the nearest centre and keeps the stored location coarse.
+            BuyerLatitude = request.BuyerLat is { } lat ? Math.Round(lat, 2, MidpointRounding.AwayFromZero) : null,
+            BuyerLongitude = request.BuyerLng is { } lng ? Math.Round(lng, 2, MidpointRounding.AwayFromZero) : null,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -172,6 +184,46 @@ public class OrderService(
         return new PagedResult<OrderResponse>(await ToResponsesAsync(items, ct), page, size, total);
     }
 
+    /// <summary>
+    /// The order's activity timeline: its audit entries (and its pickup schedule's), oldest
+    /// first, with friendly summaries and actor names. Visible to exactly the users who can
+    /// view the order itself; anyone else gets the same 404 as for a missing order (IDOR).
+    /// </summary>
+    public async Task<OrderOperationResult<IReadOnlyList<OrderActivityItem>>> GetActivityAsync(
+        Guid orderId, Guid currentUserId, string role, CancellationToken ct = default)
+    {
+        var order = await db.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == orderId, ct);
+        if (order is null || !await CanViewAsync(order, currentUserId, role, ct))
+        {
+            return OrderOperationResult<IReadOnlyList<OrderActivityItem>>.Fail(
+                OrderOperationError.NotFound, "Order not found.");
+        }
+
+        var scheduleIds = await db.PickupSchedules.AsNoTracking()
+            .Where(p => p.OrderId == orderId).Select(p => p.Id).ToListAsync(ct);
+
+        var entries = await db.AuditLogs.AsNoTracking()
+            .Where(a => (a.EntityType == "Order" && a.EntityId == orderId)
+                        || (a.EntityType == "PickupSchedule" && scheduleIds.Contains(a.EntityId)))
+            .OrderBy(a => a.Timestamp)
+            .ToListAsync(ct);
+
+        var actorIds = entries.Select(a => a.ActorId).Where(id => id != AuditLogService.SystemActorId).Distinct().ToList();
+        var names = await db.Users.AsNoTracking()
+            .Where(u => actorIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.FullName, ct);
+
+        IReadOnlyList<OrderActivityItem> items = entries
+            .Select(a => OrderActivityMapper.ToItem(
+                a,
+                a.ActorId == AuditLogService.SystemActorId
+                    ? OrderActivityMapper.SystemActorName
+                    : names.GetValueOrDefault(a.ActorId, "Unknown user")))
+            .ToList();
+
+        return OrderOperationResult<IReadOnlyList<OrderActivityItem>>.Ok(items);
+    }
+
     public async Task<OrderOperationResult<OrderResponse>> UpdateStatusAsync(
         Guid orderId, OrderStatus newStatus, Guid actorId, CancellationToken ct = default)
     {
@@ -228,8 +280,15 @@ public class OrderService(
 
         try
         {
+            // The buyer's approximate location (if they shared one when ordering) lets the
+            // Matching Agent suggest the nearest centre; without it the region default applies.
+            var location = await db.Orders.AsNoTracking()
+                .Where(o => o.Id == orderId && o.BuyerLatitude != null && o.BuyerLongitude != null)
+                .Select(o => new BuyerLocationDto(o.BuyerLatitude!.Value, o.BuyerLongitude!.Value))
+                .FirstOrDefaultAsync(ct);
+
             var proposal = await schedulingService.ProposeAsync(
-                orderId, new CreateScheduleRequest(null, null), actorId, ct);
+                orderId, new CreateScheduleRequest(null, null, location), actorId, ct);
             if (!proposal.Success)
             {
                 logger?.LogWarning(
