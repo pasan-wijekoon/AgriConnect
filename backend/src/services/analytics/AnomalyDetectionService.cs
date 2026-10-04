@@ -44,10 +44,16 @@ public class AnomalyDetectionService(AgriConnectDbContext db, IConfiguration con
             return null;
         }
 
+        var storable = StorableDeviation(deviation);
+
         var open = await db.PriceAnomalyFlags
             .FirstOrDefaultAsync(f => f.ListingId == listingId && f.Status == AnomalyStatus.Open);
         if (open is not null)
         {
+            // Still one flag per listing, but it shows the price the officer will actually see.
+            open.ListingPrice = price;
+            open.DeviationPercent = storable;
+            await db.SaveChangesAsync();
             return open;
         }
 
@@ -58,8 +64,7 @@ public class AnomalyDetectionService(AgriConnectDbContext db, IConfiguration con
             CropId = cropId,
             RegionId = regionId,
             ListingPrice = price,
-            DeviationPercent = Math.Round(
-                Math.Clamp(deviation, -MaxStorableDeviation, MaxStorableDeviation), 2),
+            DeviationPercent = storable,
             FlaggedAt = DateTimeOffset.UtcNow,
             Status = AnomalyStatus.Open,
         };
@@ -68,6 +73,9 @@ public class AnomalyDetectionService(AgriConnectDbContext db, IConfiguration con
         await db.SaveChangesAsync();
         return flag;
     }
+
+    private static decimal StorableDeviation(decimal deviation) =>
+        Math.Round(Math.Clamp(deviation, -MaxStorableDeviation, MaxStorableDeviation), 2);
 
     public async Task<List<PriceAnomalyFlag>> GetFlagsAsync(string? status, Guid? cropId, int page, int size)
     {

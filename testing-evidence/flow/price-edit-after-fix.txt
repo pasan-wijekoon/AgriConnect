@@ -1,0 +1,14 @@
+PASS  Farmer finds the published Carrots listing  status Published, price 120.0
+PASS  Farmer saves a floor price of 120  status 200
+PASS  The listing stays Published after the edit  status 'Published'
+PASS  Buyer still sees it, now with the price  price seen by buyer: 120.0
+PASS  A price that is zero is refused  status 400
+PASS  A price that is negative is refused  status 400
+PASS  A price that is above the maximum is refused  status 400
+PASS  Another farmer cannot edit this listing  status 403
+PASS  A buyer cannot edit a listing  status 403
+PASS  Price is unchanged after the refused edits  price 120.0
+PASS  D integration: raising the price far above fair puts the new price on the listing's anomaly flag  flag price 99999.0, deviation 999.99%, flags before 19 / after 19
+PASS  There is still only one open flag for the listing  1 open flag(s)
+
+SUMMARY: 12 passed, 0 failed, 12 total

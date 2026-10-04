@@ -1,6 +1,7 @@
 using AgriConnect.Api.Config;
 using AgriConnect.Api.Dtos;
 using AgriConnect.Api.Models;
+using AgriConnect.Api.Services.Analytics;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgriConnect.Api.Services;
@@ -9,11 +10,17 @@ public class ListingService
 {
     private readonly AgriConnectDbContext _db;
     private readonly AgenticAiService _agenticAi;
+    private readonly AnomalyDetectionService _anomalies;
+    private readonly ILogger<ListingService> _logger;
 
-    public ListingService(AgriConnectDbContext db, AgenticAiService agenticAi)
+    public ListingService(
+        AgriConnectDbContext db, AgenticAiService agenticAi,
+        AnomalyDetectionService anomalies, ILogger<ListingService> logger)
     {
         _db = db;
         _agenticAi = agenticAi;
+        _anomalies = anomalies;
+        _logger = logger;
     }
 
     private const int MaxPageSize = 100;
@@ -295,6 +302,17 @@ public class ListingService
         listing.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
+        // A farmer can list at a fair price and then raise it, so a changed price is checked
+        // against the AI fair range again, not only the price the listing was created with.
+        if (dto.MinPrice.HasValue)
+        {
+            var suggestion = await _db.PriceSuggestions.AsNoTracking().FirstOrDefaultAsync(p => p.ListingId == id);
+            if (suggestion is not null)
+            {
+                await FlagIfPriceAnomalousAsync(listing, suggestion);
+            }
+        }
+
         return await GetListingById(id);
     }
 
@@ -403,11 +421,15 @@ public class ListingService
             .FirstAsync(l => l.Id == listingId);
 
         // Recent local sale data for the same crop/region, blended into the
-        // agent's market lookup alongside live wholesale benchmarks.
+        // agent's market lookup alongside live wholesale benchmarks. Only listings an
+        // officer has approved count: a pending, rejected or withdrawn asking price is
+        // unverified, and one absurd price would otherwise raise the "fair" price of
+        // every later listing and hide exactly the anomalies Component D looks for.
         var recentPrices = await _db.Listings
             .Where(l => l.CropId == listing.CropId
                      && l.RegionId == listing.RegionId
                      && l.MinPrice.HasValue
+                     && (l.Status == ListingStatus.Published || l.Status == ListingStatus.SoldOut)
                      && l.Id != listingId)
             .OrderByDescending(l => l.CreatedAt)
             .Take(20)
@@ -444,6 +466,38 @@ public class ListingService
 
         _db.PriceSuggestions.Add(suggestion);
         await _db.SaveChangesAsync();
+
+        await FlagIfPriceAnomalousAsync(listing, suggestion);
+    }
+
+    // ── Price anomaly flag (Component D, FR16) ────────────────────────
+    // Hands the farmer's asking price and the AI's fair range to the analytics
+    // service, which raises an Open flag on the officer's Anomaly Queue when the
+    // price is more than the configured threshold away from the range's midpoint.
+    // Analytics must never block a farmer from listing produce, so any failure here
+    // is logged and swallowed.
+    private async Task FlagIfPriceAnomalousAsync(Listing listing, PriceSuggestion suggestion)
+    {
+        // A suggestion the validator auto-rejected still carries a usable fair range, and an
+        // asking price far outside that range is exactly what an officer should review, so
+        // only the range itself is checked here.
+        if (listing.MinPrice is not { } price
+            || suggestion.SuggestedPriceMin <= 0
+            || suggestion.SuggestedPriceMax < suggestion.SuggestedPriceMin)
+        {
+            return;
+        }
+
+        try
+        {
+            await _anomalies.EvaluateListingAsync(
+                listing.Id, listing.CropId, listing.RegionId,
+                price, suggestion.SuggestedPriceMin, suggestion.SuggestedPriceMax);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not evaluate listing {ListingId} for a price anomaly.", listing.Id);
+        }
     }
 
     // ── Officer Decision on a Price Suggestion (Approve / Reject) ─────

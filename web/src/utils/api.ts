@@ -40,13 +40,15 @@ export interface Paged<T> {
 
 export interface ExternalContext {
   available: boolean
+  /** One plain sentence about what was found, e.g. "2 orders, 60 kg in total." */
+  summary: string | null
   reason: string | null
 }
 
 export interface Investigation {
   listingId: string
   flag: { deviationPercent: number; flaggedAt: string; status: AnomalyStatus }
-  priceContext: { regionalAvgPrice: number | null; listingPrice: number; percentileInRegion: number }
+  priceContext: { regionalAvgPrice: number | null; aiFairPrice: number | null; listingPrice: number; percentileInRegion: number }
   inspectionContext: ExternalContext
   orderContext: ExternalContext
   likelyCauses: { cause: string; confidence: 'High' | 'Medium' | 'Low'; explanation: string }[]

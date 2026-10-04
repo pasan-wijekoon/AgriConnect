@@ -28,7 +28,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const { user } = useAuth();
   useEscapeKey(onClose);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
-  const [orderQuantity, setOrderQuantity] = useState<number>(Math.max(1, Math.min(100, Math.floor(listing?.quantity ?? 100))));
+  // Held as text: a number state turned an emptied box straight back into 0, so the 0 could never be deleted.
+  const [quantityText, setQuantityText] = useState<string>(String(Math.max(1, Math.min(100, Math.floor(listing?.quantity ?? 100)))));
+  const orderQuantity = quantityText.trim() === '' ? Number.NaN : Number(quantityText);
   const [orderMode, setOrderMode] = useState(false);
   const [deliveryPreference, setDeliveryPreference] = useState<DeliveryPreference>('Pickup');
   const [submitting, setSubmitting] = useState(false);
@@ -352,8 +354,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     type="number"
                     min="1"
                     max={listing.quantity}
-                    value={orderQuantity}
-                    onChange={(e) => setOrderQuantity(Number(e.target.value))}
+                    step="any"
+                    inputMode="decimal"
+                    value={quantityText}
+                    onChange={(e) => setQuantityText(e.target.value)}
                     className="form-input"
                     required
                   />
@@ -368,7 +372,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     fontWeight: 800,
                     fontSize: '1.1rem'
                   }}>
-                    Rs. {((listing.minPrice || 0) * orderQuantity).toLocaleString()}
+                    {!listing.minPrice
+                      ? <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>No price set yet. The officer will confirm it.</span>
+                      : Number.isFinite(orderQuantity) && orderQuantity > 0
+                        ? <>Rs. {(listing.minPrice * orderQuantity).toLocaleString()}</>
+                        : '—'}
                   </div>
                 </div>
               </div>
