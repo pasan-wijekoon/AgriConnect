@@ -8,7 +8,6 @@ on:
       - "backend/**"
       - "docker/backend/**"
       - ".github/workflows/backend-build-and-deploy.yaml"
-  workflow_dispatch:
 
 concurrency:
   group: backend-${{ github.ref }}

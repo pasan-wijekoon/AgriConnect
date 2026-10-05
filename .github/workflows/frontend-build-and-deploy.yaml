@@ -7,7 +7,6 @@ on:
       - "web/**"
       - "docker/web/**"
       - ".github/workflows/frontend-build-and-deploy.yaml"
-  workflow_dispatch:
 
 concurrency:
   group: frontend-${{ github.ref }}
