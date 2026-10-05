@@ -1,6 +1,5 @@
 name: Backend - Build & Deploy
 
-
 on:
   pull_request:
     branches: [main]
@@ -8,6 +7,7 @@ on:
       - "backend/**"
       - "docker/backend/**"
       - ".github/workflows/backend-build-and-deploy.yaml"
+  workflow_dispatch:
 
 concurrency:
   group: backend-${{ github.ref }}
@@ -27,6 +27,7 @@ jobs:
     name: Build & test (.NET)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +40,8 @@ jobs:
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('backend/**/*.csproj') }}
-          restore-keys: nuget-${{ runner.os }}-
+          restore-keys: |
+            nuget-${{ runner.os }}-
 
       - name: Restore
         run: dotnet restore backend/backend.csproj
@@ -47,13 +49,17 @@ jobs:
       - name: Build
         run: dotnet build backend/backend.csproj -c Release --no-restore
 
-      - name: Test (runs only if test projects exist)
+      - name: Test
+        env:
+          ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
         run: |
           mapfile -t projects < <(find backend -name '*Tests.csproj')
+
           if [ ${#projects[@]} -eq 0 ]; then
             echo "No test projects found - skipping."
             exit 0
           fi
+
           for p in "${projects[@]}"; do
             dotnet test "$p" -c Release
           done
@@ -63,11 +69,14 @@ jobs:
     needs: build-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     permissions:
       contents: read
       packages: write
+
     outputs:
       image: ${{ steps.ref.outputs.image }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -85,7 +94,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.Agriconnect_PAT }}
 
       - name: Build (and push on main)
         uses: docker/build-push-action@v6
@@ -102,20 +111,33 @@ jobs:
   deploy:
     name: Deploy to Render
     needs: docker
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     environment: production
+
     steps:
       - name: Trigger Render deploy of this commit's image
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL }}
           IMAGE: ${{ needs.docker.outputs.image }}:${{ github.sha }}
+
         run: |
           if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
             echo "::error::Secret RENDER_BACKEND_DEPLOY_HOOK_URL is not set"
             exit 1
           fi
+
           ENCODED_IMAGE="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$IMAGE")"
-          curl --fail --silent --show-error --max-time 60 -X POST "${RENDER_DEPLOY_HOOK_URL}&imgURL=${ENCODED_IMAGE}"
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --max-time 60 \
+            -X POST \
+            "${RENDER_DEPLOY_HOOK_URL}&imgURL=${ENCODED_IMAGE}"
+
           echo "Deploy requested on Render for ${IMAGE}" >> "$GITHUB_STEP_SUMMARY"
