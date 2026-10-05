@@ -79,6 +79,7 @@ builder.Services.AddAuthorization();
 // ---- Component A — Produce Listings & Price Discovery (auth + marketplace) ----
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<AgenticAiService>();
+builder.Services.AddScoped<TodayPriceCatalogService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ListingService>();
 
@@ -114,8 +115,14 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddHostedService<ReservationExpirySweepService>();
 
 // ---- Component B — Scheduling seam (FR10, plan §8) ----
-// Swap for a real HTTP client to Student 4's Logistics Scheduling Agent once it exists.
-builder.Services.AddScoped<ILogisticsSchedulingPort, StubLogisticsSchedulingPort>();
+// Real HTTP client to Student 4's Logistics Scheduling Agent (agentic-ai/,
+// POST /agents/logistics/schedule). Falls back to StubLogisticsSchedulingPort's
+// behaviour whenever the agent is unavailable, so scheduling never depends on it.
+builder.Services.AddHttpClient<ILogisticsSchedulingPort, HttpLogisticsSchedulingPort>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/");
+});
 
 // ---- Component B — Buyer-Farmer Matching Agent (FR10, plan §8.1) ----
 // Unlike ILogisticsSchedulingPort above, this agent already exists and is
@@ -163,6 +170,15 @@ builder.Services.AddHttpClient<IAgentClientService, AgentClientService>((sp, cli
     client.BaseAddress = new Uri(config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/");
 });
 builder.Services.AddScoped<IInspectionService, InspectionService>();
+
+// ---- Component D — AI Scheduling preview (Logistics Scheduling Agent) ----
+// Same agentic-ai service and AgenticAi:BaseUrl as the agents above; lets officers
+// try the agent directly from the analytics dashboard. Stores nothing.
+builder.Services.AddHttpClient<AgriConnect.Api.Services.Agents.LogisticsAgentClient>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/");
+});
 
 // ---- CORS (needed for the React web client, plan §10) ----
 // ALLOWED_ORIGINS is already provisioned in docker/.env.example; the local-dev
@@ -280,6 +296,11 @@ if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains(
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         var sharedResult = await SharedReferenceSeeder.SeedAsync(db, logger);
         Console.WriteLine($"[Shared] Seeded: {sharedResult.CropsAdded} crops, {sharedResult.RegionsAdded} regions, {sharedResult.UsersAdded} users.");
+
+        // Photos uploaded before images moved into the database are copied in once (idempotent).
+        var uploadsDir = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "uploads");
+        var importedImages = await UploadedImageImporter.ImportAsync(db, uploadsDir, logger);
+        if (importedImages > 0) Console.WriteLine($"[Shared] Imported {importedImages} existing photo(s) from wwwroot/uploads into the database.");
     }
 
     // ---- Component D — demo price history, anomaly flags and supply events ----

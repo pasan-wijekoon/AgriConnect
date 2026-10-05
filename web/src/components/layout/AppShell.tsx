@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 import { useTheme } from '../../context/ThemeContext'
+import { NotificationBell } from '../NotificationBell'
 import {
   Sprout,
   Layers,
@@ -49,6 +50,24 @@ const SIDEBAR_NAV: NavSection[] = [
         icon: Layers,
         roles: ['Farmer', 'Buyer', 'Officer', 'Administrator'],
         end: true,
+      },
+      {
+        to: '/prices/today',
+        label: "Today's Prices",
+        icon: TrendingUp,
+        roles: ['Farmer', 'Buyer', 'Officer', 'Administrator'],
+      },
+    ],
+  },
+  {
+    section: 'My Orders',
+    roles: ['Farmer', 'Buyer'],
+    items: [
+      {
+        to: '/my-orders',
+        label: 'Orders',
+        icon: ShoppingBag,
+        roles: ['Farmer', 'Buyer'],
       },
     ],
   },
@@ -120,6 +139,12 @@ const SIDEBAR_NAV: NavSection[] = [
         to: '/analytics/reports',
         label: 'Reports',
         icon: BarChart2,
+        roles: ['Officer', 'Administrator'],
+      },
+      {
+        to: '/analytics/ai-scheduling',
+        label: 'AI Scheduling',
+        icon: Sparkles,
         roles: ['Officer', 'Administrator'],
       },
     ],
@@ -204,6 +229,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
+
+        {/* Notifications (FR22) */}
+        {user && <NotificationBell theme={theme} />}
 
         {/* User badge + logout */}
         {user && (

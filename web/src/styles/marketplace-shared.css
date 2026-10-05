@@ -1,0 +1,171 @@
+/* Component A's popup, form and status classes on the shared (light/dark) theme.
+
+   styles/marketplace.css holds Component A's original dark design system, scoped under
+   .marketplace-scope — which the unified app shell does not use. These classes were
+   defined only there, so in the shell the Details / Order / Add-listing popups rendered
+   as plain blocks at the bottom of the page. They are defined here, globally, from the
+   shared --color-* tokens so they follow the light/dark toggle. */
+
+/* ── Popups ──────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000; /* above the sticky app header and sidebar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(15, 23, 20, 0.55);
+  animation: modal-fade-in 0.15s ease-out;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-card, #fff);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  animation: modal-scale-up 0.18s ease-out;
+}
+
+/* Keep the page behind a popup from scrolling. */
+body:has(.modal-overlay) {
+  overflow: hidden;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-scale-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 94vh;
+    border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
+  }
+}
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.form-textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* ── Buttons not covered by components/ui/Button.css ─────────────────────── */
+.btn-danger {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid color-mix(in srgb, var(--color-error) 35%, transparent);
+}
+
+.btn-danger:not(:disabled):hover {
+  background: color-mix(in srgb, var(--color-error) 18%, var(--color-error-bg));
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+/* ── Listing status / grade badges (extend .badge from components/ui/Badge.css) ── */
+.badge-published,
+.badge-grade-a {
+  background: var(--color-success-bg);
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+}
+
+.badge-draft,
+.badge-grade-c {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.badge-withdrawn {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+}
+
+.badge-grade-b {
+  background: var(--color-info-bg, #dbeafe);
+  color: var(--color-info, #1d4ed8);
+  border-color: color-mix(in srgb, var(--color-info, #1d4ed8) 35%, transparent);
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────── */
+.animate-spin {
+  animation: marketplace-shared-spin 0.9s linear infinite;
+}
+
+@keyframes marketplace-shared-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Control variants Component A uses that the shell's .field rules miss ──
+   (AppShell.css styles input.form-input / select.form-select / textarea.form-input,
+   but the listing and order forms use select.form-input and textarea.form-textarea.) */
+select.form-input,
+textarea.form-textarea,
+textarea.form-input,
+select.form-select {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  outline: none;
+  transition: 0.18s ease;
+}
+
+textarea.form-textarea,
+textarea.form-input {
+  min-height: 92px;
+  resize: vertical;
+}
+
+select.form-input:focus,
+textarea.form-textarea:focus,
+textarea.form-input:focus,
+select.form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-success-bg);
+}

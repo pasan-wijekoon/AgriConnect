@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../models/auth_user.dart';
-import '../services/auth_service.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/session_provider.dart';
+import '../../theme/app_colors.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  final AuthService authService;
-  final void Function(AuthUser user) onLoggedIn;
-
-  const LoginScreen({super.key, required this.authService, required this.onLoggedIn});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -17,7 +17,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscure = true;
   String? _error;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -26,11 +34,13 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      final user = await widget.authService.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-      if (mounted) widget.onLoggedIn(user);
+      await context.read<SessionProvider>().login(
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
+      // AuthGate swaps to the app shell once the session is set; drop this
+      // screen (and anything pushed above the gate) so Back can't return here.
+      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
     } catch (e) {
       if (mounted) {
         setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
@@ -48,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Sign in')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -60,23 +71,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.eco, size: 56, color: Color(0xFF2E7D32)),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'AgriConnect',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                    ),
+                    const Text('Welcome back',
+                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Sign in to list produce or browse the marketplace',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54),
-                    ),
-                    const SizedBox(height: 32),
+                    const Text('Sign in to place orders, track pickups or manage your listings.',
+                        style: TextStyle(color: AppColors.textSecondary)),
+                    const SizedBox(height: 28),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         border: OutlineInputBorder(),
@@ -88,11 +92,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscure,
+                      autofillHints: const [AutofillHints.password],
+                      decoration: InputDecoration(
                         labelText: 'Password',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock_outline),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                        ),
                       ),
                       validator: (v) =>
                           (v == null || v.isEmpty) ? 'Password is required' : null,
@@ -100,14 +109,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorBg,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(_error!, style: const TextStyle(color: AppColors.error)),
+                      ),
                     ],
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: _isLoading ? null : _submit,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D32),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppColors.primary,
+                        minimumSize: const Size.fromHeight(50),
                       ),
                       child: _isLoading
                           ? const SizedBox(
@@ -115,19 +131,33 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
-                          : const Text('Log in'),
+                          : const Text('Sign in'),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                      ),
+                      child: const Text('New here? Create an account'),
+                    ),
+                    const SizedBox(height: 16),
                     const Text('Demo accounts (password: "password")',
-                        textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 12)),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                     const SizedBox(height: 8),
                     Wrap(
                       alignment: WrapAlignment.center,
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _demoChip('Farmer', 'farmer@agriconnect.lk'),
-                        _demoChip('Buyer', 'buyer@agriconnect.lk'),
+                        ActionChip(
+                          label: const Text('Farmer'),
+                          onPressed: () => _fillDemoAccount('farmer@agriconnect.lk'),
+                        ),
+                        ActionChip(
+                          label: const Text('Buyer'),
+                          onPressed: () => _fillDemoAccount('buyer@agriconnect.lk'),
+                        ),
                       ],
                     ),
                   ],
@@ -137,13 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _demoChip(String label, String email) {
-    return ActionChip(
-      label: Text(label),
-      onPressed: () => _fillDemoAccount(email),
     );
   }
 }

@@ -57,6 +57,24 @@ public class NotificationService(AgriConnectDbContext db)
         return true;
     }
 
+    public Task<int> UnreadCountAsync(Guid userId, CancellationToken ct = default) =>
+        db.Notifications.CountAsync(n => n.UserId == userId && n.ReadAt == null, ct);
+
+    /// <summary>Marks every unread notification belonging to the caller as read;
+    /// scoped to <paramref name="userId"/> so it can never touch anyone else's.</summary>
+    public async Task<int> MarkAllReadAsync(Guid userId, CancellationToken ct = default)
+    {
+        var unread = await db.Notifications.Where(n => n.UserId == userId && n.ReadAt == null).ToListAsync(ct);
+        var now = DateTimeOffset.UtcNow;
+        foreach (var n in unread)
+        {
+            n.ReadAt = now;
+        }
+
+        await db.SaveChangesAsync(ct);
+        return unread.Count;
+    }
+
     private static NotificationResponse ToResponse(Notification n) =>
         new(n.Id, n.Type, n.Title, n.Message, n.ReadAt, n.CreatedAt);
 }

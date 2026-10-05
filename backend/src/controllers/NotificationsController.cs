@@ -25,6 +25,19 @@ public class NotificationsController(NotificationService notifications) : Contro
         return Ok(result);
     }
 
+    [HttpGet("unread-count")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UnreadCount(CancellationToken ct) =>
+        Ok(new { count = await notifications.UnreadCountAsync(User.GetUserId(), ct) });
+
+    [HttpPut("read-all")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> MarkAllRead(CancellationToken ct)
+    {
+        await notifications.MarkAllReadAsync(User.GetUserId(), ct);
+        return NoContent();
+    }
+
     [HttpPut("{id:guid}/read")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> MarkRead(Guid id, CancellationToken ct)

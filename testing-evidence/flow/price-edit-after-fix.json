@@ -1,0 +1,62 @@
+[
+  {
+    "check": "Farmer finds the published Carrots listing",
+    "pass": true,
+    "detail": "status Published, price 120.0"
+  },
+  {
+    "check": "Farmer saves a floor price of 120",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "check": "The listing stays Published after the edit",
+    "pass": true,
+    "detail": "status 'Published'"
+  },
+  {
+    "check": "Buyer still sees it, now with the price",
+    "pass": true,
+    "detail": "price seen by buyer: 120.0"
+  },
+  {
+    "check": "A price that is zero is refused",
+    "pass": true,
+    "detail": "status 400"
+  },
+  {
+    "check": "A price that is negative is refused",
+    "pass": true,
+    "detail": "status 400"
+  },
+  {
+    "check": "A price that is above the maximum is refused",
+    "pass": true,
+    "detail": "status 400"
+  },
+  {
+    "check": "Another farmer cannot edit this listing",
+    "pass": true,
+    "detail": "status 403"
+  },
+  {
+    "check": "A buyer cannot edit a listing",
+    "pass": true,
+    "detail": "status 403"
+  },
+  {
+    "check": "Price is unchanged after the refused edits",
+    "pass": true,
+    "detail": "price 120.0"
+  },
+  {
+    "check": "D integration: raising the price far above fair puts the new price on the listing's anomaly flag",
+    "pass": true,
+    "detail": "flag price 99999.0, deviation 999.99%, flags before 19 / after 19"
+  },
+  {
+    "check": "There is still only one open flag for the listing",
+    "pass": true,
+    "detail": "1 open flag(s)"
+  }
+]

@@ -17,12 +17,15 @@ class PriceTrendException implements Exception {
 
 /// Reads market price trends from the AgriConnect API (Component D).
 class PriceTrendService {
-  PriceTrendService({http.Client? client, String? baseUrl})
+  PriceTrendService({http.Client? client, String? baseUrl, this.getToken})
       : _client = client ?? http.Client(),
         _baseUrl = baseUrl ?? defaultBaseUrl();
 
   final http.Client _client;
   final String _baseUrl;
+
+  /// The signed-in user's JWT; the API rejects unauthenticated analytics calls.
+  final String? Function()? getToken;
 
   static const _timeout = Duration(seconds: 15);
 
@@ -35,9 +38,10 @@ class PriceTrendService {
     return 'http://localhost:5000';
   }
 
-  // TODO: send the signed-in farmer's JWT once login exists. Until then the API's
-  // Development-only fake sign-in accepts this header.
-  static const _headers = {'Accept': 'application/json', 'X-Dev-Role': 'Farmer'};
+  Map<String, String> get _headers => {
+        'Accept': 'application/json',
+        if (getToken?.call() case final token? when token.isNotEmpty) 'Authorization': 'Bearer $token',
+      };
 
   Future<List<NamedItem>> fetchCrops() async {
     final json = await _get(Uri.parse('$_baseUrl/api/analytics/filters'));

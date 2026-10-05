@@ -9,7 +9,7 @@ export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localh
 // ---- Response shapes (documentation/API_Contract.md) --------------------------------
 
 export interface AnalyticsFilters {
-  crops: NamedItem[]
+  crops: (NamedItem & { hasPriceHistory?: boolean })[]
   regions: NamedItem[]
 }
 
@@ -40,13 +40,15 @@ export interface Paged<T> {
 
 export interface ExternalContext {
   available: boolean
+  /** One plain sentence about what was found, e.g. "2 orders, 60 kg in total." */
+  summary: string | null
   reason: string | null
 }
 
 export interface Investigation {
   listingId: string
   flag: { deviationPercent: number; flaggedAt: string; status: AnomalyStatus }
-  priceContext: { regionalAvgPrice: number | null; listingPrice: number; percentileInRegion: number }
+  priceContext: { regionalAvgPrice: number | null; aiFairPrice: number | null; listingPrice: number; percentileInRegion: number }
   inspectionContext: ExternalContext
   orderContext: ExternalContext
   likelyCauses: { cause: string; confidence: 'High' | 'Medium' | 'Low'; explanation: string }[]
@@ -135,3 +137,20 @@ export const getReports = (query: { page?: number; size?: number } = {}) =>
   request<ReportPage>('GET', '/api/reports', { query })
 
 export const downloadUrl = (fileUrl: string) => `${API_BASE_URL}${fileUrl}`
+
+export interface SchedulingPreviewRequest {
+  centreId: string
+  preferredWindow: { start: string; end: string }
+  existingBookings: { slotStart: string; slotEnd: string }[]
+}
+
+export interface SchedulingPreview {
+  proposedSlotStart: string
+  proposedSlotEnd: string
+  conflictChecked: boolean
+  reasoning: string
+}
+
+/** Asks the Logistics Scheduling Agent (via the API) for a slot. Preview only; nothing is saved. */
+export const previewSchedule = (body: SchedulingPreviewRequest) =>
+  request<SchedulingPreview>('POST', '/api/analytics/scheduling-preview', { body })

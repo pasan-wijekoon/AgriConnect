@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/session_provider.dart';
 import '../models/listing.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
@@ -6,9 +8,8 @@ import 'listing_detail_screen.dart';
 
 class BrowseListingsScreen extends StatefulWidget {
   final ApiService apiService;
-  final VoidCallback? onLogout;
 
-  const BrowseListingsScreen({super.key, required this.apiService, this.onLogout});
+  const BrowseListingsScreen({super.key, required this.apiService});
 
   @override
   State<BrowseListingsScreen> createState() => _BrowseListingsScreenState();
@@ -81,7 +82,7 @@ class _BrowseListingsScreenState extends State<BrowseListingsScreen> {
           children: [
             Icon(Icons.eco, color: Colors.green),
             SizedBox(width: 8),
-            Text('AgriConnect Marketplace', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Marketplace', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
@@ -90,12 +91,6 @@ class _BrowseListingsScreenState extends State<BrowseListingsScreen> {
             tooltip: 'Refresh listings',
             onPressed: _loadListings,
           ),
-          if (widget.onLogout != null)
-            IconButton(
-              icon: const Icon(Icons.logout),
-              tooltip: 'Log out',
-              onPressed: widget.onLogout,
-            ),
         ],
       ),
       body: Column(
@@ -255,6 +250,7 @@ class _BrowseListingsScreenState extends State<BrowseListingsScreen> {
                                     builder: (context) => ListingDetailScreen(
                                       listingId: listing.id,
                                       apiService: widget.apiService,
+                                      canOrder: context.read<SessionProvider>().user?.isBuyer ?? false,
                                     ),
                                   ),
                                 );

@@ -13,7 +13,8 @@ public record MatchCandidateCentre(
 /// (which <see cref="IBuyerFarmerMatchingPort.MatchAsync"/> reports by returning
 /// null rather than a <see cref="MatchResult"/> at all).</summary>
 public record MatchResult(
-    Guid? MatchedCentreId, double MatchConfidence, string Notes, int CandidatesConsidered, bool Degraded);
+    Guid? MatchedCentreId, double MatchConfidence, string Notes, int CandidatesConsidered, bool Degraded,
+    string? Explanation = null);
 
 /// <summary>
 /// FR10/plan §8.1 — Component B's own Buyer-Farmer Matching Agent

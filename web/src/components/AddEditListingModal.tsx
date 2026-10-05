@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api, type Listing, type Crop, type Region, type PriceEstimateResult } from '../utils/marketApi';
 import { X, Plus, Trash2, ImagePlus, Sparkles, TrendingUp } from './Icons';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface AddEditListingModalProps {
   isOpen: boolean;
@@ -60,6 +61,7 @@ export const AddEditListingModal: React.FC<AddEditListingModalProps> = ({
   regions,
   editingListing
 }) => {
+  useEscapeKey(() => { if (isOpen) onClose(); });
   const [cropId, setCropId] = useState('');
   const [regionId, setRegionId] = useState('');
   const [quantity, setQuantity] = useState(500);

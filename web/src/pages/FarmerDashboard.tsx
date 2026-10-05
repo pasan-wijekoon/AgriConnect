@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Toast, type ToastData } from '../components/Toast';
+import { readableError } from '../utils/apiErrors';
 import { api, type Listing, type Crop, type Region } from '../utils/marketApi';
 import { useAuth } from '../context/AuthContext';
 import { ProductCard3D } from '../components/ProductCard3D';
@@ -6,7 +8,7 @@ import { ProductDetailModal } from '../components/ProductDetailModal';
 import { AddEditListingModal } from '../components/AddEditListingModal';
 import {
   Sprout, Plus, Search, Layers, TrendingUp, AlertCircle,
-  CheckCircle2, RefreshCw, Grid, ListIcon, Sparkles, Eye, Edit, Trash2
+  RefreshCw, Grid, ListIcon, Sparkles, Eye, Edit, Trash2
 } from '../components/Icons';
 
 interface FarmerDashboardProps {
@@ -37,7 +39,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -64,10 +66,8 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
     fetchData();
   }, []);
 
-  const showNotification = (msg: string) => {
-    setSuccessMessage(msg);
-    setTimeout(() => setSuccessMessage(null), 3000);
-  };
+  const showNotification = (message: string) => setToast({ kind: 'success', message });
+  const showError = (message: string) => setToast({ kind: 'error', message });
 
   // Create or Update Listing
   const handleSaveListing = async (data: {
@@ -112,7 +112,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
         description: data.description,
         photoUrls: data.photoUrls
       });
-      showNotification('New produce listing published to marketplace!');
+      showNotification('Listing submitted. It goes live once an officer has inspected and published it.');
     }
     await fetchData();
   };
@@ -125,7 +125,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
         showNotification(`${listing.cropName} listing withdrawn.`);
         await fetchData();
       } catch (err: any) {
-        alert(err.message || 'Failed to withdraw listing');
+        showError(readableError(err, 'Failed to withdraw listing'));
       }
     }
   };
@@ -142,33 +142,14 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
   // Calculate Metrics
   const totalVolume = myListings.reduce((acc, curr) => acc + curr.quantity, 0);
   const activeCount = myListings.filter(l => l.status === 'Published').length;
+  const pendingCount = myListings.filter(l => l.status === 'PendingApproval').length;
   const estimatedValuation = myListings.reduce((acc, curr) => acc + (curr.minPrice || 0) * curr.quantity, 0);
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
 
       {/* Success Notification Toast */}
-      {successMessage && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: 'var(--accent)',
-          color: 'var(--text)',
-          padding: '12px 20px',
-          borderRadius: '12px',
-          boxShadow: 'var(--shadow-md)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontWeight: 600,
-          zIndex: 100,
-          animation: 'fadeIn 0.2s ease-out'
-        }}>
-          <CheckCircle2 size={18} />
-          <span>{successMessage}</span>
-        </div>
-      )}
+      <Toast toast={toast} onClose={() => setToast(null)} />
 
       {/* Top Welcome Header */}
       <div style={{
@@ -484,12 +465,40 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
               onChange={(e) => setSelectedStatus(e.target.value)}
             >
               <option value="" style={{ background: 'var(--bg-raised)' }}>All Statuses</option>
+              <option value="PendingApproval" style={{ background: 'var(--bg-raised)' }}>Pending review</option>
               <option value="Published" style={{ background: 'var(--bg-raised)' }}>Published</option>
+              <option value="Rejected" style={{ background: 'var(--bg-raised)' }}>Rejected</option>
+              <option value="SoldOut" style={{ background: 'var(--bg-raised)' }}>Sold out</option>
               <option value="Withdrawn" style={{ background: 'var(--bg-raised)' }}>Withdrawn</option>
             </select>
           )}
         </div>
       </div>
+
+      {activeTab === 'my' && pendingCount > 0 && !selectedStatus && (
+        <div role="status" style={{
+          marginBottom: '16px',
+          padding: '12px 16px',
+          borderRadius: '12px',
+          background: 'var(--accent-soft)',
+          border: '1px solid var(--accent-border)',
+          color: 'var(--text)',
+          fontSize: '0.88rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap'
+        }}>
+          <span>
+            <strong>{pendingCount}</strong> of your listing{pendingCount === 1 ? ' is' : 's are'} waiting for an officer's quality
+            inspection. Buyers see a listing only after it has been inspected and published.
+          </span>
+          <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }} onClick={() => setSelectedStatus('PendingApproval')}>
+            Show only these
+          </button>
+        </div>
+      )}
 
       {/* Main Content Area */}
       {loading ? (

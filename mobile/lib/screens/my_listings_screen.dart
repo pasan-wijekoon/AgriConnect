@@ -3,6 +3,7 @@ import '../models/listing.dart';
 import '../models/listing_inspection_status.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
+import 'create_listing_screen.dart';
 import 'listing_detail_screen.dart';
 
 class MyListingsScreen extends StatefulWidget {
@@ -63,6 +64,19 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text('New listing'),
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreateListingScreen(apiService: widget.apiService),
+            ),
+          );
+          if (mounted) _loadMyListings();
+        },
+      ),
       appBar: AppBar(
         title: const Text('My Produce Listings'),
         actions: [

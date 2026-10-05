@@ -41,6 +41,8 @@ def test_match_endpoint_returns_a_match(client):
     body = response.json()
     assert body["matched_centre_id"] == "c1"
     assert body["order_id"] == "o1"
+    # No LLM in the test environment: the explanation is the deterministic notes.
+    assert body["explanation"] == body["notes"]
 
 
 def test_match_endpoint_with_no_candidates_returns_no_match(client):

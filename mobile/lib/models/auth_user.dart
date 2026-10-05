@@ -1,10 +1,14 @@
 class AuthUser {
+  bool get isBuyer => role == 'Buyer';
+  bool get isFarmer => role == 'Farmer';
+
   final String id;
   final String fullName;
   final String email;
   final String role;
   final String? phone;
   final String? region;
+  final String? collectionCentreId;
   final String token;
 
   AuthUser({
@@ -15,6 +19,7 @@ class AuthUser {
     required this.token,
     this.phone,
     this.region,
+    this.collectionCentreId,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
@@ -25,6 +30,7 @@ class AuthUser {
         token: json['token'] as String,
         phone: json['phone'] as String?,
         region: json['region'] as String?,
+        collectionCentreId: json['collectionCentreId'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -35,5 +41,6 @@ class AuthUser {
         'token': token,
         'phone': phone,
         'region': region,
+        'collectionCentreId': collectionCentreId,
       };
 }

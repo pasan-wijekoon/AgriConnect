@@ -3,34 +3,45 @@ import 'package:flutter/foundation.dart';
 import '../models/order.dart';
 import '../services/order_service.dart';
 
-/// Holds the current buyer/farmer's order list + place-order state for the
-/// tracking and place-order screens (plan §11 — Provider, per ADR §11
-/// decision 2). Talks to [OrderService]; screens read the dev identity
-/// (role/userId) from [DevIdentityProvider] and pass it in explicitly rather
-/// than this provider depending on that one directly.
+/// The signed-in buyer's/farmer's orders (role-scoped server-side) plus
+/// place/cancel actions. Created per login session (see MainShell), so it
+/// never carries one user's orders over to the next.
 class OrderProvider extends ChangeNotifier {
   final OrderService _service;
 
-  OrderProvider({OrderService? service}) : _service = service ?? OrderService();
+  /// The user this instance belongs to; a different user gets a fresh provider.
+  final String? ownerId;
+
+  OrderProvider(this._service, {this.ownerId});
 
   List<Order> _orders = [];
   bool _loading = false;
+  bool _loaded = false;
   String? _error;
   bool _submitting = false;
 
   List<Order> get orders => _orders;
   bool get loading => _loading;
+  bool get loaded => _loaded;
   String? get error => _error;
   bool get submitting => _submitting;
 
-  Future<void> loadOrders(String role, String userId) async {
+  int get activeCount => _orders
+      .where((o) =>
+          o.status == OrderStatus.pending ||
+          o.status == OrderStatus.approved ||
+          o.status == OrderStatus.scheduled)
+      .length;
+
+  Future<void> load() async {
     _loading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final result = await _service.listOrders(role, userId, size: 50);
+      final result = await _service.listOrders(size: 100);
       _orders = result.items;
+      _loaded = true;
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -39,12 +50,13 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  Future<Order?> placeOrder(
-    String role,
-    String userId, {
+  /// Returns the placed order, or null with [error] set.
+  Future<Order?> placeOrder({
     required String listingId,
     required double quantity,
     required DeliveryPreference deliveryPreference,
+    double? buyerLat,
+    double? buyerLng,
   }) async {
     _submitting = true;
     _error = null;
@@ -52,11 +64,11 @@ class OrderProvider extends ChangeNotifier {
 
     try {
       final order = await _service.placeOrder(
-        role,
-        userId,
         listingId: listingId,
         quantity: quantity,
         deliveryPreference: deliveryPreference,
+        buyerLat: buyerLat,
+        buyerLng: buyerLng,
       );
       _orders = [order, ..._orders];
       return order;
@@ -69,20 +81,34 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> cancelOrder(String role, String userId, String orderId) async {
+  Future<Order?> cancel(String orderId, {String? reason}) async {
+    _error = null;
     try {
-      final updated = await _service.cancelOrder(role, userId, orderId);
+      final updated = await _service.cancelOrder(orderId, reason: reason);
       _orders = _orders.map((o) => o.id == orderId ? updated : o).toList();
       notifyListeners();
-      return true;
+      return updated;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
-  Future<PickupSchedule?> loadSchedule(
-          String role, String userId, String orderId) =>
-      _service.getSchedule(role, userId, orderId);
+  /// Re-fetches one order (e.g. from the detail page's pull-to-refresh) and
+  /// folds it into the list.
+  Future<Order?> refreshOne(String orderId) async {
+    try {
+      final updated = await _service.getOrder(orderId);
+      _orders = _orders.map((o) => o.id == orderId ? updated : o).toList();
+      notifyListeners();
+      return updated;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<PickupSchedule?> loadSchedule(String orderId) => _service.getSchedule(orderId);
 }

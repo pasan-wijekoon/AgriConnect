@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { type Listing, type PriceSuggestion, api } from '../utils/marketApi';
 import { Sparkles, RefreshCw, ShieldCheck } from './Icons';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface Props {
   listing: Listing;
@@ -16,6 +17,7 @@ const statusBadgeClass: Record<string, string> = {
 };
 
 export const PriceSuggestionPanel: React.FC<Props> = ({ listing, onClose, onUpdate }) => {
+  useEscapeKey(onClose);
   const [suggestion, setSuggestion] = useState<PriceSuggestion | undefined>(listing.priceSuggestion);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +31,40 @@ export const PriceSuggestionPanel: React.FC<Props> = ({ listing, onClose, onUpda
       onUpdate({ ...listing, priceSuggestion: refreshed });
     } catch (err: any) {
       setError(err.message || 'Failed to refresh the price suggestion.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Human checkpoint (FR4): the AI price is only advisory until an officer decides on it.
+  const [note, setNote] = useState('');
+  const [revMin, setRevMin] = useState('');
+  const [revMax, setRevMax] = useState('');
+
+  const decide = async (kind: 'approve' | 'reject' | 'revise') => {
+    setError(null);
+    let min = 0;
+    let max = 0;
+    if (kind === 'revise') {
+      min = Number(revMin);
+      max = Number(revMax);
+      if (!(min > 0) || !(max > 0) || max < min) {
+        setError('Enter a revised range with a minimum above 0 and a maximum that is not below it.');
+        return;
+      }
+    }
+    setLoading(true);
+    try {
+      const updated =
+        kind === 'approve'
+          ? await api.approvePriceSuggestion(listing.id)
+          : kind === 'reject'
+            ? await api.rejectPriceSuggestion(listing.id, note.trim() || undefined)
+            : await api.revisePriceSuggestion(listing.id, min, max, note.trim() || undefined);
+      setSuggestion(updated);
+      onUpdate({ ...listing, priceSuggestion: updated });
+    } catch (err: any) {
+      setError(err.message || 'Could not record the decision.');
     } finally {
       setLoading(false);
     }
@@ -155,6 +191,47 @@ export const PriceSuggestionPanel: React.FC<Props> = ({ listing, onClose, onUpda
               {suggestion.officerNote && (
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   <strong style={{ color: 'var(--text)' }}>Officer note:</strong> {suggestion.officerNote}
+                </div>
+              )}
+
+              {suggestion.status === 'Proposed' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text)' }}>Officer decision</span>
+                  <input
+                    className="form-input"
+                    aria-label="Officer note"
+                    placeholder="Note (optional)"
+                    maxLength={1000}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                  />
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <input
+                      className="form-input"
+                      aria-label="Revised minimum price"
+                      type="number"
+                      min="0"
+                      placeholder="Revised min"
+                      style={{ flex: 1, minWidth: '110px' }}
+                      value={revMin}
+                      onChange={(e) => setRevMin(e.target.value)}
+                    />
+                    <input
+                      className="form-input"
+                      aria-label="Revised maximum price"
+                      type="number"
+                      min="0"
+                      placeholder="Revised max"
+                      style={{ flex: 1, minWidth: '110px' }}
+                      value={revMax}
+                      onChange={(e) => setRevMax(e.target.value)}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button className="btn btn-primary" disabled={loading} onClick={() => decide('approve')}>Approve price</button>
+                    <button className="btn btn-secondary" disabled={loading} onClick={() => decide('revise')}>Revise range</button>
+                    <button className="btn btn-danger" disabled={loading} onClick={() => decide('reject')}>Reject price</button>
+                  </div>
                 </div>
               )}
 

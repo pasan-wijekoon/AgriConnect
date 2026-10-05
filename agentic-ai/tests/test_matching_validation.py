@@ -39,3 +39,44 @@ def test_empty_notes_raises():
 def test_notes_too_long_raises():
     with pytest.raises(MatchValidationError):
         validate_match_response("c1", 0.5, "x" * 2001, {"c1"})
+
+
+# ---- validate_explanation ------------------------------------------------------------------
+
+from src.app.validation.matching_validation import MAX_EXPLANATION_LENGTH, validate_explanation  # noqa: E402
+
+NAMES = {"Kandy Central Collection Centre", "Galle Southern Collection Centre"}
+
+
+def test_explanation_naming_the_chosen_and_another_candidate_passes():
+    validate_explanation(
+        "Kandy Central Collection Centre is nearest; Galle Southern Collection Centre is further.",
+        "Kandy Central Collection Centre",
+        NAMES,
+    )
+
+
+def test_explanation_must_not_be_blank():
+    with pytest.raises(MatchValidationError):
+        validate_explanation("   ", "Kandy Central Collection Centre", NAMES)
+
+
+def test_explanation_must_name_the_chosen_centre():
+    with pytest.raises(MatchValidationError):
+        validate_explanation("A good option.", "Kandy Central Collection Centre", NAMES)
+
+
+def test_explanation_must_not_name_unknown_centres():
+    with pytest.raises(MatchValidationError):
+        validate_explanation(
+            "Kandy Central Collection Centre is nearest, unlike Jaffna Northern Collection Centre.",
+            "Kandy Central Collection Centre",
+            NAMES,
+        )
+
+
+def test_explanation_length_is_capped():
+    with pytest.raises(MatchValidationError):
+        validate_explanation(
+            "Kandy Central Collection Centre " + "x" * MAX_EXPLANATION_LENGTH, "Kandy Central Collection Centre", NAMES
+        )

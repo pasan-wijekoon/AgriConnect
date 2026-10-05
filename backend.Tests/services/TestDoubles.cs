@@ -24,12 +24,14 @@ internal class FakeBuyerFarmerMatchingPort(MatchResult? result) : IBuyerFarmerMa
 {
     public Guid? LastOrderIdPassedIn { get; private set; }
     public IReadOnlyList<MatchCandidateCentre>? LastCandidatesPassedIn { get; private set; }
+    public (decimal Lat, decimal Lng)? LastBuyerLocationPassedIn { get; private set; }
 
     public Task<MatchResult?> MatchAsync(
         Guid orderId, decimal buyerLat, decimal buyerLng, Guid listingId, decimal requestedQuantity,
         IReadOnlyList<MatchCandidateCentre> candidateCentres, CancellationToken cancellationToken = default)
     {
         LastOrderIdPassedIn = orderId;
+        LastBuyerLocationPassedIn = (buyerLat, buyerLng);
         LastCandidatesPassedIn = candidateCentres;
         return Task.FromResult(result);
     }

@@ -20,8 +20,9 @@ public class AnalyticsController(
     AnomalyInvestigationService investigation,
     ReferenceDataService referenceData) : ControllerBase
 {
-    // Farmers get read-only trends for the Flutter app; everything else is back-office.
-    private const string Readers = "Farmer,Officer,Administrator";
+    // Farmers and Buyers get read-only trends for the Flutter app (Buyers added 2026-10-03 so they
+    // can judge the market before ordering); everything else is back-office.
+    private const string Readers = "Farmer,Buyer,Officer,Administrator";
     private const string Staff = "Officer,Administrator";
 
     /// <summary>Crops and regions available as analytics filters.</summary>

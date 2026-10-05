@@ -1,6 +1,7 @@
 using AgriConnect.Api.Config;
 using AgriConnect.Api.Dtos;
 using AgriConnect.Api.Models;
+using AgriConnect.Api.Services.Analytics;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgriConnect.Api.Services;
@@ -9,19 +10,48 @@ public class ListingService
 {
     private readonly AgriConnectDbContext _db;
     private readonly AgenticAiService _agenticAi;
+    private readonly AnomalyDetectionService _anomalies;
+    private readonly ILogger<ListingService> _logger;
 
-    public ListingService(AgriConnectDbContext db, AgenticAiService agenticAi)
+    public ListingService(
+        AgriConnectDbContext db, AgenticAiService agenticAi,
+        AnomalyDetectionService anomalies, ILogger<ListingService> logger)
     {
         _db = db;
         _agenticAi = agenticAi;
+        _anomalies = anomalies;
+        _logger = logger;
     }
+
+    private const int MaxPageSize = 100;
+
+    // A page < 1 made Skip() negative (500), and an unbounded pageSize let one call read the table.
+    private static void NormalizePaging(ListingSearchQuery query)
+    {
+        query.Page = Math.Max(1, query.Page);
+        query.PageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
+    }
+
+    /// <summary>Unspecified is treated as UTC (what the web/mobile clients mean), Local is converted.</summary>
+    private static DateTime AsUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value,
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+    };
 
     // ── Create Listing (FR3) ──────────────────────────────────
     public async Task<ListingResponseDto> CreateListing(Guid farmerId, CreateListingDto dto)
     {
-        // Validate pickup window
+        // Validate pickup window. Dates are normalised to UTC first: a client sending an
+        // offset ("...+05:30" / "+00:00") is bound as DateTime.Kind=Local, which Npgsql
+        // refuses to write to timestamptz (it surfaced as a 500).
+        dto.PickupWindowStart = AsUtc(dto.PickupWindowStart);
+        dto.PickupWindowEnd = AsUtc(dto.PickupWindowEnd);
         if (dto.PickupWindowEnd <= dto.PickupWindowStart)
             throw new ArgumentException("Pickup window end must be after start.");
+        if (dto.PickupWindowEnd <= DateTime.UtcNow)
+            throw new ArgumentException("Pickup window must end in the future.");
 
         // Validate crop and region exist
         var crop = await _db.Crops.FindAsync(dto.CropId)
@@ -126,15 +156,19 @@ public class ListingService
         };
 
         // Pagination
+        NormalizePaging(query);
         var totalCount = await q.CountAsync();
         var items = await q
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync();
 
+        var browseItems = items.Select(MapToDto).ToList();
+        await FillAvailableQuantityAsync(browseItems);
+
         return new ListingPagedResult<ListingResponseDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = browseItems,
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize
@@ -170,15 +204,19 @@ public class ListingService
                 : q.OrderByDescending(l => l.CreatedAt)
         };
 
+        NormalizePaging(query);
         var totalCount = await q.CountAsync();
         var items = await q
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync();
 
+        var farmerItems = items.Select(MapToDto).ToList();
+        await FillAvailableQuantityAsync(farmerItems);
+
         return new ListingPagedResult<ListingResponseDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = farmerItems,
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize
@@ -196,7 +234,9 @@ public class ListingService
             .FirstOrDefaultAsync(l => l.Id == id)
             ?? throw new KeyNotFoundException("Listing not found.");
 
-        return MapToDto(listing);
+        var dto = MapToDto(listing);
+        await FillAvailableQuantityAsync([dto]);
+        return dto;
     }
 
     // ── Update Listing (FR7) ──────────────────────────────────
@@ -221,8 +261,13 @@ public class ListingService
         if (dto.Quantity.HasValue) listing.Quantity = dto.Quantity.Value;
         if (dto.Unit != null) listing.Unit = dto.Unit;
         if (dto.ClaimedGrade != null) listing.ClaimedGrade = dto.ClaimedGrade;
-        if (dto.PickupWindowStart.HasValue) listing.PickupWindowStart = dto.PickupWindowStart.Value;
-        if (dto.PickupWindowEnd.HasValue) listing.PickupWindowEnd = dto.PickupWindowEnd.Value;
+        if (dto.PickupWindowStart.HasValue) listing.PickupWindowStart = AsUtc(dto.PickupWindowStart.Value);
+        if (dto.PickupWindowEnd.HasValue) listing.PickupWindowEnd = AsUtc(dto.PickupWindowEnd.Value);
+        if ((dto.PickupWindowStart.HasValue || dto.PickupWindowEnd.HasValue)
+            && listing.PickupWindowEnd <= listing.PickupWindowStart)
+            throw new ArgumentException("Pickup window end must be after start.");
+        if (dto.PickupWindowEnd.HasValue && listing.PickupWindowEnd <= DateTime.UtcNow)
+            throw new ArgumentException("Pickup window must end in the future.");
         if (dto.MinPrice.HasValue) listing.MinPrice = dto.MinPrice.Value;
         if (dto.Description != null) listing.Description = dto.Description;
 
@@ -264,6 +309,17 @@ public class ListingService
 
         listing.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+
+        // A farmer can list at a fair price and then raise it, so a changed price is checked
+        // against the AI fair range again, not only the price the listing was created with.
+        if (dto.MinPrice.HasValue)
+        {
+            var suggestion = await _db.PriceSuggestions.AsNoTracking().FirstOrDefaultAsync(p => p.ListingId == id);
+            if (suggestion is not null)
+            {
+                await FlagIfPriceAnomalousAsync(listing, suggestion);
+            }
+        }
 
         return await GetListingById(id);
     }
@@ -373,11 +429,15 @@ public class ListingService
             .FirstAsync(l => l.Id == listingId);
 
         // Recent local sale data for the same crop/region, blended into the
-        // agent's market lookup alongside live wholesale benchmarks.
+        // agent's market lookup alongside live wholesale benchmarks. Only listings an
+        // officer has approved count: a pending, rejected or withdrawn asking price is
+        // unverified, and one absurd price would otherwise raise the "fair" price of
+        // every later listing and hide exactly the anomalies Component D looks for.
         var recentPrices = await _db.Listings
             .Where(l => l.CropId == listing.CropId
                      && l.RegionId == listing.RegionId
                      && l.MinPrice.HasValue
+                     && (l.Status == ListingStatus.Published || l.Status == ListingStatus.SoldOut)
                      && l.Id != listingId)
             .OrderByDescending(l => l.CreatedAt)
             .Take(20)
@@ -414,6 +474,38 @@ public class ListingService
 
         _db.PriceSuggestions.Add(suggestion);
         await _db.SaveChangesAsync();
+
+        await FlagIfPriceAnomalousAsync(listing, suggestion);
+    }
+
+    // ── Price anomaly flag (Component D, FR16) ────────────────────────
+    // Hands the farmer's asking price and the AI's fair range to the analytics
+    // service, which raises an Open flag on the officer's Anomaly Queue when the
+    // price is more than the configured threshold away from the range's midpoint.
+    // Analytics must never block a farmer from listing produce, so any failure here
+    // is logged and swallowed.
+    private async Task FlagIfPriceAnomalousAsync(Listing listing, PriceSuggestion suggestion)
+    {
+        // A suggestion the validator auto-rejected still carries a usable fair range, and an
+        // asking price far outside that range is exactly what an officer should review, so
+        // only the range itself is checked here.
+        if (listing.MinPrice is not { } price
+            || suggestion.SuggestedPriceMin <= 0
+            || suggestion.SuggestedPriceMax < suggestion.SuggestedPriceMin)
+        {
+            return;
+        }
+
+        try
+        {
+            await _anomalies.EvaluateListingAsync(
+                listing.Id, listing.CropId, listing.RegionId,
+                price, suggestion.SuggestedPriceMin, suggestion.SuggestedPriceMax);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not evaluate listing {ListingId} for a price anomaly.", listing.Id);
+        }
     }
 
     // ── Officer Decision on a Price Suggestion (Approve / Reject) ─────
@@ -507,6 +599,18 @@ public class ListingService
     }
 
     // ── Mapping Helper ────────────────────────────────────────
+    /// <summary>Sets <see cref="ListingResponseDto.AvailableQuantity"/> from the stock currently
+    /// held by order reservations (FR9) — one grouped query for the whole page.</summary>
+    private async Task FillAvailableQuantityAsync(IReadOnlyCollection<ListingResponseDto> dtos)
+    {
+        var reserved = await ReservationQueries.ActiveReservedByListingAsync(
+            _db, dtos.Select(d => d.Id).ToList(), DateTimeOffset.UtcNow);
+        foreach (var dto in dtos)
+        {
+            dto.AvailableQuantity = Math.Max(0m, dto.Quantity - reserved.GetValueOrDefault(dto.Id));
+        }
+    }
+
     private static ListingResponseDto MapToDto(Listing l)
     {
         return new ListingResponseDto
@@ -517,6 +621,7 @@ public class ListingService
             CropCategory = l.Crop.Category,
             RegionName = l.Region.Name,
             Quantity = l.Quantity,
+            AvailableQuantity = l.Quantity,   // refined by FillAvailableQuantityAsync where reservations are known
             Unit = l.Unit,
             ClaimedGrade = l.ClaimedGrade,
             PickupWindowStart = l.PickupWindowStart,

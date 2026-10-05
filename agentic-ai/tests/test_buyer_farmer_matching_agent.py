@@ -93,3 +93,95 @@ def test_match_propagates_degraded_flag_from_distance_tool():
 
     assert result.degraded is True
     assert "approximate" in result.notes.lower()
+
+
+# ---- LLM narration (the match itself stays deterministic) ----------------------------------
+
+
+class FakeLlm:
+    """Stands in for a chat model: returns fixed text, or raises."""
+
+    def __init__(self, text=None, error=None):
+        self._text = text
+        self._error = error
+        self.calls = 0
+
+    def invoke(self, _messages):
+        self.calls += 1
+        if self._error:
+            raise self._error
+
+        class _Reply:
+            content = self._text
+
+        return _Reply()
+
+
+def _two_centres():
+    centres = [
+        make_centre("far", name="Galle Southern Collection Centre", lat=10, lng=10),
+        make_centre("near", name="Kandy Central Collection Centre", lat=1, lng=1),
+    ]
+    return centres, StubDistanceTool({(10, 10): 40.0, (1, 1): 2.0})
+
+
+def test_explanation_without_an_llm_is_the_deterministic_notes():
+    centres, tool = _two_centres()
+
+    result = BuyerFarmerMatchingAgent(distance_tool=tool).match("o1", 0, 0, centres)
+
+    assert result.explanation == result.notes
+
+
+def test_explanation_uses_the_llm_text_but_never_changes_the_match():
+    centres, tool = _two_centres()
+    llm = FakeLlm("Kandy Central Collection Centre is the closest at 2.0 km and has free slots.")
+
+    result = BuyerFarmerMatchingAgent(distance_tool=tool, llm=llm).match("o1", 0, 0, centres)
+
+    assert llm.calls == 1
+    assert result.explanation.startswith("Kandy Central Collection Centre is the closest")
+    assert result.matched_centre_id == "near"
+    assert "Matched to Kandy Central Collection Centre" in result.notes
+
+
+def test_llm_failure_falls_back_to_the_notes():
+    centres, tool = _two_centres()
+
+    result = BuyerFarmerMatchingAgent(distance_tool=tool, llm=FakeLlm(error=RuntimeError("quota"))).match(
+        "o1", 0, 0, centres
+    )
+
+    assert result.explanation == result.notes
+    assert result.matched_centre_id == "near"
+
+
+def test_llm_text_naming_a_centre_that_was_not_a_candidate_is_discarded():
+    centres, tool = _two_centres()
+    llm = FakeLlm("Kandy Central Collection Centre is closest; Jaffna Northern Collection Centre is also an option.")
+
+    result = BuyerFarmerMatchingAgent(distance_tool=tool, llm=llm).match("o1", 0, 0, centres)
+
+    assert result.explanation == result.notes
+
+
+def test_llm_text_not_mentioning_the_matched_centre_is_discarded():
+    centres, tool = _two_centres()
+    llm = FakeLlm("This is the best option for the buyer.")
+
+    result = BuyerFarmerMatchingAgent(distance_tool=tool, llm=llm).match("o1", 0, 0, centres)
+
+    assert result.explanation == result.notes
+
+
+def test_llm_is_not_called_when_no_centre_has_capacity():
+    llm = FakeLlm("should not be used")
+    centres = [make_centre("full", name="Full Centre", lat=1, lng=1, capacity=1, current_confirmed_bookings=1)]
+
+    result = BuyerFarmerMatchingAgent(distance_tool=StubDistanceTool({(1, 1): 1.0}), llm=llm).match(
+        "o1", 0, 0, centres
+    )
+
+    assert llm.calls == 0
+    assert result.matched_centre_id is None
+    assert result.explanation == result.notes

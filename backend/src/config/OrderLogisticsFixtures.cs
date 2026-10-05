@@ -134,44 +134,40 @@ public static class OrderLogisticsFixtures
     // 4. Collection Centres (own data)
     // =========================================================================
 
+    // Region ids are Component A's real seeded Region rows (b1000000-...-0000000000NN,
+    // see AgriConnectDbContext.SeedComponentAReferenceData). Every region a listing
+    // can be created in has its own centre, so scheduling never dead-ends on
+    // "no collection centre in the listing's region". The first four ids/order are
+    // unchanged from the original fixtures (demo schedules index into them).
+    private static Guid RegionId(int n) => Guid.Parse($"b1000000-0000-0000-0000-{n:x12}");
+
+    private static CollectionCentre Centre(int n, string name, decimal lat, decimal lng, int capacity, int regionNo) => new()
+    {
+        Id = Guid.Parse($"4f2b4{n:000}-0000-0000-0000-{n:x12}"),
+        Name = name,
+        Latitude = lat,
+        Longitude = lng,
+        Capacity = capacity,
+        RegionId = RegionId(regionNo)
+    };
+
     public static List<CollectionCentre> GetCollectionCentres() =>
     [
-        new CollectionCentre
-        {
-            Id = Guid.Parse("4f2b4001-0000-0000-0000-000000000001"),
-            Name = "Kandy Central Collection Centre",
-            Latitude = 7.290572m,
-            Longitude = 80.633728m,
-            Capacity = 5,
-            RegionId = RegionCentral.Id
-        },
-        new CollectionCentre
-        {
-            Id = Guid.Parse("4f2b4002-0000-0000-0000-000000000002"),
-            Name = "Matale Collection Centre",
-            Latitude = 7.469720m,
-            Longitude = 80.623200m,
-            Capacity = 3,
-            RegionId = RegionCentral.Id
-        },
-        new CollectionCentre
-        {
-            Id = Guid.Parse("4f2b4003-0000-0000-0000-000000000003"),
-            Name = "Galle Southern Collection Centre",
-            Latitude = 6.053519m,
-            Longitude = 80.220978m,
-            Capacity = 4,
-            RegionId = RegionSouthern.Id
-        },
-        new CollectionCentre
-        {
-            Id = Guid.Parse("4f2b4004-0000-0000-0000-000000000004"),
-            Name = "Matara Collection Centre",
-            Latitude = 5.948730m,
-            Longitude = 80.548170m,
-            Capacity = 3,
-            RegionId = RegionSouthern.Id
-        }
+        Centre(1, "Kandy Central Collection Centre", 7.290572m, 80.633728m, 5, 2),
+        Centre(2, "Matale Collection Centre", 7.469720m, 80.623200m, 3, 0x0b),
+        Centre(3, "Galle Southern Collection Centre", 6.053519m, 80.220978m, 4, 3),
+        Centre(4, "Matara Collection Centre", 5.948730m, 80.548170m, 3, 6),
+        Centre(5, "Colombo Metro Collection Centre", 6.927079m, 79.861244m, 6, 1),
+        Centre(6, "Jaffna Northern Collection Centre", 9.661498m, 80.025547m, 3, 4),
+        Centre(7, "Anuradhapura Collection Centre", 8.311400m, 80.403700m, 4, 5),
+        Centre(8, "Kurunegala Collection Centre", 7.486300m, 80.362300m, 4, 7),
+        Centre(9, "Nuwara Eliya Highland Collection Centre", 6.949700m, 80.789100m, 4, 8),
+        Centre(10, "Gampaha Collection Centre", 7.087300m, 79.999200m, 4, 9),
+        Centre(11, "Kalutara Collection Centre", 6.583100m, 79.960700m, 3, 0x0a),
+        Centre(12, "Ratnapura Collection Centre", 6.682800m, 80.399200m, 3, 0x0c),
+        Centre(13, "Kegalle Collection Centre", 7.251300m, 80.346600m, 3, 0x0d),
+        Centre(14, "Badulla Collection Centre", 6.989700m, 81.055000m, 3, 0x0e),
+        Centre(15, "Monaragala Collection Centre", 6.871500m, 81.350600m, 3, 0x0f)
     ];
 
     // =========================================================================
@@ -268,7 +264,7 @@ public static class OrderLogisticsFixtures
                 ListingId = pendingOrder.ListingId,
                 OrderId = pendingOrder.Id,
                 ReservedQuantity = pendingOrder.Quantity,
-                ExpiresAt = now.AddMinutes(28)
+                ExpiresAt = now.AddDays(2)
             },
             new StockReservation
             {

@@ -23,8 +23,11 @@ namespace backend.Tests.services;
 /// </summary>
 public class StockReservationServiceConcurrencyTests
 {
-    private const string ConnectionString =
-        "Host=localhost;Database=agriconnect;Username=postgres;Password=postgres";
+    // Capped pool: hosted Postgres poolers (e.g. Supabase session mode, 15 clients) refuse
+    // more simultaneous connections than that. Requests beyond the cap simply queue for a
+    // connection and then hit the already-reserved stock, so the invariants asserted below
+    // are unchanged.
+    private static readonly string ConnectionString = TestDatabase.ConnectionString + ";Maximum Pool Size=8";
 
     private static AgriConnectDbContext NewContext()
     {

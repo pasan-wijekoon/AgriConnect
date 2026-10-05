@@ -1,0 +1,60 @@
+== 1. Login (real JWT) ==
+PASS  login as Farmer  status 200, api role 'Farmer'
+PASS  login as Buyer  status 200, api role 'Buyer'
+PASS  login as Officer  status 200, api role 'Officer'
+PASS  login as Administrator  status 200, api role 'Administrator'
+
+== 2. Component D access matrix (expected -> actual) ==
+PASS  GET filters with no token  expected 401, got 401
+PASS  GET filters as Farmer  expected 200, got 200
+PASS  GET filters as Buyer  expected 200, got 200
+PASS  GET filters as Officer  expected 200, got 200
+PASS  GET filters as Administrator  expected 200, got 200
+PASS  GET price-trends with no token  expected 401, got 401
+PASS  GET price-trends as Farmer  expected 200, got 200
+PASS  GET price-trends as Buyer  expected 200, got 200
+PASS  GET price-trends as Officer  expected 200, got 200
+PASS  GET price-trends as Administrator  expected 200, got 200
+PASS  GET anomalies with no token  expected 401, got 401
+PASS  GET anomalies as Farmer  expected 403, got 403
+PASS  GET anomalies as Buyer  expected 403, got 403
+PASS  GET anomalies as Officer  expected 200, got 200
+PASS  GET anomalies as Administrator  expected 200, got 200
+PASS  GET shortages with no token  expected 401, got 401
+PASS  GET shortages as Farmer  expected 403, got 403
+PASS  GET shortages as Buyer  expected 403, got 403
+PASS  GET shortages as Officer  expected 200, got 200
+PASS  GET shortages as Administrator  expected 200, got 200
+PASS  POST snapshots/refresh with no token  expected 401, got 401
+PASS  POST snapshots/refresh as Farmer  expected 403, got 403
+PASS  POST snapshots/refresh as Buyer  expected 403, got 403
+PASS  POST snapshots/refresh as Officer  expected 403, got 403
+PASS  POST snapshots/refresh as Administrator  expected 200, got 200
+PASS  GET reports with no token  expected 401, got 401
+PASS  GET reports as Farmer  expected 403, got 403
+PASS  GET reports as Buyer  expected 403, got 403
+PASS  GET reports as Officer  expected 403, got 403
+PASS  GET reports as Administrator  expected 200, got 200
+
+== 3. Component D data content ==
+PASS  price-trends returns weekly points with real prices  16 points for Carrots
+PASS  crops without prices are flagged  3 of 10 crops have data
+PASS  anomaly queue and shortages return seeded data  10 anomaly flags, 4 shortage events
+
+== 4. Business workflow: Farmer -> Officer -> Buyer ==
+PASS  Farmer creates a listing  status 201, listing status 'PendingApproval'
+PASS  Farmer sees it in My Listings  status 200
+PASS  Buyer cannot create a listing  status 403
+PASS  Buyer cannot see the unpublished listing  status 200
+PASS  Officer sees it waiting for inspection  status 200
+PASS  Farmer cannot use the officer inspection queue  status 403
+PASS  Officer publish is gated until inspected (expect refusal, not 5xx)  status 422: {'type': 'https://tools.ietf.org/html/rfc4918#section-11.2', 'title': 'Unprocessable Entity', 'status': 422, 'detail': 'Quality Verification Gate Bloc
+PASS  Buyer cannot order an unpublished listing  status 400: {'type': 'https://tools.ietf.org/html/rfc9110#section-15.5.1', 'title': 'Bad Request', 'status': 400, 'detail': 'Listing
+PASS  D integration: a new overpriced listing creates an anomaly flag  flags before 10, after 11
+
+== 5. Orders by role ==
+PASS  Buyer lists own orders  status 200
+PASS  Officer lists orders  status 200
+PASS  Administrator lists orders  status 200
+
+SUMMARY: 49 passed, 0 failed, 49 total

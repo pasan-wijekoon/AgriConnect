@@ -29,21 +29,45 @@ public static class DataSeeder
     {
         logger?.LogInformation("[DataSeeder] Checking Component B order/logistics fixtures...");
 
-        // 1. Seed CollectionCentres (Idempotent: matches on Id)
-        var existingCentreIds = (await context.CollectionCentres
-            .AsNoTracking()
-            .Select(c => c.Id)
-            .ToListAsync())
-            .ToHashSet();
+        // 1. Seed CollectionCentres (Idempotent: matches on Id). Existing fixture
+        //    centres are also re-synced (region/name/coordinates/capacity) — earlier
+        //    fixture versions used region ids that don't exist in the real Region
+        //    table, so a database seeded back then still carries the stale values and
+        //    scheduling could never find a centre in a listing's real region.
+        var existingCentres = await context.CollectionCentres.ToDictionaryAsync(c => c.Id);
+        var newCentres = new List<CollectionCentre>();
+        var updatedCentres = 0;
 
-        var newCentres = OrderLogisticsFixtures.GetCollectionCentres()
-            .Where(c => !existingCentreIds.Contains(c.Id))
-            .ToList();
+        foreach (var fixture in OrderLogisticsFixtures.GetCollectionCentres())
+        {
+            if (!existingCentres.TryGetValue(fixture.Id, out var existing))
+            {
+                newCentres.Add(fixture);
+                continue;
+            }
+
+            if (existing.RegionId != fixture.RegionId || existing.Name != fixture.Name
+                || existing.Latitude != fixture.Latitude || existing.Longitude != fixture.Longitude
+                || existing.Capacity != fixture.Capacity)
+            {
+                existing.RegionId = fixture.RegionId;
+                existing.Name = fixture.Name;
+                existing.Latitude = fixture.Latitude;
+                existing.Longitude = fixture.Longitude;
+                existing.Capacity = fixture.Capacity;
+                updatedCentres++;
+            }
+        }
 
         if (newCentres.Count > 0)
         {
             await context.CollectionCentres.AddRangeAsync(newCentres);
             logger?.LogInformation("[DataSeeder] Adding {Count} collection centres.", newCentres.Count);
+        }
+
+        if (updatedCentres > 0)
+        {
+            logger?.LogInformation("[DataSeeder] Re-synced {Count} existing collection centres.", updatedCentres);
         }
 
         // 2. Seed the real demo Listing rows the fixture Orders below reference
@@ -112,7 +136,7 @@ public static class DataSeeder
             logger?.LogInformation("[DataSeeder] Adding {Count} demo pickup schedules.", newSchedules.Count);
         }
 
-        int totalNew = newCentres.Count + newListings.Count + newOrders.Count + newReservations.Count + newSchedules.Count;
+        int totalNew = newCentres.Count + updatedCentres + newListings.Count + newOrders.Count + newReservations.Count + newSchedules.Count;
         if (totalNew > 0)
         {
             await context.SaveChangesAsync();

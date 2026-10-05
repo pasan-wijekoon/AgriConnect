@@ -52,6 +52,19 @@ public class CollectionCentresApiTests : IClassFixture<ApiTestFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("?lat=7.29")]
+    [InlineData("?lng=80.63")]
+    public async Task Nearest_MissingCoordinates_Returns400(string query)
+    {
+        using var client = _factory.CreateAuthedClient(Roles.Buyer, BuyerOne);
+
+        var response = await client.GetAsync("/api/collection-centres/nearest" + query);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     [Fact]
     public async Task Nearest_ValidRequest_ReturnsSortedNonDegradedResults()
     {
@@ -65,5 +78,31 @@ public class CollectionCentresApiTests : IClassFixture<ApiTestFactory>
         // FakeDistanceService always reports Degraded=false, unlike every other
         // phase's manual walkthrough (which had no live Maps key).
         Assert.All(results!, r => Assert.False(r.Degraded));
+    }
+
+    [Theory]
+    [InlineData("0", "0")]        // the "unknown location" a client might send
+    [InlineData("51.5", "-0.12")] // London
+    public async Task Nearest_CoordinatesFarFromEveryCentre_ReturnsNoSuitableCentre(string lat, string lng)
+    {
+        using var client = _factory.CreateAuthedClient(Roles.Buyer, BuyerOne);
+
+        var response = await client.GetAsync($"/api/collection-centres/nearest?lat={lat}&lng={lng}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var results = await response.Content.ReadFromJsonAsync<List<NearestCentreResponse>>(ApiTestFactory.JsonOptions);
+        Assert.Empty(results!);
+    }
+
+    [Fact]
+    public async Task Nearest_EastCoastLocation_StillGetsCentres()
+    {
+        using var client = _factory.CreateAuthedClient(Roles.Buyer, BuyerOne);
+
+        // Batticaloa: the furthest-from-a-centre part of the island, must stay within the limit.
+        var response = await client.GetAsync("/api/collection-centres/nearest?lat=7.71&lng=81.69");
+
+        var results = await response.Content.ReadFromJsonAsync<List<NearestCentreResponse>>(ApiTestFactory.JsonOptions);
+        Assert.NotEmpty(results!);
     }
 }

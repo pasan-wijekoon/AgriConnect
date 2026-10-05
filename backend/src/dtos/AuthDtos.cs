@@ -45,6 +45,7 @@ public class AuthResponseDto
     public string? Phone { get; set; }
     public string? Region { get; set; }
     public string? AvatarUrl { get; set; }
+    public Guid? CollectionCentreId { get; set; }
     public string Token { get; set; } = string.Empty; // simple token for now
 }
 
@@ -57,5 +58,7 @@ public class UserProfileDto
     public string? Phone { get; set; }
     public string? Region { get; set; }
     public string? AvatarUrl { get; set; }
+    public Guid? CollectionCentreId { get; set; }
+    public string? CollectionCentreName { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }

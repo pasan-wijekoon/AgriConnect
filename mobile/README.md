@@ -23,8 +23,10 @@ emulator's address for the host machine). Point it elsewhere with:
 flutter run --dart-define=API_BASE_URL=https://api.example.com
 ```
 
-In development there is no login yet: requests send `X-Dev-Role: Farmer`, which the API's
-development-only fake sign-in accepts.
+The app uses the real login (JWT). Sign in with a demo account (password `password`) —
+`buyer@agriconnect.lk` or `farmer@agriconnect.lk` — or create an account from the landing screen.
+Officers and Administrators use the web console. Navigation is role-based: Buyers get
+Home / Market / Orders / Centres / Account, Farmers get Home / Listings / Orders / Prices / Account.
 
 ## Check
 
