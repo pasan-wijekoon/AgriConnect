@@ -13,10 +13,24 @@ public class PricesController : ControllerBase
 {
     private readonly AgenticAiService _agenticAi;
     private readonly ListingService _listingService;
-    public PricesController(AgenticAiService agenticAi, ListingService listingService)
+    private readonly TodayPriceCatalogService _catalogService;
+
+    public PricesController(AgenticAiService agenticAi, ListingService listingService, TodayPriceCatalogService catalogService)
     {
         _agenticAi = agenticAi;
         _listingService = listingService;
+        _catalogService = catalogService;
+    }
+
+    /// <summary>
+    /// GET /api/prices/today — Live fair-price estimates for the admin-managed
+    /// Today's Prices catalog (see TodayPriceCatalogController for management).
+    /// </summary>
+    [HttpGet("today")]
+    public async Task<IActionResult> GetTodayPrices([FromQuery] string? region = null, [FromQuery] string? grade = "A")
+    {
+        var result = await _catalogService.GetLivePrices(region, grade);
+        return Ok(result);
     }
 
     /// <summary>

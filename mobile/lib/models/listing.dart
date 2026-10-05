@@ -129,6 +129,10 @@ class Listing {
   final String cropCategory;
   final String regionName;
   final double quantity;
+
+  /// Quantity still orderable right now (total minus stock held by active
+  /// orders). Older backends don't send it, so it falls back to [quantity].
+  final double availableQuantity;
   final String unit;
   final String claimedGrade;
   final DateTime pickupWindowStart;
@@ -147,6 +151,7 @@ class Listing {
     required this.cropCategory,
     required this.regionName,
     required this.quantity,
+    double? availableQuantity,
     required this.unit,
     required this.claimedGrade,
     required this.pickupWindowStart,
@@ -157,7 +162,7 @@ class Listing {
     required this.updatedAt,
     required this.photos,
     this.priceSuggestion,
-  });
+  }) : availableQuantity = availableQuantity ?? quantity;
 
   factory Listing.fromJson(Map<String, dynamic> json) {
     return Listing(
@@ -167,6 +172,7 @@ class Listing {
       cropCategory: json['cropCategory'] as String? ?? '',
       regionName: json['regionName'] as String? ?? '',
       quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
+      availableQuantity: (json['availableQuantity'] as num?)?.toDouble(),
       unit: json['unit'] as String? ?? 'kg',
       claimedGrade: json['claimedGrade'] as String? ?? '',
       pickupWindowStart: DateTime.tryParse(json['pickupWindowStart'] as String? ?? '') ?? DateTime.now(),

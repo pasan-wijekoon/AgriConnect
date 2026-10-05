@@ -169,7 +169,10 @@ export const ProductCard3D: React.FC<ProductCard3DProps> = ({
             <span>{listing.regionName || 'Sri Lanka'}</span>
             <span style={{ color: 'var(--border-strong)' }}>•</span>
             <Layers size={14} />
-            <span>{listing.quantity} {listing.unit}</span>
+            <span>
+              {listing.availableQuantity ?? listing.quantity} {listing.unit}
+              {(listing.availableQuantity ?? listing.quantity) <= 0 && ' · Sold out'}
+            </span>
           </div>
         </div>
 

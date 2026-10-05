@@ -164,6 +164,64 @@ public class SchedulingServiceTests
     }
 
     [Fact]
+    public async Task ProposeAsync_WithBuyerLocation_RecordsTheAgentsExplanationInTheAuditEntry()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        var matchingPort = new FakeBuyerFarmerMatchingPort(
+            new MatchResult(centre.Id, MatchConfidence: 0.9, Notes: "Matched to Test Centre - 2.0 km away.",
+                CandidatesConsidered: 1, Degraded: false,
+                Explanation: "Test Centre is the closest centre with free slots."));
+
+        var result = await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id,
+            new CreateScheduleRequest(null, FutureWindow(), new BuyerLocationDto(7.29m, 80.63m)),
+            ActorId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        var auditEntry = await db.AuditLogs.SingleAsync(a => a.Action == "BuyerFarmerMatch");
+        Assert.Contains("Test Centre is the closest centre with free slots.", auditEntry.Details);
+    }
+
+    [Fact]
+    public async Task ProposeAsync_WithBuyerLocation_CountsOnlyBookingsOverlappingTheWindowAsCentreLoad()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db, capacity: 1);
+        var window = FutureWindow(daysFromNow: 2);
+
+        async Task AddConfirmedAsync(DateTimeOffset start, DateTimeOffset end)
+        {
+            var other = new Order
+            {
+                Id = Guid.NewGuid(), ListingId = ListingId, BuyerId = Guid.NewGuid(), Quantity = 1m,
+                Status = OrderStatus.Scheduled, DeliveryPreference = DeliveryPreference.Pickup,
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+            };
+            db.Orders.Add(other);
+            db.PickupSchedules.Add(new PickupSchedule
+            {
+                Id = Guid.NewGuid(), OrderId = other.Id, CollectionCentreId = centre.Id,
+                SlotStart = start, SlotEnd = end, Status = ScheduleStatus.Confirmed
+            });
+            await db.SaveChangesAsync();
+        }
+
+        // A booking on another day must not make the centre look full for this window...
+        await AddConfirmedAsync(window.Start.AddDays(3), window.End.AddDays(3));
+        var matchingPort = new FakeBuyerFarmerMatchingPort(result: null);
+        await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id, new CreateScheduleRequest(null, window, new BuyerLocationDto(7.29m, 80.63m)), ActorId);
+        Assert.Equal(0, matchingPort.LastCandidatesPassedIn!.Single().CurrentConfirmedBookings);
+
+        // ...while one that overlaps it does.
+        await AddConfirmedAsync(window.Start, window.End);
+        await NewService(db, matchingPort: matchingPort).ProposeAsync(
+            order.Id, new CreateScheduleRequest(null, window, new BuyerLocationDto(7.29m, 80.63m)), ActorId);
+        Assert.Equal(1, matchingPort.LastCandidatesPassedIn!.Single().CurrentConfirmedBookings);
+    }
+
+    [Fact]
     public async Task ProposeAsync_WithBuyerLocation_AgentFindsNoCapacity_ReturnsConflict()
     {
         await using var db = NewInMemoryDb();
@@ -493,5 +551,145 @@ public class SchedulingServiceTests
         Assert.Equal(ActorId, entry.ActorId);
         Assert.Equal("ScheduleDecision", entry.Action);
         Assert.Contains("Approve", entry.Details);
+    }
+
+    // ---- GetAlternativesAsync: other windows the Officer can swap a pending proposal for ----
+
+    private sealed class ThrowingPort : ILogisticsSchedulingPort
+    {
+        public Task<SchedulingProposal> ProposeSlotAsync(
+            Guid orderId, Guid centreId, SchedulingWindow preferredWindow,
+            IReadOnlyList<ExistingBooking> existingBookings, CancellationToken cancellationToken = default) =>
+            throw new HttpRequestException("agent down");
+    }
+
+    private static async Task<PickupSchedule> AddProposedScheduleAsync(
+        AgriConnectDbContext db, Order order, CollectionCentre centre, DateTimeOffset start)
+    {
+        var schedule = new PickupSchedule
+        {
+            Id = Guid.NewGuid(), OrderId = order.Id, CollectionCentreId = centre.Id,
+            SlotStart = start, SlotEnd = start.AddHours(1), Status = ScheduleStatus.Proposed
+        };
+        db.PickupSchedules.Add(schedule);
+        await db.SaveChangesAsync();
+        return schedule;
+    }
+
+    [Fact]
+    public async Task GetAlternatives_OffersUpToThreeDistinctWindows_OnFollowingDays_AtTheSameTimeOfDay()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        var start = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(9);
+        var current = await AddProposedScheduleAsync(db, order, centre, new DateTimeOffset(start, TimeSpan.Zero));
+
+        var result = await NewService(db).GetAlternativesAsync(order.Id, ActorId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        var windows = result.Value!;
+        Assert.Equal(SchedulingService.MaxAlternatives, windows.Count);
+        Assert.Equal(windows.Count, windows.Select(w => w.Start).Distinct().Count());
+        Assert.All(windows, w =>
+        {
+            Assert.Equal(current.SlotStart.TimeOfDay, w.Start.TimeOfDay);
+            Assert.Equal(TimeSpan.FromHours(1), w.End - w.Start);
+            Assert.NotEqual(current.SlotStart, w.Start);
+        });
+        Assert.Equal(windows.OrderBy(w => w.Start), windows);
+    }
+
+    [Fact]
+    public async Task GetAlternatives_DoesNotPersistAnything()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        var start = new DateTimeOffset(DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(9), TimeSpan.Zero);
+        var current = await AddProposedScheduleAsync(db, order, centre, start);
+
+        await NewService(db).GetAlternativesAsync(order.Id, ActorId);
+
+        var after = await db.PickupSchedules.AsNoTracking().SingleAsync(p => p.Id == current.Id);
+        Assert.Equal(start, after.SlotStart);
+        Assert.Equal(ScheduleStatus.Proposed, after.Status);
+        Assert.Empty(db.AuditLogs);
+    }
+
+    [Fact]
+    public async Task GetAlternatives_SkipsDaysWhereTheCentreIsAlreadyFull()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db, capacity: 1);
+        var start = new DateTimeOffset(DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(9), TimeSpan.Zero);
+        await AddProposedScheduleAsync(db, order, centre, start);
+        // Another order is Confirmed at the same time of day, two days later: that day is full.
+        var other = new Order
+        {
+            Id = Guid.NewGuid(), ListingId = ListingId, BuyerId = Guid.NewGuid(), Quantity = 1m,
+            Status = OrderStatus.Scheduled, DeliveryPreference = DeliveryPreference.Pickup,
+            CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow
+        };
+        db.Orders.Add(other);
+        db.PickupSchedules.Add(new PickupSchedule
+        {
+            Id = Guid.NewGuid(), OrderId = other.Id, CollectionCentreId = centre.Id,
+            SlotStart = start.AddDays(2), SlotEnd = start.AddDays(2).AddHours(1), Status = ScheduleStatus.Confirmed
+        });
+        await db.SaveChangesAsync();
+
+        var result = await NewService(db).GetAlternativesAsync(order.Id, ActorId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.DoesNotContain(result.Value!, w => w.Start == start.AddDays(2));
+        Assert.NotEmpty(result.Value!);
+    }
+
+    [Fact]
+    public async Task GetAlternatives_WhenTheAgentFails_OffersNothingInsteadOfFailing()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        await AddProposedScheduleAsync(db, order, centre, DateTimeOffset.UtcNow.AddDays(1));
+
+        var result = await NewService(db, port: new ThrowingPort()).GetAlternativesAsync(order.Id, ActorId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Empty(result.Value!);
+    }
+
+    [Fact]
+    public async Task GetAlternatives_WithoutAProposedSchedule_ReturnsConflict()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, _) = await SeedApprovedOrderWithCentreAsync(db);   // approved, but nothing proposed yet
+
+        var result = await NewService(db).GetAlternativesAsync(order.Id, ActorId);
+
+        Assert.False(result.Success);
+        Assert.Equal(SchedulingOperationError.Conflict, result.Error);
+    }
+
+    [Fact]
+    public async Task GetAlternatives_ForAConfirmedSchedule_ReturnsConflict()
+    {
+        await using var db = NewInMemoryDb();
+        var (order, centre) = await SeedApprovedOrderWithCentreAsync(db);
+        var schedule = await AddProposedScheduleAsync(db, order, centre, DateTimeOffset.UtcNow.AddDays(1));
+        schedule.Status = ScheduleStatus.Confirmed;
+        await db.SaveChangesAsync();
+
+        var result = await NewService(db).GetAlternativesAsync(order.Id, ActorId);
+
+        Assert.Equal(SchedulingOperationError.Conflict, result.Error);
+    }
+
+    [Fact]
+    public async Task GetAlternatives_ForAnUnknownOrder_ReturnsNotFound()
+    {
+        await using var db = NewInMemoryDb();
+
+        var result = await NewService(db).GetAlternativesAsync(Guid.NewGuid(), ActorId);
+
+        Assert.Equal(SchedulingOperationError.NotFound, result.Error);
     }
 }

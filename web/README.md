@@ -23,8 +23,12 @@ Start the API first (`backend/`, `dotnet run`), then:
 npm run dev
 ```
 
-In development there is no login yet: the sidebar's **Signed in as (dev)** switch sends
-`X-Dev-Role: Officer` or `Administrator`, which the API's development-only fake sign-in accepts.
+Sign in through the landing page with a demo account (password `password`):
+`buyer@agriconnect.lk`, `farmer@agriconnect.lk`, `officer@agriconnect.lk` (Kandy centre),
+`officer2@agriconnect.lk` (Colombo centre) or `admin@agriconnect.lk`. Officers land in the order
+console (`/orders`), Administrators in the marketplace admin portal with links to analytics and
+quality, Buyers/Farmers in the marketplace. There is no role picker any more — the app sends the
+signed-in user's bearer token on every request.
 
 ## Check
 

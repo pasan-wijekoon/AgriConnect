@@ -30,7 +30,7 @@ public class StockReservationService(AgriConnectDbContext db, IConfiguration con
         decimal availableQuantity,
         CancellationToken cancellationToken = default)
     {
-        var ttlMinutes = configuration.GetValue("Orders:ReservationTtlMinutes", 30);
+        var ttlMinutes = configuration.GetValue("Orders:ReservationTtlMinutes", 2880);
 
         for (var attempt = 0; attempt <= RetryDelaysMs.Length; attempt++)
         {
@@ -41,11 +41,11 @@ public class StockReservationService(AgriConnectDbContext db, IConfiguration con
             {
                 var now = DateTimeOffset.UtcNow;
 
-                var activeReserved = await db.StockReservations
-                    .Where(r => r.ListingId == order.ListingId && r.ExpiresAt > now)
-                    .Join(db.Orders, r => r.OrderId, o => o.Id, (r, o) => new { r.ReservedQuantity, o.Status })
-                    .Where(x => x.Status != OrderStatus.Cancelled)
-                    .SumAsync(x => (decimal?)x.ReservedQuantity, cancellationToken) ?? 0m;
+                // What counts as "held" lives in ReservationQueries (shared with the
+                // listing queries that show the available quantity to clients).
+                var activeReserved = await ReservationQueries.ActiveReservations(db, now)
+                    .Where(r => r.ListingId == order.ListingId)
+                    .SumAsync(r => (decimal?)r.ReservedQuantity, cancellationToken) ?? 0m;
 
                 if (activeReserved + order.Quantity > availableQuantity)
                 {

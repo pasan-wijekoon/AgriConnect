@@ -56,6 +56,9 @@ public class AgriConnectDbContext : DbContext
     public DbSet<PriceSuggestion> PriceSuggestions => Set<PriceSuggestion>();
     public DbSet<TodayPriceCatalogItem> TodayPriceCatalogItems => Set<TodayPriceCatalogItem>();
 
+    // ---- Shared: produce photos stored in the database (POST /api/upload, GET /uploads/{name}) ----
+    public DbSet<UploadedImage> UploadedImages => Set<UploadedImage>();
+
     // ---- Component C — Quality Grading & Inspection (FR12–FR14) --------------
     public DbSet<Inspection> Inspections => Set<Inspection>();
     public DbSet<InspectionPhoto> InspectionPhotos => Set<InspectionPhoto>();
@@ -287,6 +290,9 @@ public class AgriConnectDbContext : DbContext
             entity.Property(e => e.Region).HasMaxLength(100);
             entity.Property(e => e.AvatarUrl).HasMaxLength(500);
 
+            entity.HasIndex(e => e.CollectionCentreId)
+                  .HasDatabaseName("IX_User_CollectionCentreId");
+
             entity.HasIndex(e => e.Email)
                   .IsUnique()
                   .HasDatabaseName("IX_User_Email");
@@ -351,6 +357,14 @@ public class AgriConnectDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.DisplayOrder);
+        });
+
+        modelBuilder.Entity<UploadedImage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            // The public name is the lookup key for GET /uploads/{fileName}.
+            entity.HasIndex(e => e.FileName).IsUnique();
+            entity.Property(e => e.Data).HasColumnType("bytea");
         });
     }
 
@@ -631,9 +645,10 @@ public class AgriConnectDbContext : DbContext
         };
         modelBuilder.Entity<Region>().HasData(regions);
 
-        // Demo users (password for all: "password")
+        // Demo users (password: "password"; the admin uses "admin123")
         // PBKDF2-HMAC-SHA256, format "{iterations}.{saltBase64}.{hashBase64}" — see AuthService.HashPassword
         var passwordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=";
+        var adminPasswordHash = "600000.EZ+jN5qodC33/GPd+dSJvg==.wsxn846JB/pixYU9C5V9hAkGzMv0yU/e8o/CYZpIsX4=";
 
         var users = new[]
         {
@@ -681,7 +696,7 @@ public class AgriConnectDbContext : DbContext
                 Id = Guid.Parse("f0000000-0000-0000-0000-000000000099"),
                 FullName = "N. Perera",
                 Email = "admin@agriconnect.lk",
-                PasswordHash = passwordHash,
+                PasswordHash = adminPasswordHash,
                 Role = "Administrator",
                 Phone = "+94112345678",
                 Region = "Nuwara Eliya",

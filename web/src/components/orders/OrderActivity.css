@@ -1,0 +1,61 @@
+/* Neutral colours (currentColor based) so the same timeline reads on the light officer
+   console and on the dark marketplace pages. */
+.order-activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.order-activity li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.order-activity li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.order-activity-meta {
+  display: block;
+  font-size: 11px;
+  opacity: 0.65;
+  margin-top: 2px;
+}
+
+.order-activity-why {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.order-activity-state {
+  font-size: 13px;
+  opacity: 0.75;
+  margin: 0;
+}
+
+.order-activity-state button {
+  margin-left: 8px;
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: inherit;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}

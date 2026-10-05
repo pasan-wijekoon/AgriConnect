@@ -14,6 +14,7 @@ export interface User {
   fullName: string;
   email: string;
   role: 'Farmer' | 'Buyer' | 'Officer' | 'Administrator';
+  collectionCentreId?: string | null;
   phone?: string;
   region?: string;
   avatarUrl?: string;
@@ -64,6 +65,53 @@ export function normalizeUser(user: User): User {
 }
 
 /** @deprecated Catalog management was retired; retained only for legacy type-checking. */
+/** An account in the Administrator's staff list (`GET /api/admin/users`). */
+export interface AdminUser {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  phone?: string | null;
+  region?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  collectionCentreId?: string | null;
+}
+
+export interface AdminUserPage {
+  items: AdminUser[];
+  page: number;
+  size: number;
+  total: number;
+}
+
+export interface TodayPriceItem {
+  cropId: string;
+  name: string;
+  category: string;
+  unit: string;
+  region: string;
+  grade: string;
+  suggestedPriceMin: number;
+  suggestedPriceMax: number;
+  averagePrice: number;
+  confidence: number;
+  change24h: number;
+  trend: 'rising' | 'falling' | 'stable';
+  imageUrl: string;
+  reasoning: string;
+  benchmarkWholesale: number;
+}
+
+export interface TodayPricesResponse {
+  date: string;
+  totalCrops: number;
+  selectedGrade: string;
+  selectedRegion: string;
+  marketStatus: string;
+  items: TodayPriceItem[];
+}
+
 export interface TodayPriceCatalogItem { id: string; name: string; category: string; unit: string; defaultRegion: string; imageUrl?: string; displayOrder: number; isActive: boolean }
 
 export interface Photo {
@@ -106,6 +154,8 @@ export interface Listing {
   cropCategory: string;
   regionName: string;
   quantity: number;
+  /** Quantity still orderable now (total minus stock held by active orders). */
+  availableQuantity?: number;
   unit: string;
   claimedGrade: string;
   pickupWindowStart: string;
@@ -326,8 +376,12 @@ export const api = {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      // /api/upload requires the signed-in user's JWT. Do not set Content-Type: the browser adds
+      // the multipart boundary itself.
+      const token = getAuthToken();
       const res = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
       });
       if (res.ok) {
@@ -335,8 +389,14 @@ export const api = {
         if (data.url) {
           return data.url.startsWith('/') ? `${API_BASE.replace('/api', '')}${data.url}` : data.url;
         }
+      } else if (res.status === 401) {
+        throw new Error('Your session has expired. Please sign in again.');
+      } else {
+        const problem = await res.json().catch(() => null);
+        throw new Error(problem?.message || problem?.detail || 'Photo upload failed. Please try again.');
       }
     } catch (err) {
+      if (err instanceof Error && err.message !== 'Failed to fetch') throw err;
       throw new Error('Photo upload failed. Please try again.');
     }
     throw new Error('Photo upload failed. Please try again.');
@@ -361,10 +421,73 @@ export const api = {
     return request<PriceEstimateResult>(`/prices/estimate?${q.toString()}`);
   },
 
-  /** @deprecated The Today's Prices catalog is no longer part of the public product scope. */
-  getTodayPriceCatalog: (): Promise<TodayPriceCatalogItem[]> => Promise.reject(new Error('Today\'s Prices catalog retired')),
-  updateTodayPriceCatalogItem: (_id: string, _data: unknown) => Promise.reject(new Error('Today\'s Prices catalog retired')),
-  createTodayPriceCatalogItem: (_data: unknown) => Promise.reject(new Error('Today\'s Prices catalog retired')),
-  deleteTodayPriceCatalogItem: (_id: string) => Promise.reject(new Error('Today\'s Prices catalog retired')),
+  // Administrator: staff accounts (Officers / Administrators)
+  listUsers: (params: { role?: string; search?: string; page?: number; size?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (params.role) q.append('role', params.role);
+    if (params.search) q.append('search', params.search);
+    q.append('page', String(params.page ?? 1));
+    q.append('size', String(params.size ?? 100));
+    return request<AdminUserPage>(`/admin/users?${q.toString()}`);
+  },
+
+  createManagedUser: (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: 'Officer' | 'Administrator';
+    phone?: string;
+    collectionCentreId?: string | null;
+  }) =>
+    request<AdminUser>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+
+  setUserActive: (id: string, isActive: boolean) =>
+    request<AdminUser>(`/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive }) }),
+
+  resetUserPassword: (id: string, newPassword: string) =>
+    request<void>(`/admin/users/${id}/reset-credentials`, { method: 'POST', body: JSON.stringify({ newPassword }) }),
+
+  // Today's Prices discovery (Component A, Fair-Price Estimation Agent)
+  getTodayPrices: (region?: string, grade: string = 'A'): Promise<TodayPricesResponse> => {
+    const params = new URLSearchParams();
+    if (region && region !== 'All') params.append('region', region);
+    if (grade) params.append('grade', grade);
+    return request<TodayPricesResponse>(`/prices/today?${params.toString()}`);
+  },
+
+  // Admin: Today's Prices catalog management (which crops appear on the
+  // discovery page - prices themselves are always computed live)
+  getTodayPriceCatalog: () =>
+    request<TodayPriceCatalogItem[]>('/admin/today-prices-catalog'),
+
+  createTodayPriceCatalogItem: (data: {
+    name: string;
+    category: string;
+    unit?: string;
+    defaultRegion: string;
+    imageUrl?: string;
+    displayOrder?: number;
+  }) =>
+    request<TodayPriceCatalogItem>('/admin/today-prices-catalog', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateTodayPriceCatalogItem: (id: string, data: {
+    name?: string;
+    category?: string;
+    unit?: string;
+    defaultRegion?: string;
+    imageUrl?: string;
+    displayOrder?: number;
+    isActive?: boolean;
+  }) =>
+    request<TodayPriceCatalogItem>(`/admin/today-prices-catalog/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteTodayPriceCatalogItem: (id: string) =>
+    request<void>(`/admin/today-prices-catalog/${id}`, { method: 'DELETE' }),
 
 };

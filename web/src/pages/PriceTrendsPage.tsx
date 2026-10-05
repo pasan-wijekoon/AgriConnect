@@ -49,7 +49,8 @@ function PageShell({ children, actions }: { children: ReactNode; actions?: React
 
 function PriceTrends({ filters }: { filters: AnalyticsFilters }) {
   const role = useRole()
-  const [cropId, setCropId] = useState(filters.crops[0].id)
+  // Open on a crop that has prices; the first one alphabetically may have none yet.
+  const [cropId, setCropId] = useState((filters.crops.find((c) => c.hasPriceHistory) ?? filters.crops[0]).id)
   const [region, setRegion] = useState(ALL)
   const [weeks, setWeeks] = useState(16)
   const [bucket, setBucket] = useState<Bucket>('week')
@@ -129,7 +130,9 @@ function PriceTrends({ filters }: { filters: AnalyticsFilters }) {
       <div className="filters">
         <Field label="Crop">
           <select value={cropId} onChange={(e) => setCropId(e.target.value)}>
-            {filters.crops.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {filters.crops.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}{c.hasPriceHistory === false ? ' (no data yet)' : ''}</option>
+            ))}
           </select>
         </Field>
         <Field label="Region">

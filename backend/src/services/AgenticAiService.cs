@@ -23,7 +23,9 @@ public class AgenticAiService
     {
         _http = httpClientFactory.CreateClient();
         _logger = logger;
-        _agentServiceUrl = config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/api";
+        // Trimmed: paths below are appended with a leading "/", and appsettings.json ships the
+        // BaseUrl with a trailing "/" (for the typed HttpClients), which would give "//agents/...".
+        _agentServiceUrl = (config["AgenticAi:BaseUrl"] ?? "http://localhost:8000/api").TrimEnd('/');
 
         // Shared secret with the internal-only agentic-ai service (see routes.py's
         // verify_internal_secret). Only sent if configured — the Python side skips

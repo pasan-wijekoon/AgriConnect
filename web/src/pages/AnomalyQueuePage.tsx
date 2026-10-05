@@ -11,7 +11,9 @@ import {
   type AnomalyFlag,
   type ExternalContext,
 } from '../utils/api.ts'
-import { ANOMALY_STATUSES, causeLabel, describeDeviation, type AnomalyStatus } from '../utils/anomalies.ts'
+import {
+  ANOMALY_STATUSES, adviceFor, causeLabel, confidenceLabel, describeDeviation, percentileSentence, statusLabel, type AnomalyStatus,
+} from '../utils/anomalies.ts'
 import { formatDateTime, formatLkr } from '../utils/format.ts'
 import { useAsync } from '../utils/useAsync.ts'
 
@@ -24,8 +26,8 @@ export function AnomalyQueuePage() {
   return (
     <>
       <PageHeader
-        title="Anomaly review queue"
-        description="Listings priced far from the AI-suggested fair price (FR16). Investigate, then mark reviewed or dismiss."
+        title="Prices to check"
+        description="These listings are priced much higher or much lower than the AI fair price. Open each one, read the details, then mark it as checked or ignore it."
       />
       {filters.error && !filters.data && <ErrorNotice error={filters.error} onRetry={filters.reload} />}
       {!filters.data && filters.loading && <p className="muted">Loading…</p>}
@@ -69,7 +71,7 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
 
   const onUpdated = (flag: AnomalyFlag, status: 'Reviewed' | 'Dismissed') => {
     setInvestigating(null)
-    setMessage(`${place(flag)} listing marked ${status.toLowerCase()}.`)
+    setMessage(`${place(flag)}: marked as ${status === 'Reviewed' ? 'checked' : 'ignored'}.`)
     setVersion((v) => v + 1)
   }
 
@@ -79,7 +81,7 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
   return (
     <>
       <div className="filters">
-        <div className="tabs" role="tablist" aria-label="Status">
+        <div className="tabs" role="tablist" aria-label="Show prices by status">
           {TABS.map((t) => (
             <button
               key={t}
@@ -89,7 +91,7 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
               className={`tab${tab === t ? ' is-active' : ''}`}
               onClick={() => selectTab(t)}
             >
-              {t}
+              {t === 'All' ? 'All' : statusLabel(t)}
               {counts.data && <span className="tab-count tabular">{counts.data[t]}</span>}
             </button>
           ))}
@@ -112,10 +114,10 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
       {list.error && <ErrorNotice error={list.error} onRetry={list.reload} />}
 
       <Card>
-        {!data && list.loading && <p className="muted">Loading flags…</p>}
+        {!data && list.loading && <p className="muted">Loading prices…</p>}
         {data && data.items.length === 0 && (
-          <EmptyState title={tab === 'Open' ? 'Nothing to review' : 'No flags here'}>
-            {tab === 'Open' ? 'Every flagged listing has been reviewed or dismissed.' : 'No flags match these filters.'}
+          <EmptyState title={tab === 'Open' ? 'Nothing to check' : 'Nothing here'}>
+            {tab === 'Open' ? 'Every flagged price has been checked or ignored.' : 'No prices match these filters.'}
           </EmptyState>
         )}
         {data && data.items.length > 0 && (
@@ -124,10 +126,10 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
               <table>
                 <thead>
                   <tr>
-                    <th scope="col">Flagged</th>
-                    <th scope="col">Crop · region</th>
-                    <th scope="col" className="num">Listing price</th>
-                    <th scope="col">Deviation</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Produce</th>
+                    <th scope="col" className="num">Asking price</th>
+                    <th scope="col">Compared with fair price</th>
                     <th scope="col">Status</th>
                     <th scope="col"><span className="visually-hidden">Actions</span></th>
                   </tr>
@@ -146,8 +148,8 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
                       </td>
                       <td><StatusBadge status={f.status} /></td>
                       <td className="num">
-                        <button type="button" className="btn btn-small" onClick={() => setInvestigating(f)}>
-                          Investigate
+                        <button type="button" className="btn btn-small" onClick={() => setInvestigating(f)} aria-label={`See details for ${place(f)}`}>
+                          See details
                         </button>
                       </td>
                     </tr>
@@ -200,32 +202,34 @@ function InvestigateDrawer({ flag, place, onClose, onUpdated }: {
   }
 
   const r = result.data
+  const topCause = r?.likelyCauses[0]
+  const handled = flag.status === 'Open' ? null : flag.status === 'Reviewed' ? 'checked' : 'ignored'
   return (
     <Drawer
-      title={`Investigate: ${place}`}
+      title={`Price check: ${place}`}
       open
       onClose={onClose}
       footer={
         flag.status === 'Open' ? (
           <>
-            <button type="button" className="btn btn-quiet" disabled={saving !== null} onClick={() => decide('Dismissed')}>
-              {saving === 'Dismissed' ? 'Dismissing…' : 'Dismiss'}
+            <button type="button" className="btn btn-quiet" disabled={saving !== null} onClick={() => decide('Dismissed')} title="The price is fine. Remove it from the list.">
+              {saving === 'Dismissed' ? 'Saving…' : 'Ignore'}
             </button>
-            <button type="button" className="btn btn-primary" disabled={saving !== null} onClick={() => decide('Reviewed')}>
-              {saving === 'Reviewed' ? 'Saving…' : 'Mark reviewed'}
+            <button type="button" className="btn btn-primary" disabled={saving !== null} onClick={() => decide('Reviewed')} title="You looked into this price.">
+              {saving === 'Reviewed' ? 'Saving…' : 'Mark as checked'}
             </button>
           </>
         ) : (
-          <span className="muted">This flag was already {flag.status.toLowerCase()}.</span>
+          <span className="muted">This price was already {handled}.</span>
         )
       }
     >
       {saveError && <ErrorNotice error={saveError} />}
       {result.error && <ErrorNotice error={result.error} onRetry={result.reload} />}
-      {!r && result.loading && <p className="muted">Investigating…</p>}
+      {!r && result.loading && <p className="muted">Loading details…</p>}
       {r && (
         <>
-          <section className="drawer-section">
+          <section className="drawer-section verdict">
             <div className="drawer-kpi">
               <span className="change">
                 <Icon name={r.flag.deviationPercent >= 0 ? 'up' : 'down'} />
@@ -233,36 +237,45 @@ function InvestigateDrawer({ flag, place, onClose, onUpdated }: {
               </span>
               <StatusBadge status={r.flag.status} />
             </div>
+            <p className="verdict-text">
+              The farmer is asking <strong>{formatLkr(r.priceContext.listingPrice)}</strong>.
+              {r.priceContext.aiFairPrice !== null && (
+                <> The AI fair price is about <strong>{formatLkr(r.priceContext.aiFairPrice)}</strong>.</>
+              )}{' '}
+              That is <strong>{describeDeviation(r.flag.deviationPercent)}</strong>.
+            </p>
             <p className="muted">Flagged {formatDateTime(r.flag.flaggedAt)} · Listing {flag.listingId.slice(0, 8)}</p>
           </section>
 
+          {topCause && (
+            <section className="drawer-section advice" aria-label="What to do">
+              <strong>What to do</strong>
+              <p>{adviceFor(topCause.cause)}</p>
+            </section>
+          )}
+
           <section className="drawer-section">
-            <h3>Price context</h3>
-            <dl className="facts">
-              <div><dt>Listing price</dt><dd className="tabular">{formatLkr(r.priceContext.listingPrice)}</dd></div>
-              <div>
-                <dt>Regional weekly average</dt>
-                <dd className="tabular">{r.priceContext.regionalAvgPrice === null ? 'No history yet' : formatLkr(r.priceContext.regionalAvgPrice)}</dd>
-              </div>
-            </dl>
-            <div className="percentile" aria-label={`Priced higher than ${r.priceContext.percentileInRegion}% of weekly averages`}>
-              <div className="percentile-track">
-                <div className="percentile-marker" style={{ left: `${r.priceContext.percentileInRegion}%` }} />
-              </div>
-              <p className="muted">
-                Priced higher than <strong>{r.priceContext.percentileInRegion}%</strong> of this crop's weekly averages in the region.
-              </p>
-            </div>
+            <h3>Compare the prices</h3>
+            <PriceBars
+              rows={[
+                { label: 'Asking price', value: r.priceContext.listingPrice, asking: true },
+                ...(r.priceContext.aiFairPrice !== null ? [{ label: 'AI fair price', value: r.priceContext.aiFairPrice }] : []),
+                ...(r.priceContext.regionalAvgPrice !== null ? [{ label: 'Usual weekly price in this region', value: r.priceContext.regionalAvgPrice }] : []),
+              ]}
+            />
+            {r.priceContext.regionalAvgPrice === null
+              ? <p className="muted">There is no price history for this crop in this region yet.</p>
+              : <p className="muted">{percentileSentence(r.priceContext.percentileInRegion)}</p>}
           </section>
 
           <section className="drawer-section">
-            <h3>Likely causes</h3>
+            <h3>Why this might have happened</h3>
             <ol className="causes">
               {r.likelyCauses.map((c) => (
                 <li key={c.cause}>
                   <div className="cause-head">
                     <strong>{causeLabel(c.cause)}</strong>
-                    <Pill>{c.confidence} confidence</Pill>
+                    <Pill>{confidenceLabel(c.confidence)}</Pill>
                   </div>
                   <p>{c.explanation}</p>
                 </li>
@@ -271,9 +284,9 @@ function InvestigateDrawer({ flag, place, onClose, onUpdated }: {
           </section>
 
           <section className="drawer-section">
-            <h3>Other evidence</h3>
-            <External label="Inspection history" context={r.inspectionContext} />
-            <External label="Order history" context={r.orderContext} />
+            <h3>Other checks</h3>
+            <External label="Quality inspection" context={r.inspectionContext} />
+            <External label="Orders" context={r.orderContext} />
           </section>
         </>
       )}
@@ -281,11 +294,31 @@ function InvestigateDrawer({ flag, place, onClose, onUpdated }: {
   )
 }
 
+/** Horizontal bars on one shared scale, so "too high" can be seen as well as read. */
+function PriceBars({ rows }: { rows: { label: string; value: number; asking?: boolean }[] }) {
+  const max = Math.max(...rows.map((row) => row.value), 1)
+  return (
+    <ul className="compare">
+      {rows.map((row) => (
+        <li key={row.label} className="compare-row">
+          <div className="compare-label">
+            <span>{row.label}</span>
+            <strong className="tabular">{formatLkr(row.value)}</strong>
+          </div>
+          <div className="compare-track" aria-hidden="true">
+            <div className={`compare-bar${row.asking ? ' is-asking' : ''}`} style={{ width: `${Math.max(2, (row.value / max) * 100)}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function External({ label, context }: { label: string; context: ExternalContext }) {
   return (
     <div className="external">
       <strong>{label}</strong>
-      <span className="muted">{context.available ? 'Available' : `Not available yet — ${context.reason ?? 'no data'}`}</span>
+      <span className="muted">{context.available ? context.summary ?? 'Nothing to show.' : 'This information could not be loaded.'}</span>
     </div>
   )
 }

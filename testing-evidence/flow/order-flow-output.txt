@@ -1,0 +1,22 @@
+PASS  Buyer sees a published listing  Carrots · Kandy · 500.0 kg
+PASS  Buyer places an order for 50 kg  status 201, order status 'Pending'
+PASS  Order appears in the buyer's My Orders  1 order(s)
+PASS  Another farmer cannot open the order (ownership)  status 404
+PASS  Ordering more than the stock is refused  status 409
+PASS  Ordering 0 kg is refused  status 400
+PASS  Buyer cannot approve their own order  status 403
+PASS  Officer sees it in the Orders queue  1 pending
+PASS  Officer approves the order  status 200, now 'Approved'
+PASS  A pickup slot was proposed automatically  status 200, slot status 'Proposed'
+      proposed: 2026-10-05T07:48:57.05039+00:00 -> 2026-10-05T08:48:57.05039+00:00 | conflictChecked: True
+PASS  Buyer cannot approve the pickup slot  status 403
+PASS  Officer approves the pickup slot  status 200, slot now 'Confirmed'
+PASS  Order becomes Scheduled  order status 'Scheduled'
+PASS  Buyer can see the confirmed pickup slot  status 200
+PASS  Officer marks the order Completed  status 200
+PASS  A completed order cannot be cancelled  status 409
+PASS  Buyer cancels a pending order  status 200
+      stock for the listing: before orders 500.0 kg, after the first order 500.0 kg, with 20 kg reserved 500.0 kg, after cancelling 500.0 kg
+PASS  Cancelling released the reserved stock  500.0 -> 500.0 kg
+
+SUMMARY: 18 passed, 0 failed, 18 total

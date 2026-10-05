@@ -121,6 +121,9 @@ public class ListingResponseDto
     public string CropCategory { get; set; } = string.Empty;
     public string RegionName { get; set; } = string.Empty;
     public decimal Quantity { get; set; }
+    /// <summary>Quantity still orderable right now: <see cref="Quantity"/> minus stock held by
+    /// active order reservations (FR9). Never negative.</summary>
+    public decimal AvailableQuantity { get; set; }
     public string Unit { get; set; } = string.Empty;
     public string ClaimedGrade { get; set; } = string.Empty;
     public DateTime PickupWindowStart { get; set; }

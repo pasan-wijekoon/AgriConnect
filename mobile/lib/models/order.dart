@@ -54,6 +54,18 @@ class Order {
   final DateTime updatedAt;
   final DateTime? reservationExpiresAt;
 
+  // Display fields the backend resolves so the UI never has to show raw ids.
+  final String? cropName;
+  final String? unit;
+  final String? farmerName;
+  final String? buyerName;
+  final String? regionName;
+  final String? collectionCentreId;
+  final String? collectionCentreName;
+  final ScheduleStatus? scheduleStatus;
+  final DateTime? slotStart;
+  final DateTime? slotEnd;
+
   Order({
     required this.id,
     required this.listingId,
@@ -64,7 +76,28 @@ class Order {
     required this.createdAt,
     required this.updatedAt,
     this.reservationExpiresAt,
+    this.cropName,
+    this.unit,
+    this.farmerName,
+    this.buyerName,
+    this.regionName,
+    this.collectionCentreId,
+    this.collectionCentreName,
+    this.scheduleStatus,
+    this.slotStart,
+    this.slotEnd,
   });
+
+  /// "Carrots" (or a generic fallback when the listing can't be resolved).
+  String get title => cropName ?? 'Produce order';
+
+  String get quantityLabel {
+    // Up to two decimals, trailing zeros trimmed: 18.75 -> "18.75", 20.0 -> "20".
+    final text = quantity.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+    return '$text ${unit ?? 'kg'}';
+  }
+
+  static DateTime? _date(dynamic v) => v == null ? null : DateTime.parse(v as String).toLocal();
 
   factory Order.fromJson(Map<String, dynamic> json) => Order(
         id: json['id'] as String,
@@ -74,11 +107,21 @@ class Order {
         status: orderStatusFromJson(json['status'] as String),
         deliveryPreference:
             deliveryPreferenceFromJson(json['deliveryPreference'] as String),
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        updatedAt: DateTime.parse(json['updatedAt'] as String),
-        reservationExpiresAt: json['reservationExpiresAt'] == null
+        createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+        updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
+        reservationExpiresAt: _date(json['reservationExpiresAt']),
+        cropName: json['cropName'] as String?,
+        unit: json['unit'] as String?,
+        farmerName: json['farmerName'] as String?,
+        buyerName: json['buyerName'] as String?,
+        regionName: json['regionName'] as String?,
+        collectionCentreId: json['collectionCentreId'] as String?,
+        collectionCentreName: json['collectionCentreName'] as String?,
+        scheduleStatus: json['scheduleStatus'] == null
             ? null
-            : DateTime.parse(json['reservationExpiresAt'] as String),
+            : scheduleStatusFromJson(json['scheduleStatus'] as String),
+        slotStart: _date(json['slotStart']),
+        slotEnd: _date(json['slotEnd']),
       );
 }
 

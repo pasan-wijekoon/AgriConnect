@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
-import { causeLabel, describeDeviation } from '../src/utils/anomalies.ts'
+import { adviceFor, causeLabel, confidenceLabel, describeDeviation, percentileSentence, statusLabel, type AnomalyStatus } from '../src/utils/anomalies.ts'
 import { daysAgo, formatDay, formatLkr, parseDay } from '../src/utils/format.ts'
 import { toApiError } from '../src/utils/problem.ts'
 import { normalizeApiBaseUrl, normalizeRole } from '../src/utils/marketApi.ts'
@@ -95,14 +95,32 @@ describe('shortages heatmap', () => {
 })
 
 describe('anomalies', () => {
-  test('deviation direction is spelled out', () => {
-    assert.equal(describeDeviation(52.7), '52.7% above AI price')
-    assert.equal(describeDeviation(-30), '30.0% below AI price')
+  test('deviation direction is spelled out in plain words', () => {
+    assert.equal(describeDeviation(52.7), '52.7% too high')
+    assert.equal(describeDeviation(-30), '30.0% too low')
   })
 
-  test('cause codes read as words, including unknown future codes', () => {
-    assert.equal(causeLabel('DistressedSale'), 'Distressed sale')
+  test('cause codes read as plain words, including unknown future codes', () => {
+    assert.equal(causeLabel('DistressedSale'), 'Needs to sell fast')
+    assert.equal(causeLabel('PotentialDataEntryError'), 'Typing mistake')
     assert.equal(causeLabel('SeasonalHarvestPeak'), 'Seasonal Harvest Peak')
+  })
+
+  test('statuses and confidence use the officer wording', () => {
+    assert.deepEqual(['Open', 'Reviewed', 'Dismissed'].map((s) => statusLabel(s as AnomalyStatus)), ['To check', 'Checked', 'Ignored'])
+    assert.deepEqual((['High', 'Medium', 'Low'] as const).map(confidenceLabel), ['Very likely', 'Possible', 'Less likely'])
+  })
+
+  test('every cause has a next step, and unknown causes get a safe one', () => {
+    assert.match(adviceFor('PotentialDataEntryError'), /confirm the price/)
+    assert.match(adviceFor('MarketVolatility'), /mark this price as checked/)
+    assert.match(adviceFor('SomethingNew'), /mark this price as checked or ignore it/)
+  })
+
+  test('the percentile is explained without statistics words', () => {
+    assert.match(percentileSentence(100), /higher than every weekly price/)
+    assert.match(percentileSentence(0), /lower than every weekly price/)
+    assert.match(percentileSentence(72), /about 72 out of every 100/)
   })
 })
 

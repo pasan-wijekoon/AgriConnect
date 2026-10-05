@@ -507,6 +507,12 @@ namespace backend.src.migrations
                     b.Property<Guid>("BuyerId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal?>("BuyerLatitude")
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<decimal?>("BuyerLongitude")
+                        .HasColumnType("numeric(5,2)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1003,11 +1009,17 @@ namespace backend.src.migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("BuyerReminderSentAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ListingId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("OfficerReminderSentAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
@@ -1344,6 +1356,43 @@ namespace backend.src.migrations
                         });
                 });
 
+            modelBuilder.Entity("AgriConnect.Api.Models.UploadedImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileName")
+                        .IsUnique();
+
+                    b.ToTable("UploadedImages");
+                });
+
             modelBuilder.Entity("AgriConnect.Api.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1353,6 +1402,9 @@ namespace backend.src.migrations
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("CollectionCentreId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1389,6 +1441,9 @@ namespace backend.src.migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CollectionCentreId")
+                        .HasDatabaseName("IX_User_CollectionCentreId");
 
                     b.HasIndex("Email")
                         .IsUnique()
@@ -1443,7 +1498,7 @@ namespace backend.src.migrations
                             Email = "admin@agriconnect.lk",
                             FullName = "N. Perera",
                             IsActive = true,
-                            PasswordHash = "600000.ezjZQwN7EZYdigiik+HqbA==.iE33PwV1IisZPhE+tOJgA6uVMgcWO0OqPdC6pWkc+9w=",
+                            PasswordHash = "600000.EZ+jN5qodC33/GPd+dSJvg==.wsxn846JB/pixYU9C5V9hAkGzMv0yU/e8o/CYZpIsX4=",
                             Phone = "+94112345678",
                             Region = "Nuwara Eliya",
                             Role = "Administrator"

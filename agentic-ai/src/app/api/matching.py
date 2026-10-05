@@ -13,7 +13,7 @@ import os
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
-from src.app.agents.buyer_farmer_matching_agent import BuyerFarmerMatchingAgent, CandidateCentre
+from src.app.agents.buyer_farmer_matching_agent import CandidateCentre, build_matching_agent
 from src.app.validation.matching_validation import MatchValidationError
 
 router = APIRouter(prefix="/agents/buyer-farmer-matching", tags=["matching"])
@@ -48,6 +48,8 @@ class MatchResponse(BaseModel):
     notes: str
     candidates_considered: int
     degraded: bool
+    # Plain-language reason for the match (LLM-written when configured, else same as notes).
+    explanation: str
 
 
 def _check_internal_api_key(x_internal_api_key: str | None) -> None:
@@ -67,7 +69,7 @@ def match_buyer_to_centre(
 ) -> MatchResponse:
     _check_internal_api_key(x_internal_api_key)
 
-    agent = BuyerFarmerMatchingAgent()
+    agent = build_matching_agent()
     candidates = [
         CandidateCentre(
             centre_id=c.centre_id,
@@ -99,4 +101,5 @@ def match_buyer_to_centre(
         notes=result.notes,
         candidates_considered=result.candidates_considered,
         degraded=result.degraded,
+        explanation=result.explanation or result.notes,
     )

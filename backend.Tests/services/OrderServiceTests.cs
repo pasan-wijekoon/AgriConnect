@@ -53,6 +53,118 @@ public class OrderServiceTests
         return order;
     }
 
+    // ---- PlaceOrderAsync: optional buyer location (feeds the Matching Agent on approval) ----
+
+    [Theory]
+    [InlineData(7.29, null)]
+    [InlineData(null, 80.63)]
+    [InlineData(91.0, 80.63)]
+    [InlineData(-91.0, 80.63)]
+    [InlineData(7.29, 181.0)]
+    [InlineData(7.29, -181.0)]
+    public async Task PlaceOrderAsync_WithIncompleteOrOutOfRangeLocation_ReturnsInvalidRequest(double? lat, double? lng)
+    {
+        await using var db = NewInMemoryDb();
+        var reservation = new FakeStockReservationService(succeeds: true);
+
+        var result = await NewService(db, reservation: reservation).PlaceOrderAsync(
+            BuyerId,
+            new CreateOrderRequest(PublishedListingId, 5m, DeliveryPreference.Pickup, (decimal?)lat, (decimal?)lng));
+
+        Assert.False(result.Success);
+        Assert.Equal(OrderOperationError.InvalidRequest, result.Error);
+        Assert.Null(reservation.LastOrderPassedIn); // nothing was reserved
+    }
+
+    [Fact]
+    public async Task PlaceOrderAsync_WithLocation_StoresItRoundedToTwoDecimals_AndNeverReturnsIt()
+    {
+        await using var db = NewInMemoryDb();
+        var reservation = new FakeStockReservationService(succeeds: true);
+
+        var result = await NewService(db, reservation: reservation).PlaceOrderAsync(
+            BuyerId,
+            new CreateOrderRequest(PublishedListingId, 5m, DeliveryPreference.Pickup, 7.29456m, 80.63549m));
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(7.29m, reservation.LastOrderPassedIn!.BuyerLatitude);
+        Assert.Equal(80.64m, reservation.LastOrderPassedIn.BuyerLongitude);
+        Assert.DoesNotContain(
+            typeof(OrderResponse).GetProperties(), p => p.Name.Contains("Latitude") || p.Name.Contains("Longitude"));
+    }
+
+    [Fact]
+    public async Task PlaceOrderAsync_WithoutLocation_LeavesItEmpty()
+    {
+        await using var db = NewInMemoryDb();
+        var reservation = new FakeStockReservationService(succeeds: true);
+
+        var result = await NewService(db, reservation: reservation).PlaceOrderAsync(
+            BuyerId, new CreateOrderRequest(PublishedListingId, 5m, DeliveryPreference.Pickup));
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Null(reservation.LastOrderPassedIn!.BuyerLatitude);
+        Assert.Null(reservation.LastOrderPassedIn.BuyerLongitude);
+    }
+
+    [Fact]
+    public async Task Approving_AnOrderWithALocation_HandsItToTheMatchingAgent()
+    {
+        await using var db = NewInMemoryDb();
+        var regionId = Guid.NewGuid();
+        var listings = new FakeListingAvailabilityPort().Add(
+            new ListingAvailability(PublishedListingId, FarmerId, regionId, "Published", 100m));
+        var matching = new FakeBuyerFarmerMatchingPort(result: null);
+        var audit = new AuditLogService(db);
+        var notifications = new NotificationService(db);
+        var scheduling = new SchedulingService(
+            db, listings, new StubbingLogisticsSchedulingPort(), matching, audit, notifications);
+        var service = new OrderService(
+            db, listings, new FakeStockReservationService(succeeds: true), audit, notifications, scheduling);
+
+        db.CollectionCentres.Add(new CollectionCentre
+        {
+            Id = Guid.NewGuid(), Name = "Centre", Latitude = 7.3m, Longitude = 80.6m, Capacity = 3, RegionId = regionId
+        });
+        var order = await SeedOrderAsync(db, OrderStatus.Pending);
+        order.BuyerLatitude = 7.29m;
+        order.BuyerLongitude = 80.63m;
+        await db.SaveChangesAsync();
+
+        var result = await service.UpdateStatusAsync(order.Id, OrderStatus.Approved, OfficerId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(order.Id, matching.LastOrderIdPassedIn);
+        Assert.Equal((7.29m, 80.63m), matching.LastBuyerLocationPassedIn);
+    }
+
+    [Fact]
+    public async Task Approving_AnOrderWithoutALocation_DoesNotCallTheMatchingAgent()
+    {
+        await using var db = NewInMemoryDb();
+        var regionId = Guid.NewGuid();
+        var listings = new FakeListingAvailabilityPort().Add(
+            new ListingAvailability(PublishedListingId, FarmerId, regionId, "Published", 100m));
+        var matching = new FakeBuyerFarmerMatchingPort(result: null);
+        var audit = new AuditLogService(db);
+        var notifications = new NotificationService(db);
+        var scheduling = new SchedulingService(
+            db, listings, new StubbingLogisticsSchedulingPort(), matching, audit, notifications);
+        var service = new OrderService(
+            db, listings, new FakeStockReservationService(succeeds: true), audit, notifications, scheduling);
+
+        db.CollectionCentres.Add(new CollectionCentre
+        {
+            Id = Guid.NewGuid(), Name = "Centre", Latitude = 7.3m, Longitude = 80.6m, Capacity = 3, RegionId = regionId
+        });
+        var order = await SeedOrderAsync(db, OrderStatus.Pending);
+
+        var result = await service.UpdateStatusAsync(order.Id, OrderStatus.Approved, OfficerId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Null(matching.LastOrderIdPassedIn);
+    }
+
     // ---- PlaceOrderAsync ----
 
     [Fact]

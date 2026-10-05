@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -595,6 +594,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                         const Text('Floor Price (LKR)', style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
                         TextFormField(
+                          key: const Key('floorPriceField'),
                           controller: _minPriceController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: InputDecoration(
@@ -602,6 +602,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           ),
+                          validator: (value) {
+                            final input = value?.trim() ?? '';
+                            if (input.isEmpty) return null;
+                            final price = double.tryParse(input);
+                            if (price == null || price <= 0) return 'Enter a valid positive price';
+                            return null;
+                          },
                         ),
                       ],
                     ),
@@ -804,6 +811,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton.icon(
+                  key: const Key('submitListingButton'),
                   icon: _isSubmitting
                       ? const SizedBox(
                           width: 20,

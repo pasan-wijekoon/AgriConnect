@@ -1,0 +1,1655 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="312fc62a-b48a-413e-a259-3bb970404ac9" name="Yashodha@LAPTOP-HI37VNPC 2026-10-03 11:23:05" runUser="LAPTOP-HI37VNPC\Yashodha" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-03T11:23:05.5099554+05:30" queuing="2026-10-03T11:23:05.5099557+05:30" start="2026-10-03T11:22:49.9626890+05:30" finish="2026-10-03T11:23:06.4255500+05:30" />
+  <TestSettings name="default" id="f3008f52-d656-45d2-8cc8-f553aaf7f724">
+    <Deployment runDeploymentRoot="Yashodha_LAPTOP-HI37VNPC_2026-10-03_11_23_05" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7d5b0a62-7d05-48d8-b501-286ff7cfa064" testId="d42d3fdd-e8dc-024f-a678-fdb6deb7879d" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_ForACropWithNoData_ReturnsAnEmptyList_Not404" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0274459" startTime="2026-10-03T11:23:06.2230914+05:30" endTime="2026-10-03T11:23:06.2508128+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7d5b0a62-7d05-48d8-b501-286ff7cfa064" />
+    <UnitTestResult executionId="c4196fb4-bccf-45a3-b7ef-1c812365878b" testId="ae694bf3-90f4-4c93-732a-bcce10351eee" testName="backend.Tests.integration.AnalyticsApiTests.Endpoints_WithoutCredentials_Return401(url: &quot;/api/analytics/anomalies&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0047143" startTime="2026-10-03T11:23:05.4949868+05:30" endTime="2026-10-03T11:23:05.4950232+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c4196fb4-bccf-45a3-b7ef-1c812365878b" />
+    <UnitTestResult executionId="fa1fca26-1ee2-4883-9315-ff7112fe1def" testId="a2987965-b9d3-41d4-4926-bc2185cb7bee" testName="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;status=Banana&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0186972" startTime="2026-10-03T11:23:05.9160093+05:30" endTime="2026-10-03T11:23:05.9351615+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fa1fca26-1ee2-4883-9315-ff7112fe1def" />
+    <UnitTestResult executionId="2f2d4a55-d03c-4ae2-a363-6f4b8bbc39c8" testId="f7285199-735a-32fe-8a17-153f87fd5e4f" testName="backend.Tests.integration.AnalyticsApiTests.Endpoints_WithoutCredentials_Return401(url: &quot;/api/analytics/filters&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0117824" startTime="2026-10-03T11:23:05.4941322+05:30" endTime="2026-10-03T11:23:05.4942618+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2f2d4a55-d03c-4ae2-a363-6f4b8bbc39c8" />
+    <UnitTestResult executionId="59033fe2-b79c-4654-bad1-afb6760110e5" testId="7b6edfb8-abdd-b3e9-5551-c026171f8f05" testName="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAFarmer_Return403(url: &quot;/api/analytics/shortages&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0018559" startTime="2026-10-03T11:23:06.1819400+05:30" endTime="2026-10-03T11:23:06.1834483+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="59033fe2-b79c-4654-bad1-afb6760110e5" />
+    <UnitTestResult executionId="b677bc7e-e1b7-444a-a8e7-8fb483ce4ba2" testId="d76aea0c-13bd-ba02-643b-58b6b2c60f41" testName="backend.Tests.integration.AnalyticsApiTests.Shortages_WithAnUnknownFilter_Returns400(query: &quot;type=flood&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0120413" startTime="2026-10-03T11:23:06.1835986+05:30" endTime="2026-10-03T11:23:06.1959347+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b677bc7e-e1b7-444a-a8e7-8fb483ce4ba2" />
+    <UnitTestResult executionId="a55e6001-0fbe-4f64-b614-ac38b56ac133" testId="84328242-99fc-c34a-e70f-3eff6277e327" testName="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAnOfficer_Return200(url: &quot;/api/analytics/shortages&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0181930" startTime="2026-10-03T11:23:06.2578308+05:30" endTime="2026-10-03T11:23:06.2763883+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a55e6001-0fbe-4f64-b614-ac38b56ac133" />
+    <UnitTestResult executionId="dc0149fb-f9d0-40e8-8349-4f2a5129f3c2" testId="5c18cdaf-a6a3-5b13-8ebe-4589cd609e17" testName="backend.Tests.integration.AnalyticsApiTests.SnapshotRefresh_IsAdministratorOnly" computerName="LAPTOP-HI37VNPC" duration="00:00:00.3730328" startTime="2026-10-03T11:23:05.4962964+05:30" endTime="2026-10-03T11:23:05.8690262+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dc0149fb-f9d0-40e8-8349-4f2a5129f3c2" />
+    <UnitTestResult executionId="6db9837c-ffb3-4718-8b87-1359d31520b7" testId="7e7fcaba-ada8-41b6-9899-589d1992e4db" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;from=3&quot;···)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0059772" startTime="2026-10-03T11:23:06.0538926+05:30" endTime="2026-10-03T11:23:06.0600504+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6db9837c-ffb3-4718-8b87-1359d31520b7" />
+    <UnitTestResult executionId="99f1962f-98f3-4fab-8729-aa2dd691da63" testId="1e7ec7ff-7661-25dc-a3b4-e047558d61c3" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=not-a-guid&amp;from=2026-06-01&amp;to=2026-12-31&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0025442" startTime="2026-10-03T11:23:06.0675642+05:30" endTime="2026-10-03T11:23:06.0704692+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="99f1962f-98f3-4fab-8729-aa2dd691da63" />
+    <UnitTestResult executionId="d6912e30-76c4-461a-b148-2362324f30cf" testId="5e3ceef0-b30d-becc-5b47-4b9af1949ff3" testName="backend.Tests.integration.AnalyticsApiTests.UpdateAnomalyStatus_ToAnInvalidStatus_Returns400(status: &quot;1&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0072355" startTime="2026-10-03T11:23:06.0353682+05:30" endTime="2026-10-03T11:23:06.0400163+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d6912e30-76c4-461a-b148-2362324f30cf" />
+    <UnitTestResult executionId="18e029ca-4a3e-4848-af5b-ae6765224ccc" testId="fccba920-f086-fcc7-c2a3-6c01e78f6cfe" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_ForACropWithHistory_ReturnsOrderedPointsWithRealPrices" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0347717" startTime="2026-10-03T11:23:06.2817928+05:30" endTime="2026-10-03T11:23:06.3171941+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="18e029ca-4a3e-4848-af5b-ae6765224ccc" />
+    <UnitTestResult executionId="3b479413-7de3-4119-af0f-0fd58a5a122d" testId="b8d2899a-5406-d9e7-2f32-41ba168f5fa2" testName="backend.Tests.integration.AnalyticsApiTests.Endpoints_WithoutCredentials_Return401(url: &quot;/api/analytics/shortages&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:08.1890288" startTime="2026-10-03T11:22:57.2975806+05:30" endTime="2026-10-03T11:23:05.4755432+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3b479413-7de3-4119-af0f-0fd58a5a122d" />
+    <UnitTestResult executionId="7a653676-e18f-43a8-a020-450612865d42" testId="777d858c-f3fd-63e4-cd81-a24d55d2c20c" testName="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;page=0&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0033410" startTime="2026-10-03T11:23:05.9354067+05:30" endTime="2026-10-03T11:23:05.9390394+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7a653676-e18f-43a8-a020-450612865d42" />
+    <UnitTestResult executionId="18f1d609-ffcf-4c9c-a78c-9152f0a078d4" testId="a3301654-830d-c0e3-2889-87e99be5e68e" testName="backend.Tests.integration.AnalyticsApiTests.UpdateAnomalyStatus_ToAnInvalidStatus_Returns400(status: &quot;Open&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0367141" startTime="2026-10-03T11:23:05.9952308+05:30" endTime="2026-10-03T11:23:06.0322421+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="18f1d609-ffcf-4c9c-a78c-9152f0a078d4" />
+    <UnitTestResult executionId="22c76fe5-ac24-466a-9a40-cefeac1e2461" testId="a968dd6f-00a1-5f69-7709-ba937bcfc147" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;from=2026-06-01&amp;to=2026-12-31&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0021906" startTime="2026-10-03T11:23:06.0649900+05:30" endTime="2026-10-03T11:23:06.0673913+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="22c76fe5-ac24-466a-9a40-cefeac1e2461" />
+    <UnitTestResult executionId="aa1c76ab-6c5c-49fd-b15d-eb6a39baa9d5" testId="95cff4fe-93f5-08b7-52a0-bf91cd94b934" testName="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;size=101&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0388567" startTime="2026-10-03T11:23:05.8700537+05:30" endTime="2026-10-03T11:23:05.9085589+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aa1c76ab-6c5c-49fd-b15d-eb6a39baa9d5" />
+    <UnitTestResult executionId="4b1af5ce-d497-45e9-b83e-b32852ccf1d4" testId="25a54971-9472-41d6-f0cf-dbf51f64b48e" testName="backend.Tests.integration.AnalyticsApiTests.Filters_AsABuyer_Returns403" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0021449" startTime="2026-10-03T11:23:06.2552918+05:30" endTime="2026-10-03T11:23:06.2576848+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4b1af5ce-d497-45e9-b83e-b32852ccf1d4" />
+    <UnitTestResult executionId="b54f10ec-6e92-4458-972c-aaa60cffda72" testId="93c55010-de16-63e5-01d3-79385e104c76" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;to=202&quot;···)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0130370" startTime="2026-10-03T11:23:06.0403414+05:30" endTime="2026-10-03T11:23:06.0536523+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b54f10ec-6e92-4458-972c-aaa60cffda72" />
+    <UnitTestResult executionId="2f39d790-a687-4476-ad22-167c458f5008" testId="41ddc30a-3b50-3d25-6731-e7a6e24b0784" testName="backend.Tests.integration.AnalyticsApiTests.UpdateAnomalyStatus_ForAnUnknownFlag_Returns404" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0177109" startTime="2026-10-03T11:23:06.2047772+05:30" endTime="2026-10-03T11:23:06.2228046+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2f39d790-a687-4476-ad22-167c458f5008" />
+    <UnitTestResult executionId="42402d89-a1f6-4a16-a258-4215200a4d37" testId="e8900261-f966-0b2c-1400-7353a9e04d37" testName="backend.Tests.integration.AnalyticsApiTests.Shortages_WithAnUnknownFilter_Returns400(query: &quot;severity=extreme&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0034239" startTime="2026-10-03T11:23:06.1960892+05:30" endTime="2026-10-03T11:23:06.1997222+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="42402d89-a1f6-4a16-a258-4215200a4d37" />
+    <UnitTestResult executionId="fe75c090-8fe0-44ca-a99b-e1e23ca59b60" testId="0a06b9e1-e459-7e4f-66ce-144b938aa73d" testName="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;size=0&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0066825" startTime="2026-10-03T11:23:05.9087700+05:30" endTime="2026-10-03T11:23:05.9158585+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fe75c090-8fe0-44ca-a99b-e1e23ca59b60" />
+    <UnitTestResult executionId="125bb6e0-3944-4b5a-9b25-86dd624f8de9" testId="debe6757-dfe6-0ace-080d-4149e7e419f9" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;from=2&quot;···)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0042866" startTime="2026-10-03T11:23:06.0602305+05:30" endTime="2026-10-03T11:23:06.0647966+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="125bb6e0-3944-4b5a-9b25-86dd624f8de9" />
+    <UnitTestResult executionId="4a9e9e6a-5097-4fba-9cab-921aa4858103" testId="406b9969-3a1a-e2a3-847f-c0b65f33d61c" testName="backend.Tests.integration.AnalyticsApiTests.Errors_AreReturnedAsRfc7807ProblemDetails" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0044093" startTime="2026-10-03T11:23:06.1999288+05:30" endTime="2026-10-03T11:23:06.2045560+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4a9e9e6a-5097-4fba-9cab-921aa4858103" />
+    <UnitTestResult executionId="4c04bb69-1c58-40c4-9d19-b1372afc7b86" testId="1103b7f0-1d0a-a0b3-b2c5-1a3ae1ab9029" testName="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAFarmer_Return403(url: &quot;/api/analytics/anomalies&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0029449" startTime="2026-10-03T11:23:06.1781106+05:30" endTime="2026-10-03T11:23:06.1811692+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4c04bb69-1c58-40c4-9d19-b1372afc7b86" />
+    <UnitTestResult executionId="11d45691-92ea-455a-88a1-7e6c1260afde" testId="e7536bf0-8c41-7cd9-5243-580c2ea0031d" testName="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;from=2&quot;···)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0026946" startTime="2026-10-03T11:23:06.0706712+05:30" endTime="2026-10-03T11:23:06.0736199+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="11d45691-92ea-455a-88a1-7e6c1260afde" />
+    <UnitTestResult executionId="d1d66e14-1999-4f60-8455-e255c0b91a22" testId="2e19d81b-9ebd-5779-3187-7ff4ffd94c30" testName="backend.Tests.integration.AnalyticsApiTests.Anomalies_AtTheMaximumPageSize_Returns200" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0552622" startTime="2026-10-03T11:23:05.9392699+05:30" endTime="2026-10-03T11:23:05.9949136+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d1d66e14-1999-4f60-8455-e255c0b91a22" />
+    <UnitTestResult executionId="2bd4418d-da67-4d96-b796-533061815dd7" testId="7cd8b099-1569-b2bf-3737-d76d16c0dfa2" testName="backend.Tests.integration.AnalyticsApiTests.ReportExport_AsAnOfficer_Returns403" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0038894" startTime="2026-10-03T11:23:06.2510119+05:30" endTime="2026-10-03T11:23:06.2551046+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2bd4418d-da67-4d96-b796-533061815dd7" />
+    <UnitTestResult executionId="5f7fe2cf-0e24-4f9f-b716-d40c2900d3a7" testId="a2ba231a-fe5c-07a4-cd1e-1976bbf5e422" testName="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAnOfficer_Return200(url: &quot;/api/analytics/anomalies&quot;)" computerName="LAPTOP-HI37VNPC" duration="00:00:00.0049008" startTime="2026-10-03T11:23:06.2774374+05:30" endTime="2026-10-03T11:23:06.2816516+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5f7fe2cf-0e24-4f9f-b716-d40c2900d3a7" />
+    <UnitTestResult executionId="a66195cf-7115-407e-a7d0-6162bf2031c9" testId="3c5ac7c5-cfdd-785d-5318-7314a78c1f5e" testName="backend.Tests.integration.AnalyticsApiTests.Filters_FlagWhichCropsHavePriceHistory" computerName="LAPTOP-HI37VNPC" duration="00:00:00.1034079" startTime="2026-10-03T11:23:06.0738180+05:30" endTime="2026-10-03T11:23:06.1777785+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a66195cf-7115-407e-a7d0-6162bf2031c9" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Shortages_WithAnUnknownFilter_Returns400(query: &quot;type=flood&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="d76aea0c-13bd-ba02-643b-58b6b2c60f41">
+      <Execution id="b677bc7e-e1b7-444a-a8e7-8fb483ce4ba2" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Shortages_WithAnUnknownFilter_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Anomalies_AtTheMaximumPageSize_Returns200" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="2e19d81b-9ebd-5779-3187-7ff4ffd94c30">
+      <Execution id="d1d66e14-1999-4f60-8455-e255c0b91a22" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Anomalies_AtTheMaximumPageSize_Returns200" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Filters_FlagWhichCropsHavePriceHistory" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="3c5ac7c5-cfdd-785d-5318-7314a78c1f5e">
+      <Execution id="a66195cf-7115-407e-a7d0-6162bf2031c9" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Filters_FlagWhichCropsHavePriceHistory" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Shortages_WithAnUnknownFilter_Returns400(query: &quot;severity=extreme&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="e8900261-f966-0b2c-1400-7353a9e04d37">
+      <Execution id="42402d89-a1f6-4a16-a258-4215200a4d37" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Shortages_WithAnUnknownFilter_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.UpdateAnomalyStatus_ToAnInvalidStatus_Returns400(status: &quot;1&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="5e3ceef0-b30d-becc-5b47-4b9af1949ff3">
+      <Execution id="d6912e30-76c4-461a-b148-2362324f30cf" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="UpdateAnomalyStatus_ToAnInvalidStatus_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.UpdateAnomalyStatus_ToAnInvalidStatus_Returns400(status: &quot;Open&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="a3301654-830d-c0e3-2889-87e99be5e68e">
+      <Execution id="18f1d609-ffcf-4c9c-a78c-9152f0a078d4" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="UpdateAnomalyStatus_ToAnInvalidStatus_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.UpdateAnomalyStatus_ForAnUnknownFlag_Returns404" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="41ddc30a-3b50-3d25-6731-e7a6e24b0784">
+      <Execution id="2f39d790-a687-4476-ad22-167c458f5008" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="UpdateAnomalyStatus_ForAnUnknownFlag_Returns404" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAnOfficer_Return200(url: &quot;/api/analytics/shortages&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="84328242-99fc-c34a-e70f-3eff6277e327">
+      <Execution id="a55e6001-0fbe-4f64-b614-ac38b56ac133" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="BackOfficeEndpoints_AsAnOfficer_Return200" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;page=0&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="777d858c-f3fd-63e4-cd81-a24d55d2c20c">
+      <Execution id="7a653676-e18f-43a8-a020-450612865d42" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Anomalies_WithInvalidPagingOrStatus_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Errors_AreReturnedAsRfc7807ProblemDetails" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="406b9969-3a1a-e2a3-847f-c0b65f33d61c">
+      <Execution id="4a9e9e6a-5097-4fba-9cab-921aa4858103" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Errors_AreReturnedAsRfc7807ProblemDetails" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;size=0&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="0a06b9e1-e459-7e4f-66ce-144b938aa73d">
+      <Execution id="fe75c090-8fe0-44ca-a99b-e1e23ca59b60" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Anomalies_WithInvalidPagingOrStatus_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=not-a-guid&amp;from=2026-06-01&amp;to=2026-12-31&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="1e7ec7ff-7661-25dc-a3b4-e047558d61c3">
+      <Execution id="99f1962f-98f3-4fab-8729-aa2dd691da63" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_WithInvalidInput_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.ReportExport_AsAnOfficer_Returns403" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="7cd8b099-1569-b2bf-3737-d76d16c0dfa2">
+      <Execution id="2bd4418d-da67-4d96-b796-533061815dd7" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="ReportExport_AsAnOfficer_Returns403" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.SnapshotRefresh_IsAdministratorOnly" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="5c18cdaf-a6a3-5b13-8ebe-4589cd609e17">
+      <Execution id="dc0149fb-f9d0-40e8-8349-4f2a5129f3c2" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="SnapshotRefresh_IsAdministratorOnly" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Endpoints_WithoutCredentials_Return401(url: &quot;/api/analytics/anomalies&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="ae694bf3-90f4-4c93-732a-bcce10351eee">
+      <Execution id="c4196fb4-bccf-45a3-b7ef-1c812365878b" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Endpoints_WithoutCredentials_Return401" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Endpoints_WithoutCredentials_Return401(url: &quot;/api/analytics/filters&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="f7285199-735a-32fe-8a17-153f87fd5e4f">
+      <Execution id="2f2d4a55-d03c-4ae2-a363-6f4b8bbc39c8" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Endpoints_WithoutCredentials_Return401" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_ForACropWithHistory_ReturnsOrderedPointsWithRealPrices" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="fccba920-f086-fcc7-c2a3-6c01e78f6cfe">
+      <Execution id="18e029ca-4a3e-4848-af5b-ae6765224ccc" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_ForACropWithHistory_ReturnsOrderedPointsWithRealPrices" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;status=Banana&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="a2987965-b9d3-41d4-4926-bc2185cb7bee">
+      <Execution id="fa1fca26-1ee2-4883-9315-ff7112fe1def" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Anomalies_WithInvalidPagingOrStatus_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_ForACropWithNoData_ReturnsAnEmptyList_Not404" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="d42d3fdd-e8dc-024f-a678-fdb6deb7879d">
+      <Execution id="7d5b0a62-7d05-48d8-b501-286ff7cfa064" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_ForACropWithNoData_ReturnsAnEmptyList_Not404" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAFarmer_Return403(url: &quot;/api/analytics/anomalies&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="1103b7f0-1d0a-a0b3-b2c5-1a3ae1ab9029">
+      <Execution id="4c04bb69-1c58-40c4-9d19-b1372afc7b86" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="BackOfficeEndpoints_AsAFarmer_Return403" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Filters_AsABuyer_Returns403" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="25a54971-9472-41d6-f0cf-dbf51f64b48e">
+      <Execution id="4b1af5ce-d497-45e9-b83e-b32852ccf1d4" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Filters_AsABuyer_Returns403" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAFarmer_Return403(url: &quot;/api/analytics/shortages&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="7b6edfb8-abdd-b3e9-5551-c026171f8f05">
+      <Execution id="59033fe2-b79c-4654-bad1-afb6760110e5" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="BackOfficeEndpoints_AsAFarmer_Return403" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;from=2&quot;···)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="e7536bf0-8c41-7cd9-5243-580c2ea0031d">
+      <Execution id="11d45691-92ea-455a-88a1-7e6c1260afde" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_WithInvalidInput_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;from=2&quot;···)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="debe6757-dfe6-0ace-080d-4149e7e419f9">
+      <Execution id="125bb6e0-3944-4b5a-9b25-86dd624f8de9" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_WithInvalidInput_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;to=202&quot;···)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="93c55010-de16-63e5-01d3-79385e104c76">
+      <Execution id="b54f10ec-6e92-4458-972c-aaa60cffda72" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_WithInvalidInput_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Anomalies_WithInvalidPagingOrStatus_Returns400(query: &quot;size=101&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="95cff4fe-93f5-08b7-52a0-bf91cd94b934">
+      <Execution id="aa1c76ab-6c5c-49fd-b15d-eb6a39baa9d5" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Anomalies_WithInvalidPagingOrStatus_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.Endpoints_WithoutCredentials_Return401(url: &quot;/api/analytics/shortages&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="b8d2899a-5406-d9e7-2f32-41ba168f5fa2">
+      <Execution id="3b479413-7de3-4119-af0f-0fd58a5a122d" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="Endpoints_WithoutCredentials_Return401" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;from=2026-06-01&amp;to=2026-12-31&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="a968dd6f-00a1-5f69-7709-ba937bcfc147">
+      <Execution id="22c76fe5-ac24-466a-9a40-cefeac1e2461" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_WithInvalidInput_Returns400" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.BackOfficeEndpoints_AsAnOfficer_Return200(url: &quot;/api/analytics/anomalies&quot;)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="a2ba231a-fe5c-07a4-cd1e-1976bbf5e422">
+      <Execution id="5f7fe2cf-0e24-4f9f-b716-d40c2900d3a7" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="BackOfficeEndpoints_AsAnOfficer_Return200" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.integration.AnalyticsApiTests.PriceTrends_WithInvalidInput_Returns400(query: &quot;cropId=00000000-0000-0000-0000-000000000001&amp;from=3&quot;···)" storage="c:\users\yashodha\onedrive\documents\github\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="7e7fcaba-ada8-41b6-9899-589d1992e4db">
+      <Execution id="6db9837c-ffb3-4718-8b87-1359d31520b7" />
+      <TestMethod codeBase="C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.integration.AnalyticsApiTests" name="PriceTrends_WithInvalidInput_Returns400" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="d42d3fdd-e8dc-024f-a678-fdb6deb7879d" executionId="7d5b0a62-7d05-48d8-b501-286ff7cfa064" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae694bf3-90f4-4c93-732a-bcce10351eee" executionId="c4196fb4-bccf-45a3-b7ef-1c812365878b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a2987965-b9d3-41d4-4926-bc2185cb7bee" executionId="fa1fca26-1ee2-4883-9315-ff7112fe1def" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f7285199-735a-32fe-8a17-153f87fd5e4f" executionId="2f2d4a55-d03c-4ae2-a363-6f4b8bbc39c8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b6edfb8-abdd-b3e9-5551-c026171f8f05" executionId="59033fe2-b79c-4654-bad1-afb6760110e5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d76aea0c-13bd-ba02-643b-58b6b2c60f41" executionId="b677bc7e-e1b7-444a-a8e7-8fb483ce4ba2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="84328242-99fc-c34a-e70f-3eff6277e327" executionId="a55e6001-0fbe-4f64-b614-ac38b56ac133" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5c18cdaf-a6a3-5b13-8ebe-4589cd609e17" executionId="dc0149fb-f9d0-40e8-8349-4f2a5129f3c2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7e7fcaba-ada8-41b6-9899-589d1992e4db" executionId="6db9837c-ffb3-4718-8b87-1359d31520b7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1e7ec7ff-7661-25dc-a3b4-e047558d61c3" executionId="99f1962f-98f3-4fab-8729-aa2dd691da63" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5e3ceef0-b30d-becc-5b47-4b9af1949ff3" executionId="d6912e30-76c4-461a-b148-2362324f30cf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fccba920-f086-fcc7-c2a3-6c01e78f6cfe" executionId="18e029ca-4a3e-4848-af5b-ae6765224ccc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b8d2899a-5406-d9e7-2f32-41ba168f5fa2" executionId="3b479413-7de3-4119-af0f-0fd58a5a122d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="777d858c-f3fd-63e4-cd81-a24d55d2c20c" executionId="7a653676-e18f-43a8-a020-450612865d42" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a3301654-830d-c0e3-2889-87e99be5e68e" executionId="18f1d609-ffcf-4c9c-a78c-9152f0a078d4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a968dd6f-00a1-5f69-7709-ba937bcfc147" executionId="22c76fe5-ac24-466a-9a40-cefeac1e2461" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95cff4fe-93f5-08b7-52a0-bf91cd94b934" executionId="aa1c76ab-6c5c-49fd-b15d-eb6a39baa9d5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="25a54971-9472-41d6-f0cf-dbf51f64b48e" executionId="4b1af5ce-d497-45e9-b83e-b32852ccf1d4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="93c55010-de16-63e5-01d3-79385e104c76" executionId="b54f10ec-6e92-4458-972c-aaa60cffda72" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="41ddc30a-3b50-3d25-6731-e7a6e24b0784" executionId="2f39d790-a687-4476-ad22-167c458f5008" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e8900261-f966-0b2c-1400-7353a9e04d37" executionId="42402d89-a1f6-4a16-a258-4215200a4d37" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0a06b9e1-e459-7e4f-66ce-144b938aa73d" executionId="fe75c090-8fe0-44ca-a99b-e1e23ca59b60" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="debe6757-dfe6-0ace-080d-4149e7e419f9" executionId="125bb6e0-3944-4b5a-9b25-86dd624f8de9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="406b9969-3a1a-e2a3-847f-c0b65f33d61c" executionId="4a9e9e6a-5097-4fba-9cab-921aa4858103" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1103b7f0-1d0a-a0b3-b2c5-1a3ae1ab9029" executionId="4c04bb69-1c58-40c4-9d19-b1372afc7b86" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e7536bf0-8c41-7cd9-5243-580c2ea0031d" executionId="11d45691-92ea-455a-88a1-7e6c1260afde" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2e19d81b-9ebd-5779-3187-7ff4ffd94c30" executionId="d1d66e14-1999-4f60-8455-e255c0b91a22" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7cd8b099-1569-b2bf-3737-d76d16c0dfa2" executionId="2bd4418d-da67-4d96-b796-533061815dd7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a2ba231a-fe5c-07a4-cd1e-1976bbf5e422" executionId="5f7fe2cf-0e24-4f9f-b716-d40c2900d3a7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3c5ac7c5-cfdd-785d-5318-7314a78c1f5e" executionId="a66195cf-7115-407e-a7d0-6162bf2031c9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="30" executed="30" passed="30" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.10)&#xD;
+[xUnit.net 00:00:03.45]   Discovering: backend.Tests&#xD;
+[xUnit.net 00:00:03.90]   Discovered:  backend.Tests&#xD;
+[xUnit.net 00:00:03.94]   Starting:    backend.Tests&#xD;
+info: Program[0]&#xD;
+      [SharedReferenceSeeder] Checking shared reference fixtures...&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT u."Email"&#xD;
+      FROM "User" AS u&#xD;
+info: Program[0]&#xD;
+      [SharedReferenceSeeder] All shared reference fixtures already present; no changes needed.&#xD;
+[Shared] Seeded: 0 crops, 0 regions, 0 users.&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT c."Name", c."Id"&#xD;
+      FROM "Crop" AS c&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT r."Name", r."Id"&#xD;
+      FROM "Region" AS r&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT EXISTS (&#xD;
+          SELECT 1&#xD;
+          FROM "PriceTrendSnapshot" AS p)&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT EXISTS (&#xD;
+          SELECT 1&#xD;
+          FROM "PriceAnomalyFlag" AS p)&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT EXISTS (&#xD;
+          SELECT 1&#xD;
+          FROM "ShortageOversupplyEvent" AS s)&#xD;
+[Component D] Seeded: 0 snapshots, 0 anomalies, 0 supply events.&#xD;
+info: Program[0]&#xD;
+      [DataSeeder] Checking Component B order/logistics fixtures...&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT c."Id"&#xD;
+      FROM "CollectionCentre" AS c&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT o."Id"&#xD;
+      FROM "Order" AS o&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT s."Id"&#xD;
+      FROM "StockReservation" AS s&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id"&#xD;
+      FROM "PickupSchedule" AS p&#xD;
+info: Program[0]&#xD;
+      [DataSeeder] Database already contains all Component B fixtures; no changes needed.&#xD;
+[Component B] Seeded: 0 collection centres, 0 orders, 0 reservations, 0 schedules.&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Application started. Press Ctrl+C to shut down.&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Hosting environment: Development&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Content root path: C:\Users\Yashodha\OneDrive\Documents\GitHub\AgriConnect\backend&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (11ms) [Parameters=[@now='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT o."Id", o."BuyerId", o."CreatedAt", o."DeliveryPreference", o."ListingId", o."Quantity", o."Status", o."UpdatedAt"&#xD;
+      FROM "Order" AS o&#xD;
+      INNER JOIN "StockReservation" AS s ON o."Id" = s."OrderId"&#xD;
+      WHERE o."Status" = 'Pending' AND s."ExpiresAt" &lt;= @now&#xD;
+warn: Microsoft.EntityFrameworkCore.Query[10103]&#xD;
+      The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT min(p0."Period") AS "From", max(p0."Period") AS "To"&#xD;
+      FROM (&#xD;
+          SELECT p."Period", 1 AS "Key"&#xD;
+          FROM "PriceTrendSnapshot" AS p&#xD;
+      ) AS p0&#xD;
+      GROUP BY p0."Key"&#xD;
+      LIMIT 1&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT c."Id"&#xD;
+      FROM "Crop" AS c&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT r."Id"&#xD;
+      FROM "Region" AS r&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date), @id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."RegionId" = @id&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT count(*)::int&#xD;
+      FROM (&#xD;
+          SELECT DISTINCT p."Period"&#xD;
+          FROM "PriceTrendSnapshot" AS p&#xD;
+      ) AS p0&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."CropId", p."DeviationPercent", p."FlaggedAt", p."ListingId", p."ListingPrice", p."RegionId", p."Status"&#xD;
+      FROM "PriceAnomalyFlag" AS p&#xD;
+      ORDER BY p."FlaggedAt" DESC&#xD;
+      LIMIT @p1 OFFSET @p&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT count(*)::int&#xD;
+      FROM "PriceAnomalyFlag" AS p&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT DISTINCT p."CropId"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."SampleCount" &gt; 0&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (44ms) [Parameters=[@cropsWithPrices='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT c."Id", c."Name", c."Id" = ANY (@cropsWithPrices) AND c."Id" = ANY (@cropsWithPrices) IS NOT NULL AS "HasPriceHistory"&#xD;
+      FROM "Crop" AS c&#xD;
+      ORDER BY c."Name"&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT r."Id", r."Name"&#xD;
+      FROM "Region" AS r&#xD;
+      ORDER BY r."Name"&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (2ms) [Parameters=[@id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."CropId", p."DeviationPercent", p."FlaggedAt", p."ListingId", p."ListingPrice", p."RegionId", p."Status"&#xD;
+      FROM "PriceAnomalyFlag" AS p&#xD;
+      WHERE p."Id" = @id&#xD;
+      LIMIT 1&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."SampleCount" &gt; 0&#xD;
+      ORDER BY p."RegionId", p."Period"&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT s."Id", s."CropId", s."DetectedAt", s."Notes", s."RegionId", s."Severity", s."Type"&#xD;
+      FROM "ShortageOversupplyEvent" AS s&#xD;
+      ORDER BY s."DetectedAt" DESC&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."CropId", p."DeviationPercent", p."FlaggedAt", p."ListingId", p."ListingPrice", p."RegionId", p."Status"&#xD;
+      FROM "PriceAnomalyFlag" AS p&#xD;
+      ORDER BY p."FlaggedAt" DESC&#xD;
+      LIMIT @p1 OFFSET @p&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT count(*)::int&#xD;
+      FROM "PriceAnomalyFlag" AS p&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT DISTINCT p."CropId"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."SampleCount" &gt; 0&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropsWithPrices='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT c."Id", c."Name", c."Id" = ANY (@cropsWithPrices) AND c."Id" = ANY (@cropsWithPrices) IS NOT NULL AS "HasPriceHistory"&#xD;
+      FROM "Crop" AS c&#xD;
+      ORDER BY c."Name"&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT r."Id", r."Name"&#xD;
+      FROM "Region" AS r&#xD;
+      ORDER BY r."Name"&#xD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]&#xD;
+      Executed DbCommand (1ms) [Parameters=[@cropId='?' (DbType = Guid), @from='?' (DbType = Date), @to='?' (DbType = Date)], CommandType='Text', CommandTimeout='30']&#xD;
+      SELECT p."Id", p."AvgPrice", p."CropId", p."MaxPrice", p."MinPrice", p."Period", p."RegionId", p."SampleCount"&#xD;
+      FROM "PriceTrendSnapshot" AS p&#xD;
+      WHERE p."CropId" = @cropId AND p."Period" &gt;= @from AND p."Period" &lt;= @to AND p."SampleCount" &gt; 0&#xD;
+      ORDER BY p."RegionId", p."Period"&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Application is shutting down...&#xD;
+[xUnit.net 00:00:13.03]   Finished:    backend.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

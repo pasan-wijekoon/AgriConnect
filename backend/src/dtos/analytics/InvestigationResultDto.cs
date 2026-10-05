@@ -30,17 +30,24 @@ public class PriceContextDto
     /// <summary>Null when the crop has no price history in this region yet.</summary>
     public decimal? RegionalAvgPrice { get; set; }
 
+    /// <summary>The AI fair price (midpoint of its range) the deviation was measured against. Null when it cannot be recovered exactly.</summary>
+    public decimal? AiFairPrice { get; set; }
+
     public decimal ListingPrice { get; set; }
 
     /// <summary>0–100. Share of this crop's weekly averages in the region priced below the listing.</summary>
     public int PercentileInRegion { get; set; }
 }
 
-/// <summary>Data owned by another component. Keys stay stable while it is unavailable.</summary>
+/// <summary>Data owned by another component (inspections, orders), as one plain sentence for the officer.</summary>
 public class ExternalContextDto
 {
     public bool Available { get; set; }
 
+    /// <summary>What was found, e.g. "2 orders, 60 kg in total." Null only when the data could not be read.</summary>
+    public string? Summary { get; set; }
+
+    /// <summary>Why the data could not be read. Null when <see cref="Available"/> is true.</summary>
     public string? Reason { get; set; }
 }
 

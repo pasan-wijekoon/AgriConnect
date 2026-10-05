@@ -56,9 +56,9 @@ This document is a **two-way contract**:
 
 ## 1. `GET /api/analytics/price-trends`
 
-Historical price trends per crop and region. **FR15** · Roles: `Farmer`, `Officer`, `Administrator`
+Historical price trends per crop and region. **FR15** · Roles: `Farmer`, `Buyer`, `Officer`, `Administrator`
 
-Farmers can read trends so the Flutter app can show them; every other analytics route is Officer/Administrator only.
+Farmers and Buyers can read trends so the Flutter app can show them (Buyers added 2026-10-03); every other analytics route is Officer/Administrator only.
 
 **Query parameters**
 
@@ -269,7 +269,7 @@ Idempotent — safe to re-run. Upserts against the unique `(CropId, RegionId, Pe
 
 ## 9. `GET /api/analytics/filters`
 
-Crops and regions for filter dropdowns, so clients never show raw GUIDs. Roles: `Farmer`, `Officer`, `Administrator`
+Crops and regions for filter dropdowns, so clients never show raw GUIDs. Roles: `Farmer`, `Buyer`, `Officer`, `Administrator`
 
 ```json
 {

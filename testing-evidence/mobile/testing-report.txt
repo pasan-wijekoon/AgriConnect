@@ -1,0 +1,22 @@
+00:00 +0: loading C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/api_service_test.dart
+00:00 +0: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/api_service_test.dart: MOB-U-01 ΓÇô API client parses listing fields from a valid response
+00:00 +1: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/api_service_test.dart: MOB-U-02 ΓÇô missing listing fields use safe defaults without crashing
+00:02 +2: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/price_trends_screen_test.dart: price trends screen loads without crashing
+00:07 +3: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/price_trends_screen_test.dart: price trends screen loads without crashing
+00:07 +4: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/today_prices_screen_test.dart: shows a card per crop with the price range and a summary
+00:11 +5: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/today_prices_screen_test.dart: shows a card per crop with the price range and a summary
+00:12 +6: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/today_prices_screen_test.dart: shows a card per crop with the price range and a summary
+00:12 +7: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 ΓÇô -5 price blocks listing submission
+00:12 +8: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 ΓÇô -5 price blocks listing submission
+00:13 +9: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 ΓÇô -5 price blocks listing submission
+00:14 +10: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 ΓÇô -5 price blocks listing submission
+00:15 +11: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 ΓÇô -5 price blocks listing submission
+00:16 +12: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 ΓÇô -5 price blocks listing submission
+00:17 +13: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 ΓÇô -5 price blocks listing submission
+00:18 +14: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/login_form_test.dart: MOB-W-01 ΓÇô empty fields show validation errors
+00:18 +15: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/login_form_test.dart: MOB-W-01 ΓÇô empty fields show validation errors
+00:19 +16: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:21 +17: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart: a farmer lands on Home and gets five role-specific tabs
+00:24 +18: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart: a buyer gets Market and Centres tabs and can sign out
+00:25 +19: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart: officers are pointed to the web console instead of the mobile app
+00:25 +20: All tests passed!

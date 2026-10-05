@@ -52,6 +52,16 @@ public class OrdersController(OrderService orderService, SchedulingService sched
         return result.Success ? Ok(result.Value) : ToErrorResult(result.Error, result.ErrorMessage!);
     }
 
+    /// <summary>FR11/FR20 — the order's activity timeline (who did what, when).</summary>
+    [HttpGet("{id:guid}/activity")]
+    [Authorize(Roles = Roles.BuyerFarmerOfficerAdmin)]
+    [ProducesResponseType(typeof(IReadOnlyList<OrderActivityItem>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetActivity(Guid id, CancellationToken ct)
+    {
+        var result = await orderService.GetActivityAsync(id, User.GetUserId(), User.GetRole(), ct);
+        return result.Success ? Ok(result.Value) : ToErrorResult(result.Error, result.ErrorMessage!);
+    }
+
     [HttpPut("{id:guid}/status")]
     [Authorize(Roles = Roles.OfficerAdmin)]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
@@ -115,6 +125,19 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     }
 
     /// <summary>
+    /// FR10 — up to three other pickup windows an Officer can choose instead of the
+    /// pending proposal (read-only; choosing one goes through the normal revision decision).
+    /// </summary>
+    [HttpGet("{id:guid}/schedule/alternatives")]
+    [Authorize(Roles = Roles.OfficerAdmin)]
+    [ProducesResponseType(typeof(IReadOnlyList<ScheduleWindowDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetScheduleAlternatives(Guid id, CancellationToken ct)
+    {
+        var result = await schedulingService.GetAlternativesAsync(id, User.GetUserId(), ct);
+        return result.Success ? Ok(result.Value) : ToSchedulingErrorResult(result.Error, result.ErrorMessage!);
+    }
+
+    /// <summary>
     /// FR19 — Officer Approve/Reject decision on the order's pending schedule
     /// proposal. No generic AgentWorkflow controller exists anywhere in the repo
     /// (confirmed by searching all branches), so per the plan's own stated default
@@ -127,7 +150,8 @@ public class OrdersController(OrderService orderService, SchedulingService sched
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DecideSchedule(Guid id, [FromBody] ScheduleDecisionRequest request, CancellationToken ct)
     {
-        var result = await schedulingService.DecideAsync(id, request.Decision, User.GetUserId(), ct);
+        var result = await schedulingService.DecideAsync(
+            id, request.Decision, User.GetUserId(), ct, request.Reason, request.PreferredWindow);
         return result.Success ? Ok(result.Value) : ToSchedulingErrorResult(result.Error, result.ErrorMessage!);
     }
 

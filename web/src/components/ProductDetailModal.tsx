@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { type Listing, resolveImageUrl } from '../utils/marketApi';
 import { useAuth } from '../context/AuthContext';
+import { ApiError, ordersApi, type DeliveryPreference, type OrderResponse } from '../utils/ordersApi';
 import { X, MapPin, Calendar, Sparkles, CheckCircle2, AlertCircle, ShoppingBag, Edit, Trash2 } from './Icons';
 
 interface ProductDetailModalProps {
@@ -10,6 +12,8 @@ interface ProductDetailModalProps {
   onWithdraw?: (listing: Listing) => void;
   onApprove?: (listing: Listing) => void;
   onReject?: (listing: Listing) => void;
+  /** Called when a Buyer chooses "View my orders" after placing an order. */
+  onViewOrders?: () => void;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -18,15 +22,51 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onEdit,
   onWithdraw,
   onApprove,
-  onReject
+  onReject,
+  onViewOrders
 }) => {
   const { user } = useAuth();
+  useEscapeKey(onClose);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
-  const [orderQuantity, setOrderQuantity] = useState<number>(100);
-  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  // Held as text: a number state turned an emptied box straight back into 0, so the 0 could never be deleted.
+  // What can still be ordered right now (total minus stock held by active orders).
+  const available = listing?.availableQuantity ?? listing?.quantity ?? 0;
+  const [quantityText, setQuantityText] = useState<string>(String(Math.max(1, Math.min(100, Math.floor(available || 100)))));
+  const orderQuantity = quantityText.trim() === '' ? Number.NaN : Number(quantityText);
   const [orderMode, setOrderMode] = useState(false);
+  const [deliveryPreference, setDeliveryPreference] = useState<DeliveryPreference>('Pickup');
+  const [submitting, setSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<OrderResponse | null>(null);
+  // Optional, approximate (2 decimal places, about 1 km) buyer location for the nearest-centre suggestion.
+  const [buyerLocation, setBuyerLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationNote, setLocationNote] = useState<string | null>(null);
 
   if (!listing) return null;
+
+  const shareLocation = () => {
+    setLocationNote(null);
+    if (!navigator.geolocation) {
+      setLocationNote('Location is not available in this browser. You can still place the order.');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setBuyerLocation({
+          lat: Math.round(pos.coords.latitude * 100) / 100,
+          lng: Math.round(pos.coords.longitude * 100) / 100,
+        });
+        setLocating(false);
+      },
+      () => {
+        setLocationNote('We couldn’t get your location. You can still place the order.');
+        setLocating(false);
+      },
+      { timeout: 8000, maximumAge: 300000 },
+    );
+  };
 
   const rawPhotos = listing.photos && listing.photos.length > 0
     ? listing.photos
@@ -49,14 +89,36 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowOrderSuccess(true);
-    setTimeout(() => {
-      setShowOrderSuccess(false);
+    setOrderError(null);
+
+    if (!Number.isFinite(orderQuantity) || orderQuantity <= 0) {
+      setOrderError('Enter a quantity greater than 0.');
+      return;
+    }
+    if (orderQuantity > available) {
+      setOrderError(`Only ${available} ${listing.unit} are available right now.`);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Real order: the backend reserves the stock atomically (FR9) and answers 409
+      // with the remaining quantity if someone else got there first.
+      const order = await ordersApi.create({
+        listingId: listing.id,
+        quantity: orderQuantity,
+        deliveryPreference,
+        ...(buyerLocation ? { buyerLat: buyerLocation.lat, buyerLng: buyerLocation.lng } : {}),
+      });
+      setPlacedOrder(order);
       setOrderMode(false);
-      onClose();
-    }, 2200);
+    } catch (err) {
+      setOrderError(err instanceof ApiError ? err.message : 'We couldn’t place your order. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -214,7 +276,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="glass-card" style={{ padding: '14px' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-faint)', fontWeight: 600 }}>AVAILABLE BATCH</div>
               <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)', marginTop: '4px' }}>
-                {listing.quantity} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{listing.unit}</span>
+                {available} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{listing.unit}</span>
+                {available < listing.quantity && (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-faint)', fontWeight: 500, marginTop: '2px' }}>
+                    of {listing.quantity} {listing.unit} listed
+                  </div>
+                )}
               </div>
             </div>
 
@@ -321,15 +388,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <input
                     type="number"
                     min="1"
-                    max={listing.quantity}
-                    value={orderQuantity}
-                    onChange={(e) => setOrderQuantity(Number(e.target.value))}
+                    max={available}
+                    step="any"
+                    inputMode="decimal"
+                    value={quantityText}
+                    onChange={(e) => setQuantityText(e.target.value)}
                     className="form-input"
                     required
                   />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Estimated Wholesale Total</label>
+                  <label className="form-label">Estimated total (at floor price)</label>
                   <div style={{
                     padding: '10px 14px',
                     background: 'rgba(0, 0, 0, 0.3)',
@@ -338,36 +407,89 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     fontWeight: 800,
                     fontSize: '1.1rem'
                   }}>
-                    Rs. {((listing.minPrice || 0) * orderQuantity).toLocaleString()}
+                    {!listing.minPrice
+                      ? <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>No price set yet. The officer will confirm it.</span>
+                      : Number.isFinite(orderQuantity) && orderQuantity > 0
+                        ? <>Rs. {(listing.minPrice * orderQuantity).toLocaleString()}</>
+                        : '—'}
                   </div>
                 </div>
               </div>
 
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Collection method</label>
+                <select
+                  className="form-input"
+                  value={deliveryPreference}
+                  onChange={(e) => setDeliveryPreference(e.target.value as DeliveryPreference)}
+                >
+                  <option value="Pickup">Pickup at the collection centre</option>
+                  <option value="Delivery">Delivery</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                {buyerLocation ? (
+                  <>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--accent-text)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <MapPin size={14} /> Approximate location shared. It helps suggest the nearest collection centre.
+                    </span>
+                    <button type="button" className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '0.78rem' }} onClick={() => setBuyerLocation(null)}>
+                      Remove
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.82rem' }} onClick={shareLocation} disabled={locating}>
+                    <MapPin size={14} /> {locating ? 'Locating…' : 'Use my approximate location (optional)'}
+                  </button>
+                )}
+                {locationNote && <span role="status" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{locationNote}</span>}
+              </div>
+
+              <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                Your quantity is reserved as soon as you order. An officer will review it and confirm a pickup slot.
+              </p>
+
+              {orderError && (
+                <div role="alert" style={{ color: 'var(--danger)', background: 'var(--danger-soft)', border: '1px solid var(--danger-border)', borderRadius: '10px', padding: '10px 12px', fontSize: '0.85rem' }}>
+                  {orderError}
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                  Confirm & Submit Order
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={submitting}>
+                  {submitting ? 'Placing order…' : 'Confirm & Submit Order'}
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => setOrderMode(false)}>
+                <button type="button" className="btn btn-secondary" disabled={submitting} onClick={() => { setOrderMode(false); setOrderError(null); }}>
                   Cancel
                 </button>
               </div>
             </form>
           )}
 
-          {showOrderSuccess && (
-            <div style={{
+          {placedOrder && (
+            <div role="status" style={{
               background: 'var(--accent-soft)',
               border: '1px solid var(--accent)',
               color: 'var(--accent-text)',
               padding: '14px',
               borderRadius: '12px',
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
+              justifyContent: 'space-between',
               gap: '10px',
               fontWeight: 600
             }}>
-              <CheckCircle2 size={20} />
-              <span>Wholesale purchase order successfully dispatched to farmer & regional collection centre!</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <CheckCircle2 size={20} />
+                Order placed — {placedOrder.quantity} {listing.unit} reserved. An officer will review it shortly.
+              </span>
+              {onViewOrders && (
+                <button type="button" className="btn btn-primary" onClick={() => { onClose(); onViewOrders(); }}>
+                  View my orders
+                </button>
+              )}
             </div>
           )}
 
@@ -432,20 +554,22 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             )}
 
             {/* Buyer Logic */}
-            {isBuyer && !orderMode && (
+            {isBuyer && !orderMode && !placedOrder && listing.status === 'Published' && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', gap: '10px' }}>
                 <button
                   className="btn btn-primary"
                   style={{ padding: '12px 24px', fontSize: '1rem' }}
                   onClick={() => setOrderMode(true)}
+                  disabled={available <= 0}
+                  title={available <= 0 ? 'All of this batch is currently reserved' : undefined}
                 >
-                  <ShoppingBag size={18} /> Request Wholesale Order
+                  <ShoppingBag size={18} /> {available <= 0 ? 'Sold out' : 'Request Wholesale Order'}
                 </button>
               </div>
             )}
 
             {/* Admin / Officer Logic */}
-          {(isAdmin || isOfficer) && (
+            {(isAdmin || isOfficer) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   Officer Review Mode (Listing ID: {listing.id.substring(0, 8)}...)
