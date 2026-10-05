@@ -7,6 +7,7 @@ on:
       - "backend/**"
       - "docker/backend/**"
       - ".github/workflows/backend-build-and-deploy.yaml"
+      
   workflow_dispatch:
 
 concurrency:
@@ -33,7 +34,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.302
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
@@ -96,7 +97,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.Agriconnect_PAT }}
 
-      - name: Build (and push on main)
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -109,7 +110,7 @@ jobs:
           cache-to: type=gha,scope=backend,mode=max
 
   deploy:
-    name: Deploy to Render
+    name: Deploy to Railway
     needs: docker
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
@@ -119,25 +120,37 @@ jobs:
     environment: production
 
     steps:
-      - name: Trigger Render deploy of this commit's image
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL }}
-          IMAGE: ${{ needs.docker.outputs.image }}:${{ github.sha }}
-
+      - name: Install Railway CLI
         run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "::error::Secret RENDER_BACKEND_DEPLOY_HOOK_URL is not set"
+          npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          IMAGE: ${{ needs.docker.outputs.image }}:${{ github.sha }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::Secret RAILWAY_TOKEN is not set"
             exit 1
           fi
 
-          ENCODED_IMAGE="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$IMAGE")"
+          if [ -z "$RAILWAY_PROJECT_ID" ]; then
+            echo "::error::Secret RAILWAY_PROJECT_ID is not set"
+            exit 1
+          fi
 
-          curl \
-            --fail \
-            --silent \
-            --show-error \
-            --max-time 60 \
-            -X POST \
-            "${RENDER_DEPLOY_HOOK_URL}&imgURL=${ENCODED_IMAGE}"
+          if [ -z "$RAILWAY_SERVICE_ID" ]; then
+            echo "::error::Secret RAILWAY_SERVICE_ID is not set"
+            exit 1
+          fi
 
-          echo "Deploy requested on Render for ${IMAGE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploying ${IMAGE} to Railway..."
+
+          railway redeploy \
+            --project "$RAILWAY_PROJECT_ID" \
+            --service "$RAILWAY_SERVICE_ID" \
+            --yes
+
+          echo "Railway deployment requested." >> "$GITHUB_STEP_SUMMARY"
