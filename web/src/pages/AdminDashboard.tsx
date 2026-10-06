@@ -163,11 +163,11 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+    <div className="marketplace-dashboard admin-dashboard" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
       <Toast toast={toast} onClose={closeToast} />
 
       {/* Top Banner */}
-      <div style={{
+      <div className="dashboard-header" style={{
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
@@ -202,7 +202,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div style={{
+      <div className="dashboard-tabs admin-dashboard-tabs" style={{
         display: 'flex',
         gap: '12px',
         borderBottom: '1px solid var(--border)',

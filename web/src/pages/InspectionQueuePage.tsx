@@ -63,7 +63,7 @@ export function InspectionQueuePage() {
     <div>
       <PageHeader
         title="Quality Inspection Queue"
-        description="Listings awaiting officer quality verification before they can be published (FR5, FR12)."
+        description="Listings awaiting officer quality verification before they can be published"
       />
 
       <Card>
