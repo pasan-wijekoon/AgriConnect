@@ -34,7 +34,7 @@ dotnet tool restore
 Create the database schema:
 
 ```powershell
-dotnet ef database update
+dotnet ef database update --context AgriConnectDbContext
 ```
 
 Run the API:
@@ -87,25 +87,25 @@ backend/
 Add a migration after changing an entity or the DbContext:
 
 ```powershell
-dotnet ef migrations add YourMigrationName
+dotnet ef migrations add YourMigrationName --context AgriConnectDbContext
 ```
 
 Apply pending migrations:
 
 ```powershell
-dotnet ef database update
+dotnet ef database update --context AgriConnectDbContext
 ```
 
 List migrations and their applied status:
 
 ```powershell
-dotnet ef migrations list
+dotnet ef migrations list --context AgriConnectDbContext
 ```
 
 Roll back to a previous migration:
 
 ```powershell
-dotnet ef database update PreviousMigrationName
+dotnet ef database update PreviousMigrationName --context AgriConnectDbContext
 ```
 
 ### Migration rules for the team

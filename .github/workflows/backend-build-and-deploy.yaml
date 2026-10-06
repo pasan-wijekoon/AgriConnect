@@ -98,7 +98,7 @@ jobs:
         working-directory: backend
         run: |
           dotnet tool restore
-          dotnet ef database update --connection "$ConnectionStrings__Default"
+          dotnet ef database update --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
 
       - name: Test
         run: |
@@ -145,7 +145,7 @@ jobs:
 
       - name: Apply migrations
         working-directory: backend
-        run: dotnet ef database update --project backend.csproj --connection "$DB_CONNECTION"
+        run: dotnet ef database update --project backend.csproj --context AgriConnectDbContext --connection "$DB_CONNECTION"
 
       # Manual runs only: tick "seed" in the Actions UI. Safe to repeat.
       - name: Seed reference data
