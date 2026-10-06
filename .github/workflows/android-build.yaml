@@ -1,18 +1,13 @@
 name: Android - Build
 
-# Single workflow: Flutter analyze + test, then (on push to main) build a signed release APK
-# directly on GitHub Actions. This replaces the old android-build.yaml + codemagic.yaml pair,
-# so Codemagic and its REST API trigger are no longer needed.
+# Flutter analyze + test on PRs; on push to main, build a signed release APK
+# via Gradle (assembleRelease).
 #
-# One-time setup (repo Settings > Secrets and variables > Actions, in the `production` environment):
-#   ANDROID_KEYSTORE_BASE64   base64 of your release keystore  (e.g. `base64 -w0 release.jks`)
-#   ANDROID_KEYSTORE_PASSWORD keystore password
-#   ANDROID_KEY_ALIAS         key alias
-#   ANDROID_KEY_PASSWORD      key password
-#   API_BASE_URL              backend base URL passed to the app via --dart-define
+# Secrets (repo Settings > Secrets and variables > Actions, `production` environment):
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+#   ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD, API_BASE_URL
 #
-# Assumes mobile/android/app/build.gradle(.kts) reads signing config from android/key.properties
-# (the standard Flutter release-signing setup).
+# Assumes mobile/android/app/build.gradle(.kts) reads signing config from android/key.properties.
 
 on:
   pull_request:
@@ -20,7 +15,13 @@ on:
     paths:
       - "mobile/**"
       - ".github/workflows/android-build.yaml"
-      
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/android-build.yaml"
+  workflow_dispatch:
+
 concurrency:
   group: android-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -59,7 +60,7 @@ jobs:
           fi
 
   build:
-    name: Build signed release APK
+    name: Build signed release APK (assembleRelease)
     needs: verify
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -75,6 +76,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: gradle
 
       - uses: subosito/flutter-action@v2
         with:
@@ -109,21 +111,27 @@ jobs:
           } > android/key.properties
 
       - name: Get packages
-        run: flutter pub get
+        run: flutter pub get   # also generates android/local.properties (flutter.sdk)
 
-      - name: Build signed APK
+      - name: Set build number
+        run: echo "flutter.versionCode=${{ github.run_number }}" >> android/local.properties
+
+      - name: Assemble release APK
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
         run: |
-          flutter build apk --release \
-            --build-number="${{ github.run_number }}" \
-            --dart-define=API_BASE_URL="$API_BASE_URL"
+          DART_DEFINES=$(printf 'API_BASE_URL=%s' "$API_BASE_URL" | base64 -w0)
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleRelease \
+            --no-daemon \
+            -Pdart-defines="$DART_DEFINES"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: agriconnect-release-apk
-          path: mobile/build/app/outputs/flutter-apk/*.apk
+          path: mobile/build/app/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 30
 
