@@ -5,3 +5,6 @@ dockerfilePath = "docker/backend/Dockerfile"
 [deploy]
 healthcheckPath = "/health"
 healthcheckTimeout = 30
+# The production Docker image contains the ASP.NET runtime, not the SDK.
+# Never use `dotnet run` here; execute the published application directly.
+startCommand = "dotnet backend.dll"

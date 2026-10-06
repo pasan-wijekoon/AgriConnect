@@ -188,6 +188,39 @@ jobs:
             type=ref,event=pr
 
       - uses: docker/build-push-action@v6
+        name: Build backend image for smoke test
+        with:
+          context: .
+          file: docker/backend/Dockerfile
+          load: true
+          platforms: linux/amd64
+          tags: agriconnect-backend:ci
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Smoke test backend container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name agriconnect-backend-ci \
+            -p 5000:5000 \
+            -e ASPNETCORE_URLS=http://+:5000 \
+            -e Jwt__Key=ci-only-signing-key-012345678901234567890123456789 \
+            -e ConnectionStrings__Default='Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres' \
+            agriconnect-backend:ci
+
+          trap 'docker logs agriconnect-backend-ci || true; docker rm -f agriconnect-backend-ci || true' EXIT
+          for i in $(seq 1 30); do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 3 http://127.0.0.1:5000/health || true)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 2
+          done
+          echo "::error::Backend container did not become healthy."
+          exit 1
+
+      - name: Publish backend image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/backend/Dockerfile
@@ -239,7 +272,10 @@ jobs:
         env:
           HEALTH_URL: ${{ vars.BACKEND_HEALTH_URL }}
         run: |
-          if [ -z "$HEALTH_URL" ]; then echo "BACKEND_HEALTH_URL not set - skipping."; exit 0; fi
+          if [ -z "$HEALTH_URL" ]; then
+            echo "::error::BACKEND_HEALTH_URL is not configured."
+            exit 1
+          fi
           sleep 45
           for i in $(seq 1 20); do
             code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
