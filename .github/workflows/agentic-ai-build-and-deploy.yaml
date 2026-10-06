@@ -82,33 +82,60 @@ jobs:
           fi
 
   # =========================================================
-  # 2. VERIFY DOCKER IMAGE BUILDS (no push - SnapDeploy builds it)
+  # 2. BUILD & PUSH DOCKER IMAGE TO GHCR
   # =========================================================
   docker:
-    name: Verify Docker Build
+    name: Build & Push Docker Image
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image: ${{ steps.image.outputs.image }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Compute Docker image reference
+        id: image
+        shell: bash
+        run: |
+          OWNER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          IMAGE="ghcr.io/${OWNER}/${IMAGE_NAME}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "Docker image: ${IMAGE}"
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image (no push)
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/agentic-ai/Dockerfile
-          push: false
-          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/amd64
+          tags: |
+            ${{ steps.image.outputs.image }}:${{ github.sha }}
+            ${{ steps.image.outputs.image }}:latest
           cache-from: type=gha,scope=agentic-ai
           cache-to: type=gha,scope=agentic-ai,mode=max
 
   # =========================================================
-  # 3. DEPLOY TO SNAPDEPLOY
+  # 3. DEPLOY TO SNAPDEPLOY (pulls image from GHCR)
   # =========================================================
   deploy:
     name: Deploy Agentic AI to SnapDeploy
@@ -128,9 +155,9 @@ jobs:
       - name: Check deployment secrets
         env:
           SNAPDEPLOY_AGENTIC_AI_API_KEY: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_API_KEY }}
-          SNAPDEPLOY_AGENTIC_AI_CONTAINER_NAME: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_CONTAINER_NAME }}
+          SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID }}
         run: |
-          for v in SNAPDEPLOY_AGENTIC_AI_API_KEY SNAPDEPLOY_AGENTIC_AI_CONTAINER_NAME; do
+          for v in SNAPDEPLOY_AGENTIC_AI_API_KEY SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID; do
             if [ -z "${!v}" ]; then
               echo "::error::$v is not set"
               exit 1
@@ -138,89 +165,70 @@ jobs:
           done
           echo "All required secrets are configured."
 
-      - name: Trigger SnapDeploy deployment
-        id: trigger
+      - name: Restart container to pull latest image
         env:
           API_KEY: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_API_KEY }}
-          CONTAINER_NAME: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_CONTAINER_NAME }}
+          CONTAINER_ID: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID }}
         run: |
-          echo "Deploying Agentic AI to SnapDeploy..."
+          call() {
+            # $1 = action (stop|start)
+            CODE=$(curl -sS -o resp.json -w "%{http_code}" \
+              -X POST "${SNAPDEPLOY_API}/containers/${CONTAINER_ID}/$1" \
+              -H "X-API-Key: ${API_KEY}" \
+              -H "X-SnapDeploy-Client: mcp/ci")
+            echo "$1 -> HTTP $CODE"
+            cat resp.json; echo
+            if [ "$CODE" = "402" ] || [ "$CODE" = "429" ]; then
+              echo "::error::SnapDeploy plan limit reached (HTTP $CODE). Not retrying."
+              exit 1
+            fi
+            echo "$CODE"
+          }
 
-          HTTP_CODE=$(curl -sS -o response.json -w "%{http_code}" \
-            -X POST "${SNAPDEPLOY_API}/deploy" \
-            -H "X-API-Key: ${API_KEY}" \
-            -H "Idempotency-Key: release-${GITHUB_SHA}" \
-            -H "X-SnapDeploy-Client: mcp/ci" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n \
-                  --arg repo "${GITHUB_REPOSITORY}" \
-                  --arg name "${CONTAINER_NAME}" \
-                  '{repo:$repo, name:$name, branch:"main", size:"small"}')")
+          echo "Pulling ${{ needs.docker.outputs.image }}:latest on SnapDeploy..."
 
-          cat response.json
-          echo
+          # Stop errors are tolerated (container may already be asleep/stopped).
+          call stop > /dev/null || true
+          sleep 5
 
-          if [ "$HTTP_CODE" = "402" ] || [ "$HTTP_CODE" = "429" ]; then
-            echo "::error::SnapDeploy plan limit reached (HTTP $HTTP_CODE). Free tier allows 10 deploys/day. Not retrying."
+          START_CODE=$(call start | tail -n 1)
+          if [ "${START_CODE:0:1}" != "2" ]; then
+            echo "::error::Failed to start container (HTTP $START_CODE)"
             exit 1
           fi
+          echo "Container start requested."
 
-          if [ "${HTTP_CODE:0:1}" != "2" ]; then
-            echo "::error::SnapDeploy deploy failed (HTTP $HTTP_CODE)"
-            exit 1
-          fi
-
-          echo "container_id=$(jq -r '.containerId // empty' response.json)" >> "$GITHUB_OUTPUT"
-          echo "deployment_id=$(jq -r '.deploymentId // empty' response.json)" >> "$GITHUB_OUTPUT"
-          echo "url=$(jq -r '.url // empty' response.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Wait for deployment to finish
+      - name: Health check
         env:
-          API_KEY: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_API_KEY }}
-          CONTAINER_ID: ${{ steps.trigger.outputs.container_id }}
-          DEPLOYMENT_ID: ${{ steps.trigger.outputs.deployment_id }}
+          APP_URL: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_URL }}
+          HEALTH_PATH: /health
         run: |
-          if [ -z "$CONTAINER_ID" ]; then
-            echo "No containerId returned - skipping status polling."
+          if [ -z "$APP_URL" ]; then
+            echo "SNAPDEPLOY_AGENTIC_AI_URL not set - skipping health check."
             exit 0
           fi
 
-          for i in $(seq 1 40); do
-            curl -sS "${SNAPDEPLOY_API}/containers/${CONTAINER_ID}/deployments" \
-              -H "X-API-Key: ${API_KEY}" -o deployments.json
-
-            STATUS=$(jq -r --arg id "$DEPLOYMENT_ID" '
-              (if type=="array" then . else (.deployments // .content // []) end)
-              | (map(select((.id|tostring)==$id or (.deploymentId|tostring)==$id)) + .)[0].status // "UNKNOWN"
-            ' deployments.json)
-
-            echo "[$i/40] Deployment status: $STATUS"
-
-            if [ "$STATUS" = "COMPLETED" ]; then
-              echo "Deployment completed."
+          for i in $(seq 1 30); do
+            CODE=$(curl -sS -o /dev/null -w "%{http_code}" "${APP_URL%/}${HEALTH_PATH}" || echo 000)
+            echo "[$i/30] ${APP_URL%/}${HEALTH_PATH} -> HTTP $CODE"
+            if [ "$CODE" = "200" ]; then
+              echo "Service is healthy."
               exit 0
             fi
-            if [ "$STATUS" = "FAILED" ]; then
-              echo "::error::SnapDeploy deployment FAILED. Check build logs in the SnapDeploy dashboard."
-              exit 1
-            fi
-            sleep 15
+            sleep 10
           done
 
-          echo "::error::Timed out waiting for deployment."
+          echo "::error::Health check did not pass in time."
           exit 1
 
       - name: Deployment summary
-        env:
-          URL: ${{ steps.trigger.outputs.url }}
         run: |
           {
             echo "## Agentic AI Deployment"
             echo ""
-            echo "**Platform:** SnapDeploy"
+            echo "**Platform:** SnapDeploy (image from GHCR)"
             echo "**LLM Provider:** Gemini"
-            echo "**Container:** \`${{ secrets.SNAPDEPLOY_AGENTIC_AI_CONTAINER_NAME }}\`"
-            echo "**URL:** ${URL:-n/a}"
+            echo "**Image:** \`${{ needs.docker.outputs.image }}:${{ github.sha }}\`"
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
             echo "Deployment triggered successfully."
