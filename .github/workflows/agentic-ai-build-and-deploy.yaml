@@ -1,30 +1,51 @@
-# Agentic AI CI/CD: test, publish an immutable GHCR image, and deploy it to Render.
-name: Agentic AI CI/CD
+name: Agentic AI - CI/CD
+
+# Pipeline overview
+#   test   : uv sync + import check + pytest, using the mock LLM (no secrets, safe for fork PRs)
+#   docker : builds docker/agentic-ai/Dockerfile (every run); pushes to GHCR only on push to main
+#   deploy : redeploys the Railway service (push to main only), then optional health check
+#
+# One-time setup
+#   Settings > Environments > production  (add required reviewers if you want a manual gate)
+#     Secrets:   RAILWAY_AGENTIC_AI_TOKEN
+#                RAILWAY_AGENTIC_AI_PROJECT_ID
+#                RAILWAY_AGENTIC_AI_SERVICE_ID
+#   Settings > Secrets and variables > Actions > Variables (optional):
+#                AGENTIC_AI_HEALTH_URL    e.g. https://<service>.up.railway.app/health
+#
+# Images are pushed as ghcr.io/<owner>/agriconnect-agentic-ai:sha-<commit> and :latest.
+# Make sure the Railway service pulls this image (and has access to the package if it is private).
 
 on:
   push:
     branches: [main, development, integration, test-oder]
-    paths: ['agentic-ai/**', 'docker/agentic-ai/**', '.github/workflows/agentic-ai-build-and-deploy.yaml']
+    paths:
+      - "agentic-ai/**"
+      - "docker/agentic-ai/**"
+      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
   pull_request:
     branches: [main, development, integration]
-    paths: ['agentic-ai/**', 'docker/agentic-ai/**', '.github/workflows/agentic-ai-build-and-deploy.yaml']
+    paths:
+      - "agentic-ai/**"
+      - "docker/agentic-ai/**"
+      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
   workflow_dispatch:
-
-permissions:
-  contents: read
-  packages: write
 
 concurrency:
   group: agentic-ai-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 env:
-  IMAGE: ghcr.io/pasan-wijekoon/agriconnect-agentic-ai
-  IMAGE_TAG: sha-${{ github.sha }}
+  PYTHON_VERSION: "3.12"
+  IMAGE_NAME: agriconnect-agentic-ai
 
 jobs:
+  # ---------------------------------------------------------------- CI
   test:
-    name: Test Agentic AI
+    name: Install & test (Python)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -33,73 +54,139 @@ jobs:
     env:
       LLM_PROVIDER: mock
       TOOLS_MODE: mock
-    steps:
-      - name: Check out
-        uses: actions/checkout@v4
-      - name: Set up uv and Python 3.12
-        uses: astral-sh/setup-uv@v6
-        with:
-          python-version: '3.12'
-          enable-cache: true
-          cache-dependency-glob: agentic-ai/uv.lock
-      - name: Install dependencies
-        run: uv sync --extra dev
-      - name: Run tests
-        run: uv run pytest -q
-
-  image:
-    name: Build and publish Agentic AI image
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+      ENVIRONMENT: test
+      INTERNAL_API_SECRET: ci-test-secret
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: |
+            agentic-ai/uv.lock
+            agentic-ai/pyproject.toml
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Import check
+        run: uv run python -c "import src.app.main"
+
+      - name: Run tests
+        run: |
+          if [ -d tests ] || find . -name 'test_*.py' -not -path './.venv/*' | grep -q .; then
+            uv run pytest -q
+          else
+            echo "No tests found - skipping."
+          fi
+
+  # ---------------------------------------------------------------- CD: image
+  docker:
+    name: Build & push Docker image
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image reference
+        id: image
+        run: |
+          OWNER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "image=ghcr.io/${OWNER}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
       - name: Log in to GHCR
+        if: env.PUSH == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/setup-buildx-action@v3
-      - name: Build and push image
+
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/agentic-ai/Dockerfile
           platforms: linux/amd64
-          push: true
-          tags: ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+          push: ${{ env.PUSH == 'true' }}
+          tags: |
+            ${{ steps.image.outputs.image }}:sha-${{ github.sha }}
+            ${{ steps.image.outputs.image }}:latest
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=agentic-ai
+          cache-to: type=gha,scope=agentic-ai,mode=max
 
+  # ---------------------------------------------------------------- CD: deploy
   deploy:
-    name: Deploy Agentic AI to Render
-    needs: image
+    name: Deploy to Railway
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: production
     concurrency:
-      group: deploy-production
+      group: deploy-agentic-ai-production
       cancel-in-progress: false
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
+      RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
     steps:
-      - name: Trigger Render image deploy
-        env:
-          HOOK: ${{ secrets.RENDER_AGENTIC_AI_DEPLOY_HOOK_URL }}
-          IMAGE: ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+      - name: Check deployment secrets
         run: |
-          test -n "$HOOK" || { echo "::error::Render Agentic AI deploy hook is missing"; exit 1; }
-          ENCODED_IMAGE=$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["IMAGE"], safe=""))')
-          curl --fail --silent --show-error --request POST "${HOOK}&imgURL=${ENCODED_IMAGE}"
+          for v in RAILWAY_TOKEN RAILWAY_PROJECT_ID RAILWAY_SERVICE_ID; do
+            if [ -z "${!v}" ]; then echo "::error::Secret for $v is not set"; exit 1; fi
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+
+      - name: Redeploy service
+        run: |
+          railway redeploy \
+            --project "$RAILWAY_PROJECT_ID" \
+            --service "$RAILWAY_SERVICE_ID" \
+            --yes
+
       - name: Wait for health endpoint
         env:
           URL: ${{ vars.AGENTIC_AI_HEALTH_URL }}
         run: |
           if [ -z "$URL" ]; then echo "Health URL not configured; deploy triggered."; exit 0; fi
           for i in $(seq 1 40); do
-            if curl --fail --silent --max-time 20 "$URL" > /dev/null; then exit 0; fi
+            if curl --fail --silent --max-time 20 "$URL" > /dev/null; then
+              echo "Healthy."
+              exit 0
+            fi
             sleep 15
           done
           echo "::error::Agentic AI health check failed"
           exit 1
+
+      - name: Deployment summary
+        run: |
+          {
+            echo "## Agentic AI deployment"
+            echo ""
+            echo "- Platform: Railway"
+            echo "- Image: \`${{ needs.docker.outputs.image }}:sha-${{ github.sha }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
