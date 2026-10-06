@@ -68,8 +68,27 @@ jobs:
       - name: Build
         run: dotnet build backend/backend.csproj -c Release --no-restore
 
+      # Same command you run locally, but the value comes from the
+      # SUPABASE_CONNECTION_STRING GitHub secret, never from the workflow file.
+      # The secret holds ONLY the connection string, e.g.
+      #   Host=...;Port=5432;Database=postgres;Username=...;Password=...;SSL Mode=Require;Trust Server Certificate=true
+      - name: Configure database connection (user-secrets)
+        env:
+          DB_CONNECTION: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+        run: |
+          if [ -z "$DB_CONNECTION" ]; then
+            echo "::warning::SUPABASE_CONNECTION_STRING is not set (normal for PRs from forks). Database tests may fail."
+            exit 0
+          fi
+
+          # Adds a UserSecretsId to the csproj in this CI workspace only if it is missing.
+          dotnet user-secrets init --project backend/backend.csproj || true
+          dotnet user-secrets set "ConnectionStrings:Default" "$DB_CONNECTION" --project backend/backend.csproj
+
       - name: Test
         env:
+          # Also exposed as an environment variable. ASP.NET reads
+          # ConnectionStrings__Default as ConnectionStrings:Default.
           ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
         run: |
           mapfile -t projects < <(find backend -name '*Tests.csproj')
@@ -103,13 +122,15 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      # Uses your AGRICONNECT_PAT secret if it exists, otherwise the built-in
+      # GITHUB_TOKEN. The PAT needs the write:packages scope.
       - name: Log in to GHCR
         if: env.SHOULD_PUSH == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.AGRICONNECT_PAT }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.AGRICONNECT_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Generate tags & labels
         id: meta
@@ -138,6 +159,9 @@ jobs:
   #    Pushing an image does not redeploy by itself, so we tell Railway
   #    to redeploy; it then pulls ghcr.io/<owner>/agriconnect-backend:latest.
   #    RAILWAY_TOKEN must be a PROJECT token (scoped to one environment).
+  #
+  #    The running backend gets its database string from the Railway service
+  #    variable ConnectionStrings__Default (set once in Railway, not here).
   # =========================================================
   deploy:
     name: Deploy to Railway
@@ -158,10 +182,10 @@ jobs:
           RAILWAY_SERVICE: ${{ vars.RAILWAY_BACKEND_SERVICE }}
         run: |
           if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE" ]; then
-            echo "RAILWAY_TOKEN secret and RAILWAY_BACKEND_SERVICE variable are required."
+            echo "::error::RAILWAY_TOKEN secret and RAILWAY_BACKEND_SERVICE variable are required."
             exit 1
           fi
-          npx -y @railway/cli@latest redeploy --service "$RAILWAY_SERVICE" --yes
+          npx -y @railway/cli@4 redeploy --service "$RAILWAY_SERVICE" --yes
 
       - name: Summary
         run: |
@@ -201,7 +225,7 @@ jobs:
           sleep 45
 
           for i in $(seq 1 20); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
+            code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
             echo "Attempt $i: HTTP $code"
             if [ "$code" = "200" ]; then
               echo "Service is healthy."
@@ -210,5 +234,5 @@ jobs:
             sleep 20
           done
 
-          echo "Service did not become healthy in time."
+          echo "::error::Service did not become healthy in time."
           exit 1
