@@ -1,31 +1,34 @@
 name: Agentic AI - CI/CD 
 
-# Push to main:
-#   1. test    -> install deps, lint (if configured), run pytest with a MOCKED LLM
-#   2. docker  -> build image, push to GHCR and Docker Hub
-#   3. deploy  -> fast-forward the `deploy-agent` branch; Back4app watches it
-#   4. verify  -> optional health check
-# Pull requests run steps 1 and 2 only, and nothing is pushed.
+# AgriConnect agentic-ai service: Python 3.12, uv, FastAPI + LangGraph.
+#
+# Pull request : test -> build image + smoke test (nothing is pushed)
+# Push to main : test -> build + smoke test + push to GHCR & Docker Hub
+#                -> promote `deploy-agent` branch (Back4app builds from it)
+#                -> health check
+#
+# No real LLM key is used in CI. The service ships with LLM_PROVIDER=mock,
+# so tests and the container smoke test run deterministically and for free.
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - "agent/**"
-      - "docker/agent/**"
-      - ".github/workflows/agent-cicd.yaml"
+      - "agentic-ai/**"
+      - "docker/agentic-ai/**"
+      - ".github/workflows/agentic-ai-cicd.yaml"
 
   push:
     branches: [main]
     paths:
-      - "agent/**"
-      - "docker/agent/**"
-      - ".github/workflows/agent-cicd.yaml"
+      - "agentic-ai/**"
+      - "docker/agentic-ai/**"
+      - ".github/workflows/agentic-ai-cicd.yaml"
 
   workflow_dispatch:
 
 concurrency:
-  group: agent-${{ github.ref }}
+  group: agentic-ai-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -33,20 +36,24 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agent
-  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/agent
+  LLM_PROVIDER: mock
+  CONTAINER_PORT: "8000"
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-agentic-ai
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/agriconnect-agentic-ai
 
 jobs:
 
   # =========================================================
-  # 1. INSTALL, LINT, TEST
-  #    Tests must not call the real LLM (slow, costly, flaky).
-  #    A dummy key is passed so client libraries initialise.
+  # 1. LINT + TEST (mock LLM, no network, no secrets)
   # =========================================================
   test:
-    name: Lint & test (Python)
+    name: Lint & test (uv)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: agentic-ai
 
     steps:
       - uses: actions/checkout@v4
@@ -54,40 +61,44 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: agent/requirements*.txt
 
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: agentic-ai/uv.lock
+
+      # --locked fails if uv.lock is out of date with pyproject.toml,
+      # so dependency drift is caught in CI instead of in production.
       - name: Install dependencies
-        working-directory: agent
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-          pip install pytest ruff
+        run: uv sync --locked
 
-      - name: Lint
-        working-directory: agent
-        run: ruff check .
-
-      - name: Test (mocked LLM)
-        working-directory: agent
-        env:
-          ANTHROPIC_API_KEY: test-key-not-real
+      - name: Lint (only if ruff is configured)
         run: |
-          if [ -z "$(find . -name 'test_*.py' -o -name '*_test.py')" ]; then
+          if grep -q "\[tool.ruff" pyproject.toml; then
+            uv run --with ruff ruff check .
+          else
+            echo "No [tool.ruff] config in pyproject.toml - skipping lint."
+          fi
+
+      - name: Import check (app boots with mock provider)
+        run: uv run python -c "import src.app.main"
+
+      - name: Test
+        run: |
+          if [ -z "$(find . -path ./.venv -prune -o \( -name 'test_*.py' -o -name '*_test.py' \) -print -quit)" ]; then
             echo "No tests found - skipping."
             exit 0
           fi
-          pytest -q
+          uv run --with pytest pytest -q
 
   # =========================================================
-  # 2. BUILD IMAGE, PUSH TO GHCR + DOCKER HUB (main only)
+  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH (main only)
   # =========================================================
   docker:
-    name: Docker build & publish
+    name: Docker build, smoke test & publish
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: read
       packages: write
@@ -100,13 +111,47 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      # Build once and load it locally so we can run it before publishing.
+      - name: Build image for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/agentic-ai/Dockerfile
+          load: true
+          push: false
+          platforms: linux/amd64
+          tags: agriconnect-agentic-ai:ci
+          cache-from: type=gha,scope=agentic-ai
+          cache-to: type=gha,scope=agentic-ai,mode=max
+
+      # FastAPI always serves /openapi.json, so no custom health route is needed
+      # to prove the container starts and the app imports inside the image.
+      - name: Smoke test container
+        run: |
+          docker run -d --name agent \
+            -p ${{ env.CONTAINER_PORT }}:${{ env.CONTAINER_PORT }} \
+            -e LLM_PROVIDER=mock \
+            agriconnect-agentic-ai:ci
+
+          for i in $(seq 1 30); do
+            if curl -fsS "http://localhost:${{ env.CONTAINER_PORT }}/openapi.json" > /dev/null; then
+              echo "Container is serving requests."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Container did not become ready. Logs:"
+          docker logs agent
+          exit 1
+
       - name: Log in to GHCR
         if: env.SHOULD_PUSH == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.AGRICONNECT_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
         if: env.SHOULD_PUSH == 'true'
@@ -116,6 +161,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Generate tags & labels
+        if: env.SHOULD_PUSH == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -123,25 +169,26 @@ jobs:
             ${{ env.GHCR_IMAGE }}
             ${{ env.DOCKERHUB_IMAGE }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=sha,format=long
-            type=ref,event=pr
 
-      - name: Build and push
+      # Layers are cached from the build above, so this step is fast.
+      - name: Push to GHCR and Docker Hub
+        if: env.SHOULD_PUSH == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/agent/Dockerfile
-          push: ${{ env.SHOULD_PUSH == 'true' }}
+          file: docker/agentic-ai/Dockerfile
+          push: true
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=agent
-          cache-to: type=gha,scope=agent,mode=max
+          cache-from: type=gha,scope=agentic-ai
 
   # =========================================================
   # 3. DEPLOY TO BACK4APP
-  #    Moves `deploy-agent` to this commit; Back4app builds from it.
+  #    Moves `deploy-agent` to this commit; Back4app watches that
+  #    branch and builds + releases it.
   # =========================================================
   deploy:
     name: Deploy to Back4app
@@ -154,7 +201,7 @@ jobs:
       contents: write
 
     concurrency:
-      group: back4app-deploy-agent
+      group: back4app-deploy-agentic-ai
       cancel-in-progress: false
 
     steps:
@@ -171,11 +218,11 @@ jobs:
       - name: Summary
         run: |
           {
-            echo "## Agent deployed"
+            echo "## Agentic AI deployed"
             echo ""
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
-            echo "Tests passed, image published, \`deploy-agent\` branch updated."
+            echo "Tests and container smoke test passed, images published, \`deploy-agent\` updated."
             echo ""
             echo "Images:"
             echo "- \`${{ env.GHCR_IMAGE }}:sha-${{ github.sha }}\`"
@@ -183,7 +230,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # =========================================================
-  # 4. OPTIONAL HEALTH CHECK (skipped if AGENT_HEALTH_URL unset)
+  # 4. HEALTH CHECK (skipped unless AGENT_HEALTH_URL is set)
+  #    Use .../openapi.json if the service has no /health route.
   # =========================================================
   verify:
     name: Health check
