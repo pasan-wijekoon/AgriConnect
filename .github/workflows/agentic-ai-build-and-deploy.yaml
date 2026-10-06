@@ -90,6 +90,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write   # required for provenance attestation push to GHCR
 
     outputs:
       image: ${{ steps.image.outputs.image }}
@@ -121,7 +122,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.AGRICONNECT_PAT }}
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
@@ -196,6 +197,7 @@ jobs:
       - name: Deploy Agentic AI
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
         run: |
           echo "Deploying Agentic AI..."
