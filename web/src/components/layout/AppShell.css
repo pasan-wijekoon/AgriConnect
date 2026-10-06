@@ -228,3 +228,102 @@ button:active:not(:disabled) { transform: translateY(1px); }
   .app-header-brand span { font-size: 15px; }
   .app-header-brand-icon { width: 30px; height: 30px; }
 }
+
+/* Dashboard landing-page usability ---------------------------------------------- */
+.marketplace-dashboard {
+  container-type: inline-size;
+}
+
+.marketplace-dashboard .dashboard-header {
+  margin-bottom: 1.5rem !important;
+}
+
+.marketplace-dashboard .dashboard-header h1 {
+  max-width: 760px;
+}
+
+.marketplace-dashboard .dashboard-filter-card {
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+.marketplace-dashboard .dashboard-kpis > * {
+  min-width: 0;
+}
+
+.marketplace-dashboard .dashboard-kpis .glass-card {
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.marketplace-dashboard .dashboard-kpis .glass-card:hover {
+  transform: translateY(-2px);
+}
+
+.marketplace-dashboard .dashboard-category-tabs,
+.marketplace-dashboard .dashboard-tabs {
+  scrollbar-width: thin;
+}
+
+.marketplace-dashboard .dashboard-category-tabs button,
+.marketplace-dashboard .dashboard-tabs button {
+  min-height: 40px;
+}
+
+.marketplace-dashboard .dashboard-hero {
+  box-shadow: var(--shadow-card);
+}
+
+.marketplace-dashboard .dashboard-results-header {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@container (max-width: 720px) {
+  .marketplace-dashboard .dashboard-header {
+    align-items: stretch !important;
+  }
+
+  .marketplace-dashboard .dashboard-header > div:last-child {
+    width: 100%;
+  }
+
+  .marketplace-dashboard .dashboard-header > div:last-child > button {
+    flex: 1 1 180px;
+  }
+
+  .marketplace-dashboard .dashboard-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .marketplace-dashboard .dashboard-tabs,
+  .marketplace-dashboard .dashboard-category-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    padding-bottom: 8px !important;
+  }
+
+  .marketplace-dashboard .dashboard-tabs > *,
+  .marketplace-dashboard .dashboard-category-tabs > * {
+    flex: 0 0 auto;
+  }
+
+  .marketplace-dashboard .dashboard-hero {
+    padding: 1.5rem !important;
+  }
+
+  .marketplace-dashboard .dashboard-hero h1 {
+    font-size: 1.9rem !important;
+  }
+}
+
+@container (max-width: 440px) {
+  .marketplace-dashboard .dashboard-kpis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .marketplace-dashboard .dashboard-results-header {
+    align-items: flex-start !important;
+    flex-direction: column;
+  }
+}

@@ -218,6 +218,18 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// ---- Deployment: apply EF Core migrations at startup ----
+// A fresh hosted database (e.g. Render PostgreSQL) has no schema, and nothing else in the
+// deployment path runs `dotnet ef database update`. Opt-in via Database__MigrateOnStartup=true
+// so local/dev and test runs keep their current behaviour.
+if (builder.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    using var migrateScope = app.Services.CreateScope();
+    var migrateDb = migrateScope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+    await migrateDb.Database.MigrateAsync();
+    Console.WriteLine("[Startup] Database: migrations applied");
+}
+
 // ---- Startup diagnostics: print DB connectivity + server status to the terminal ----
 using (var scope = app.Services.CreateScope())
 {
@@ -287,7 +299,8 @@ app.Use(async (context, next) =>
 
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only"))
+if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only")
+    || builder.Configuration.GetValue<bool>("Database:SeedOnStartup"))
 {
     // ---- Shared Reference Tables — seed crops, regions, and dev users ----
     using (var scope = app.Services.CreateScope())
@@ -363,6 +376,9 @@ if (args.Contains("--seed-only"))
 }
 
 app.MapControllers();
+
+// Unauthenticated liveness endpoint used by Render and CI/CD deployment checks.
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.Run();
 
 // Exposes the top-level-statements Program class (implicitly `internal`) to
