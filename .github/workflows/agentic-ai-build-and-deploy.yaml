@@ -89,7 +89,10 @@ jobs:
             echo "No tests found - skipping."
             exit 0
           fi
-          uv run --with pytest pytest -q
+          # pytest + pytest-asyncio are added on the fly here. Better long-term fix:
+          # run `uv add --dev pytest pytest-asyncio` in agentic-ai/ and commit
+          # pyproject.toml + uv.lock, then this can become plain `uv run pytest -q`.
+          uv run --with pytest --with pytest-asyncio pytest -q
 
   # =========================================================
   # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH (main only)
