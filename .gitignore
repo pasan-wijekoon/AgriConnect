@@ -57,6 +57,13 @@ cmake-build-*/
 *.sublime-project
 
 # ==========================================
+# Local-only agent/planning files (never committed)
+# ==========================================
+/CLAUDE.md
+/PROGRESS.md
+/*_plan.md
+
+# ==========================================
 # Environment & Secrets
 # ==========================================
 .env
@@ -233,3 +240,9 @@ lerna-debug.log*
 # Symbols & Obfuscation
 app.*.symbols
 app.*.map.json
+# Local reference docs (not shared with the team)
+documentation/User_Roles_and_User_Stories.md
+documentation/Component_Capabilities_and_Flows.md
+
+# Photos uploaded through the app (runtime data: the database stores only their /uploads/... URL)
+backend/wwwroot/uploads/

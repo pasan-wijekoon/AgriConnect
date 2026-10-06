@@ -1,122 +1,66 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { useAuth } from './context/AuthContext'
+import { LoginPage } from './pages/LoginPage'
+import { FarmerDashboard } from './pages/FarmerDashboard'
+import { BuyerDashboard } from './pages/BuyerDashboard'
+import { AdminDashboard } from './pages/AdminDashboard'
+import { InspectionQueuePage } from './pages/InspectionQueuePage'
+import { RecordInspectionPage } from './pages/RecordInspectionPage'
+import { DiscrepancyQueuePage } from './pages/DiscrepancyQueuePage'
+import { InspectionHistoryPage } from './pages/InspectionHistoryPage'
+import { PublishGatePage } from './pages/PublishGatePage'
+import { OrderQueuePage } from './pages/orders/OrderQueuePage'
+import { OrderDetailPage } from './pages/orders/OrderDetailPage'
+import { ScheduleCalendarPage } from './pages/orders/ScheduleCalendarPage'
+import { MyOrdersPage } from './pages/MyOrdersPage'
+import { PriceTrendsPage } from './pages/PriceTrendsPage'
+import { ShortagesPage } from './pages/ShortagesPage'
+import { AnomalyQueuePage } from './pages/AnomalyQueuePage'
+import { ReportsPage } from './pages/ReportsPage'
+import { AiSchedulingPage } from './pages/AiSchedulingPage'
+import { TodayPricesPage } from './pages/TodayPricesPage'
+import './styles/analytics.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function Forbidden() { return <div className="glass-card"><h1>Access denied</h1><p>Your account cannot access this page.</p></div> }
+function RoleRoute({ roles, children }: { roles: string[]; children: React.ReactNode }) {
+  const { user } = useAuth()
+  return user && roles.includes(user.role) ? <>{children}</> : <Forbidden />
 }
-
-export default App
+// Component D's pages use generic class names (.card, .badge ...) defined in styles/analytics.css;
+// this wrapper scopes that CSS to the analytics routes only.
+function AnalyticsScope() { return <div className="analytics-scope"><Outlet /></div> }
+function Home() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  if (user?.role === 'Farmer') return <FarmerDashboard />
+  if (user?.role === 'Buyer') return <BuyerDashboard onOpenOrders={() => navigate('/my-orders')} />
+  if (user?.role === 'Administrator') return <AdminDashboard />
+  return <PriceTrendsPage />
+}
+export default function App() {
+  return <Routes>
+    <Route path="/login" element={<LoginPage />} />
+    <Route element={<ProtectedRoute />}>
+      <Route path="/dashboard" element={<Home />} />
+      <Route path="/quality/inspections" element={<RoleRoute roles={['Officer','Administrator']}><InspectionQueuePage /></RoleRoute>} />
+      <Route path="/quality/inspections/:listingId/record" element={<RoleRoute roles={['Officer','Administrator']}><RecordInspectionPage /></RoleRoute>} />
+      <Route path="/quality/discrepancies" element={<RoleRoute roles={['Officer','Administrator']}><DiscrepancyQueuePage /></RoleRoute>} />
+      <Route path="/quality/history" element={<RoleRoute roles={['Officer','Administrator']}><InspectionHistoryPage /></RoleRoute>} />
+      <Route path="/quality/publish/:listingId" element={<RoleRoute roles={['Officer','Administrator']}><PublishGatePage /></RoleRoute>} />
+      <Route path="/prices/today" element={<TodayPricesPage />} />
+      <Route path="/my-orders" element={<RoleRoute roles={['Buyer','Farmer']}><MyOrdersPage /></RoleRoute>} />
+      <Route path="/orders" element={<RoleRoute roles={['Officer','Administrator']}><OrderQueuePage /></RoleRoute>} />
+      <Route path="/orders/:orderId" element={<RoleRoute roles={['Officer','Administrator']}><OrderDetailPage /></RoleRoute>} />
+      <Route path="/orders/schedule" element={<RoleRoute roles={['Officer','Administrator']}><ScheduleCalendarPage /></RoleRoute>} />
+      <Route element={<RoleRoute roles={['Officer','Administrator']}><AnalyticsScope /></RoleRoute>}>
+        <Route path="/analytics/price-trends" element={<PriceTrendsPage />} />
+        <Route path="/analytics/shortages" element={<ShortagesPage />} />
+        <Route path="/analytics/anomalies" element={<AnomalyQueuePage />} />
+        <Route path="/analytics/reports" element={<ReportsPage />} />
+        <Route path="/analytics/ai-scheduling" element={<AiSchedulingPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Route>
+  </Routes>
+}

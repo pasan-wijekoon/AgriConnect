@@ -1,0 +1,25 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.page-header-title {
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.page-header-description {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .page-header-title {
+    font-size: 22px;
+  }
+}

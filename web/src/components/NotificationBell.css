@@ -1,0 +1,134 @@
+.nb {
+  position: relative;
+  --nb-bg: #ffffff;
+  --nb-text: #1f2937;
+  --nb-muted: #6b7280;
+  --nb-border: #e5e7eb;
+  --nb-hover: #f3f4f6;
+  --nb-unread: #e8f5e9;
+  --nb-accent: #2e7d32;
+}
+
+.nb[data-theme='dark'] {
+  --nb-bg: #121715;
+  --nb-text: #f1f4f2;
+  --nb-muted: #9ba6a1;
+  --nb-border: #2f3a35;
+  --nb-hover: #1a211e;
+  --nb-unread: rgba(47, 174, 107, 0.14);
+  --nb-accent: #2fae6b;
+}
+
+.nb-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--nb-border);
+  background: transparent;
+  color: var(--nb-text);
+  cursor: pointer;
+}
+
+.nb-button:hover {
+  background: var(--nb-hover);
+}
+
+.nb-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.nb-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 60;
+  width: min(360px, calc(100vw - 24px));
+  background: var(--nb-bg);
+  color: var(--nb-text);
+  border: 1px solid var(--nb-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.nb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--nb-border);
+}
+
+.nb-link {
+  background: none;
+  border: none;
+  color: var(--nb-accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nb-list {
+  max-height: min(420px, 60vh);
+  overflow-y: auto;
+}
+
+.nb-empty {
+  margin: 0;
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--nb-muted);
+}
+
+.nb-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  border: none;
+  border-bottom: 1px solid var(--nb-border);
+  cursor: pointer;
+  font: inherit;
+}
+
+.nb-item:hover {
+  background: var(--nb-hover);
+}
+
+.nb-item.nb-unread {
+  background: var(--nb-unread);
+  font-weight: 600;
+}
+
+.nb-sub {
+  color: var(--nb-muted);
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.nb-time {
+  color: var(--nb-muted);
+  font-size: 12px;
+  font-weight: 400;
+}

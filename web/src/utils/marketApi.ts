@@ -1,0 +1,493 @@
+// AgriConnect Web Dashboard - API Client (Expanded with Auth)
+
+export function normalizeApiBaseUrl(value?: string): string {
+  const base = (value || 'http://localhost:5000').replace(/\/+$/, '');
+  return /\/api$/i.test(base) ? base : `${base}/api`;
+}
+
+export const API_BASE = normalizeApiBaseUrl(import.meta.env?.VITE_API_BASE_URL);
+
+// ── Types ─────────────────────────────────────────────────────
+
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  role: 'Farmer' | 'Buyer' | 'Officer' | 'Administrator';
+  collectionCentreId?: string | null;
+  phone?: string;
+  region?: string;
+  avatarUrl?: string;
+  token: string;
+}
+
+export function resolveImageUrl(url?: string | null): string {
+  if (!url || !url.trim()) return '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('/')) {
+    return trimmed;
+  }
+  return `/${trimmed}`;
+}
+
+export interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  phone?: string;
+  region?: string;
+  avatarUrl?: string;
+  createdAt: string;
+}
+
+export interface Crop {
+  id: string;
+  name: string;
+  category: string;
+}
+
+export interface Region {
+  id: string;
+  name: string;
+  collectionCentreId?: string;
+}
+
+export function normalizeRole(role: string): User['role'] {
+  return role === 'Admin' ? 'Administrator' : role as User['role'];
+}
+
+export function normalizeUser(user: User): User {
+  return { ...user, role: normalizeRole(user.role) };
+}
+
+/** @deprecated Catalog management was retired; retained only for legacy type-checking. */
+/** An account in the Administrator's staff list (`GET /api/admin/users`). */
+export interface AdminUser {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  phone?: string | null;
+  region?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  collectionCentreId?: string | null;
+}
+
+export interface AdminUserPage {
+  items: AdminUser[];
+  page: number;
+  size: number;
+  total: number;
+}
+
+export interface TodayPriceItem {
+  cropId: string;
+  name: string;
+  category: string;
+  unit: string;
+  region: string;
+  grade: string;
+  suggestedPriceMin: number;
+  suggestedPriceMax: number;
+  averagePrice: number;
+  confidence: number;
+  change24h: number;
+  trend: 'rising' | 'falling' | 'stable';
+  imageUrl: string;
+  reasoning: string;
+  benchmarkWholesale: number;
+}
+
+export interface TodayPricesResponse {
+  date: string;
+  totalCrops: number;
+  selectedGrade: string;
+  selectedRegion: string;
+  marketStatus: string;
+  items: TodayPriceItem[];
+}
+
+export interface TodayPriceCatalogItem { id: string; name: string; category: string; unit: string; defaultRegion: string; imageUrl?: string; displayOrder: number; isActive: boolean }
+
+export interface Photo {
+  id: string;
+  url: string;
+  uploadedAt: string;
+}
+
+export interface PriceSuggestion {
+  id: string;
+  listingId: string;
+  suggestedPriceMin: number;
+  suggestedPriceMax: number;
+  confidence: number;
+  reasoningSummary: string;
+  status: 'Proposed' | 'Approved' | 'Rejected' | 'Revised';
+  checkpointName?: string;
+  decidedByUserId?: string;
+  decidedAt?: string;
+  officerNote?: string;
+  createdAt: string;
+}
+
+export interface PriceEstimateResult {
+  crop: string;
+  region: string;
+  grade: string;
+  suggestedPriceMin: number;
+  suggestedPriceMax: number;
+  averagePrice: number;
+  confidence: number;
+  reasoningSummary: string;
+  benchmarkWholesale: number;
+}
+
+export interface Listing {
+  id: string;
+  farmerId: string;
+  cropName: string;
+  cropCategory: string;
+  regionName: string;
+  quantity: number;
+  /** Quantity still orderable now (total minus stock held by active orders). */
+  availableQuantity?: number;
+  unit: string;
+  claimedGrade: string;
+  pickupWindowStart: string;
+  pickupWindowEnd: string;
+  status: 'Draft' | 'PendingApproval' | 'Published' | 'Withdrawn' | 'SoldOut';
+  minPrice?: number;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  photos: Photo[];
+  priceSuggestion?: PriceSuggestion;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ListingFilters {
+  cropId?: string;
+  regionId?: string;
+  grade?: string;
+  status?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+  sortBy?: string;
+  sortDir?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+// ── Auth Token Helper ─────────────────────────────────────────
+
+function getAuthToken(): string | null {
+  const stored = localStorage.getItem('agriconnect_user');
+  if (stored) {
+    try {
+      const user = JSON.parse(stored);
+      return user.token;
+    } catch { return null; }
+  }
+  return null;
+}
+
+// ── Request Helper ────────────────────────────────────────────
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...options?.headers as Record<string, string>,
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`API error ${res.status}: ${errorText || res.statusText}`);
+  }
+
+  if (res.status === 204) {
+    return {} as T;
+  }
+
+  return res.json();
+}
+
+// ── API ───────────────────────────────────────────────────────
+
+export const api = {
+  // Auth
+  login: (email: string, password: string) =>
+    request<User>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }).then(normalizeUser),
+
+  register: (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: string;
+    phone?: string;
+    region?: string;
+  }) =>
+    request<User>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }).then(normalizeUser),
+
+  getMe: () => request<UserProfile>('/auth/me'),
+
+  // Reference data
+  getCrops: () => request<Crop[]>('/crops'),
+  getRegions: () => request<Region[]>('/regions'),
+
+  // Listings
+  getListings: (filters: ListingFilters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.cropId) params.append('cropId', filters.cropId);
+    if (filters.regionId) params.append('regionId', filters.regionId);
+    if (filters.grade) params.append('grade', filters.grade);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.minPrice !== undefined) params.append('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
+    if (filters.search) params.append('search', filters.search);
+    if (filters.sortBy) params.append('sortBy', filters.sortBy);
+    if (filters.sortDir) params.append('sortDir', filters.sortDir);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.pageSize) params.append('pageSize', filters.pageSize.toString());
+
+    return request<PagedResult<Listing>>(`/listings?${params.toString()}`);
+  },
+
+  getMyListings: (filters: ListingFilters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.sortBy) params.append('sortBy', filters.sortBy);
+    if (filters.sortDir) params.append('sortDir', filters.sortDir);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.pageSize) params.append('pageSize', filters.pageSize.toString());
+
+    return request<PagedResult<Listing>>(`/listings/my?${params.toString()}`);
+  },
+
+  getListingById: (id: string) => request<Listing>(`/listings/${id}`),
+
+  createListing: (data: {
+    cropId: string;
+    regionId: string;
+    quantity: number;
+    unit: string;
+    claimedGrade: string;
+    pickupWindowStart: string;
+    pickupWindowEnd: string;
+    minPrice?: number;
+    description?: string;
+    photoUrls: string[];
+  }) =>
+    request<Listing>('/listings', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateListing: (id: string, data: {
+    cropId?: string;
+    regionId?: string;
+    quantity?: number;
+    unit?: string;
+    claimedGrade?: string;
+    pickupWindowStart?: string;
+    pickupWindowEnd?: string;
+    minPrice?: number;
+    description?: string;
+    photoUrls?: string[];
+  }) =>
+    request<Listing>(`/listings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  // Business-specific endpoint: get or trigger AI Fair-Price Suggestion
+  getPriceSuggestion: (listingId: string) =>
+    request<PriceSuggestion>(`/listings/${listingId}/price-suggestion`),
+
+  // Withdraw listing (FR7)
+  withdrawListing: (id: string) =>
+    request<void>(`/listings/${id}`, { method: 'DELETE' }),
+
+  // Admin actions
+  // Publishes via Component C's FR5 quality gate (POST .../publish) — the
+  // old ungated PATCH .../approve was removed during integration since it set
+  // Published with no inspection check at all. This call now 422s with a
+  // human-readable reason if the listing hasn't passed inspection yet.
+  approveListing: (id: string) =>
+    request<unknown>(`/listings/${id}/publish`, { method: 'POST' }),
+
+  rejectListing: (id: string) =>
+    request<Listing>(`/listings/${id}/reject`, { method: 'PATCH' }),
+
+  // Officer decision on the AI-suggested price itself (FR: Approve / Reject / Request Revision)
+  approvePriceSuggestion: (listingId: string) =>
+    request<PriceSuggestion>(`/listings/${listingId}/price-suggestion/approve`, { method: 'PATCH' }),
+
+  rejectPriceSuggestion: (listingId: string, officerNote?: string) =>
+    request<PriceSuggestion>(`/listings/${listingId}/price-suggestion/reject`, {
+      method: 'PATCH',
+      body: JSON.stringify({ officerNote }),
+    }),
+
+  revisePriceSuggestion: (listingId: string, revisedPriceMin: number, revisedPriceMax: number, officerNote?: string) =>
+    request<PriceSuggestion>(`/listings/${listingId}/price-suggestion/revise`, {
+      method: 'PATCH',
+      body: JSON.stringify({ revisedPriceMin, revisedPriceMax, officerNote }),
+    }),
+
+  // Photos
+  addPhotos: (listingId: string, photoUrls: string[]) =>
+    request<Photo[]>(`/listings/${listingId}/photos`, {
+      method: 'POST',
+      body: JSON.stringify({ photoUrls }),
+    }),
+
+  // Upload photo from device
+  uploadPhoto: async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      // /api/upload requires the signed-in user's JWT. Do not set Content-Type: the browser adds
+      // the multipart boundary itself.
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          return data.url.startsWith('/') ? `${API_BASE.replace('/api', '')}${data.url}` : data.url;
+        }
+      } else if (res.status === 401) {
+        throw new Error('Your session has expired. Please sign in again.');
+      } else {
+        const problem = await res.json().catch(() => null);
+        throw new Error(problem?.message || problem?.detail || 'Photo upload failed. Please try again.');
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message !== 'Failed to fetch') throw err;
+      throw new Error('Photo upload failed. Please try again.');
+    }
+    throw new Error('Photo upload failed. Please try again.');
+  },
+
+  // Live Quick Price Estimation (Farmer Add Modal)
+  getQuickPriceEstimate: (params: {
+    cropId: string;
+    regionId: string;
+    cropName?: string;
+    regionName?: string;
+    grade?: string;
+    quantity?: number;
+  }): Promise<PriceEstimateResult> => {
+    const q = new URLSearchParams();
+    q.append('cropId', params.cropId);
+    q.append('regionId', params.regionId);
+    if (params.cropName) q.append('cropName', params.cropName);
+    if (params.regionName) q.append('regionName', params.regionName);
+    if (params.grade) q.append('grade', params.grade);
+    if (params.quantity) q.append('quantity', params.quantity.toString());
+    return request<PriceEstimateResult>(`/prices/estimate?${q.toString()}`);
+  },
+
+  // Administrator: staff accounts (Officers / Administrators)
+  listUsers: (params: { role?: string; search?: string; page?: number; size?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (params.role) q.append('role', params.role);
+    if (params.search) q.append('search', params.search);
+    q.append('page', String(params.page ?? 1));
+    q.append('size', String(params.size ?? 100));
+    return request<AdminUserPage>(`/admin/users?${q.toString()}`);
+  },
+
+  createManagedUser: (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: 'Officer' | 'Administrator';
+    phone?: string;
+    collectionCentreId?: string | null;
+  }) =>
+    request<AdminUser>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+
+  setUserActive: (id: string, isActive: boolean) =>
+    request<AdminUser>(`/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive }) }),
+
+  resetUserPassword: (id: string, newPassword: string) =>
+    request<void>(`/admin/users/${id}/reset-credentials`, { method: 'POST', body: JSON.stringify({ newPassword }) }),
+
+  // Today's Prices discovery (Component A, Fair-Price Estimation Agent)
+  getTodayPrices: (region?: string, grade: string = 'A'): Promise<TodayPricesResponse> => {
+    const params = new URLSearchParams();
+    if (region && region !== 'All') params.append('region', region);
+    if (grade) params.append('grade', grade);
+    return request<TodayPricesResponse>(`/prices/today?${params.toString()}`);
+  },
+
+  // Admin: Today's Prices catalog management (which crops appear on the
+  // discovery page - prices themselves are always computed live)
+  getTodayPriceCatalog: () =>
+    request<TodayPriceCatalogItem[]>('/admin/today-prices-catalog'),
+
+  createTodayPriceCatalogItem: (data: {
+    name: string;
+    category: string;
+    unit?: string;
+    defaultRegion: string;
+    imageUrl?: string;
+    displayOrder?: number;
+  }) =>
+    request<TodayPriceCatalogItem>('/admin/today-prices-catalog', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateTodayPriceCatalogItem: (id: string, data: {
+    name?: string;
+    category?: string;
+    unit?: string;
+    defaultRegion?: string;
+    imageUrl?: string;
+    displayOrder?: number;
+    isActive?: boolean;
+  }) =>
+    request<TodayPriceCatalogItem>(`/admin/today-prices-catalog/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteTodayPriceCatalogItem: (id: string) =>
+    request<void>(`/admin/today-prices-catalog/${id}`, { method: 'DELETE' }),
+
+};
