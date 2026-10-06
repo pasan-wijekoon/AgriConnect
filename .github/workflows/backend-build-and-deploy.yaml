@@ -1,4 +1,8 @@
-name: Backend - Build & Deploy (SnapDeploy)
+name: Backend - CI (Back4app Containers deploys from GitHub)
+
+# Back4app Containers builds and deploys from your GitHub repo using its own
+# GitHub App, so this workflow only has to prove the code and Dockerfile are
+# good BEFORE (or as) a push reaches main. No image push, no deploy secrets.
 
 on:
   pull_request:
@@ -6,14 +10,14 @@ on:
     paths:
       - "backend/**"
       - "docker/backend/**"
-      - ".github/workflows/backend-build-and-deploy.yaml"
+      - ".github/workflows/backend-ci-back4app.yaml"
 
   push:
     branches: [main]
     paths:
       - "backend/**"
       - "docker/backend/**"
-      - ".github/workflows/backend-build-and-deploy.yaml"
+      - ".github/workflows/backend-ci-back4app.yaml"
 
   workflow_dispatch:
 
@@ -26,10 +30,8 @@ permissions:
 
 env:
   DOTNET_VERSION: "10.0.302"
-  IMAGE_NAME: agriconnect-backend
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
-  SNAPDEPLOY_API: https://snapdeploy.dev/api/mobile
 
 jobs:
 
@@ -78,147 +80,47 @@ jobs:
           done
 
   # =========================================================
-  # 2. BUILD & PUSH DOCKER IMAGE TO GHCR
+  # 2. VERIFY DOCKER IMAGE BUILDS (same Dockerfile Back4app will build)
   # =========================================================
-  docker:
-    name: Build & push image (GHCR)
+  docker-build-check:
+    name: Verify Docker build (no push)
     needs: build-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
-    permissions:
-      contents: read
-      packages: write
-
-    outputs:
-      image: ${{ steps.ref.outputs.image }}
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compute image reference
-        id: ref
-        run: |
-          OWNER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
-          echo "image=ghcr.io/${OWNER}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
-
       - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.Agriconnect_PAT }}
-
-      - name: Build and push image
+      - name: Build image (not pushed)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/backend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: false
           platforms: linux/amd64
-          tags: |
-            ${{ steps.ref.outputs.image }}:${{ github.sha }}
-            ${{ steps.ref.outputs.image }}:latest
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
   # =========================================================
-  # 3. DEPLOY TO SNAPDEPLOY (pulls image from GHCR)
+  # 3. SUMMARY
   # =========================================================
-  deploy:
-    name: Deploy Backend to SnapDeploy
-    needs: docker
-
-    if: >
-      github.event_name != 'pull_request' &&
-      github.ref == 'refs/heads/main'
-
+  summary:
+    name: Deployment note
+    needs: docker-build-check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    environment:
-      name: production
+    timeout-minutes: 5
 
     steps:
-      - name: Check deployment secrets
-        env:
-          SNAPDEPLOY_BACKEND_API_KEY: ${{ secrets.SNAPDEPLOY_BACKEND_API_KEY }}
-          SNAPDEPLOY_BACKEND_CONTAINER_ID: ${{ secrets.SNAPDEPLOY_BACKEND_CONTAINER_ID }}
-        run: |
-          for v in SNAPDEPLOY_BACKEND_API_KEY SNAPDEPLOY_BACKEND_CONTAINER_ID; do
-            if [ -z "${!v}" ]; then
-              echo "::error::$v is not set"
-              exit 1
-            fi
-          done
-          echo "All required secrets are configured."
-
-      - name: Restart container to pull latest image
-        env:
-          API_KEY: ${{ secrets.SNAPDEPLOY_BACKEND_API_KEY }}
-          CONTAINER_ID: ${{ secrets.SNAPDEPLOY_BACKEND_CONTAINER_ID }}
-        run: |
-          call() {
-            # $1 = action (stop|start)
-            CODE=$(curl -sS -o resp.json -w "%{http_code}" \
-              -X POST "${SNAPDEPLOY_API}/containers/${CONTAINER_ID}/$1" \
-              -H "X-API-Key: ${API_KEY}" \
-              -H "X-SnapDeploy-Client: mcp/ci")
-            echo "$1 -> HTTP $CODE" >&2
-            cat resp.json >&2; echo >&2
-            if [ "$CODE" = "402" ] || [ "$CODE" = "429" ]; then
-              echo "::error::SnapDeploy plan limit reached (HTTP $CODE). Not retrying." >&2
-            fi
-            echo "$CODE"
-          }
-
-          echo "Pulling ${{ needs.docker.outputs.image }}:latest on SnapDeploy..."
-
-          # Stop errors are tolerated (container may already be asleep/stopped).
-          call stop > /dev/null || true
-          sleep 5
-
-          START_CODE=$(call start | tail -n 1)
-          if [ "${START_CODE:0:1}" != "2" ]; then
-            echo "::error::Failed to start container (HTTP $START_CODE)"
-            exit 1
-          fi
-          echo "Container start requested."
-
-      - name: Health check
-        env:
-          APP_URL: ${{ secrets.SNAPDEPLOY_BACKEND_URL }}
-          HEALTH_PATH: /health
-        run: |
-          if [ -z "$APP_URL" ]; then
-            echo "SNAPDEPLOY_BACKEND_URL not set - skipping health check."
-            exit 0
-          fi
-
-          for i in $(seq 1 30); do
-            CODE=$(curl -sS -o /dev/null -w "%{http_code}" "${APP_URL%/}${HEALTH_PATH}" || echo 000)
-            echo "[$i/30] ${APP_URL%/}${HEALTH_PATH} -> HTTP $CODE"
-            if [ "$CODE" = "200" ]; then
-              echo "Service is healthy."
-              exit 0
-            fi
-            sleep 10
-          done
-
-          echo "::error::Health check did not pass in time."
-          exit 1
-
-      - name: Deployment summary
+      - name: Write summary
         run: |
           {
-            echo "## Backend Deployment"
+            echo "## Backend CI passed"
             echo ""
-            echo "**Platform:** SnapDeploy (image from GHCR)"
-            echo "**Image:** \`${{ needs.docker.outputs.image }}:${{ github.sha }}\`"
+            echo "**Platform:** Back4app Containers (builds from GitHub on push)"
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
-            echo "Deployment triggered successfully."
+            echo "Tests and Docker build succeeded. Back4app builds and deploys this commit from the repo automatically."
           } >> "$GITHUB_STEP_SUMMARY"
