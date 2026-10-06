@@ -76,6 +76,23 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+app.MapGet("/db-check", async (IConfiguration config) =>
+{
+    try
+    {
+        // Postgres example (Npgsql)
+        await using var conn = new Npgsql.NpgsqlConnection(config.GetConnectionString("Default"));
+        await conn.OpenAsync();
+        await using var cmd = new Npgsql.NpgsqlCommand("SELECT 1", conn);
+        var result = await cmd.ExecuteScalarAsync();
+        return Results.Ok(new { connected = true, result });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+});
+
 // ---- Component A — Produce Listings & Price Discovery (auth + marketplace) ----
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<AgenticAiService>();
