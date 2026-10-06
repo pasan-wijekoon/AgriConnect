@@ -183,23 +183,22 @@ Platform targets are available via `flutter run -d <android|ios|macos|windows|li
 
 ---
 
-## CI/CD
+## Backend CI
 
-The backend workflow at `.github/workflows/backend-build-and-deploy.yaml` builds the API on pull requests and deploys the `main` branch to Railway.
+The backend workflow at `.github/workflows/backend-build-and-deploy.yaml` runs build, test, and Docker smoke checks on pull requests. On successful pushes to `main`, it applies EF Core migrations to Neon and publishes the tested backend image to GHCR. Railway continues deploying the watched repository separately.
 
-Configure these secrets in the GitHub `production` environment:
+Configure these GitHub secrets:
 
-- `RAILWAY_TOKEN` — a project-scoped Railway token
-- `RAILWAY_PROJECT_ID` — the Railway project ID
-- `RAILWAY_SERVICE_ID` — the Railway backend service ID
+- `AgriConnect_PAT` — GHCR publishing credential
+- `NEON_CONNECTION_STRING` — Neon PostgreSQL connection string in Npgsql format
 
 Configure this variable on the Railway backend service:
 
 ```text
-ConnectionStrings__Default=<rotated Supabase PostgreSQL connection string>
+ConnectionStrings__Default=<Neon PostgreSQL connection string>
 ```
 
-Never commit the connection string. The previously shared Supabase password must be rotated before deployment. The backend workflow applies committed EF Core migrations before deploying the Railway service.
+Never commit the production connection string. Configure `ConnectionStrings__Default` in the Railway backend service with the same Neon connection string used by the workflow.
 
 ## Deployment (planned)
 

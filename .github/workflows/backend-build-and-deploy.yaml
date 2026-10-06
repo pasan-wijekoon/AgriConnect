@@ -1,18 +1,12 @@
-name: Backend - CI/CD
+name: Backend - CI
 
-# AgriConnect backend: ASP.NET Core (.NET 10) + Supabase Postgres + Railway.
+# AgriConnect backend: ASP.NET Core (.NET 10) + Neon PostgreSQL.
 #
-# Pull request : build + test (throwaway Postgres) -> docker build (nothing pushed)
-# Push to main : build + test -> migrate DB (Supabase) -> build + smoke test
-#                -> push image to GHCR -> deploy source to Railway -> health check
-# Manual run   : "seed" input seeds crops/regions/users once into the DB.
+# Pull request : build + test (throwaway Postgres) -> Docker build + smoke test
+# Push to main : build + test -> Neon migration -> Docker build + smoke test
+#                -> push image to GHCR
 #
-# Required GitHub secrets : SUPABASE_CONNECTION_STRING, RAILWAY_TOKEN,
-#                           RAILWAY_PROJECT_ID
-# Required GitHub variables: RAILWAY_BACKEND_SERVICE, BACKEND_HEALTH_URL
-#
-# Runtime secrets (ConnectionStrings__Default, Jwt__Key, ALLOWED_ORIGINS,
-# AgenticAi__BaseUrl) live in Railway Variables, NOT in this file.
+# Required GitHub secrets: AgriConnect_PAT, NEON_CONNECTION_STRING
 
 on:
   pull_request:
@@ -32,11 +26,6 @@ on:
       - ".github/workflows/backend-build-and-deploy.yaml"
 
   workflow_dispatch:
-    inputs:
-      seed:
-        description: "Seed reference data + demo users into the database"
-        type: boolean
-        default: false
 
 concurrency:
   group: backend-${{ github.ref }}
@@ -110,21 +99,15 @@ jobs:
           if [ ${#projects[@]} -eq 0 ]; then echo "No test projects."; exit 0; fi
           for p in "${projects[@]}"; do dotnet test "$p" -c Release; done
 
-  # 2. MIGRATE (main only) ---------------------------------------------------
-  # Applies EF Core migrations to Supabase BEFORE the new image goes live,
-  # so the app never starts against an out-of-date schema.
-  migrate:
-    name: Migrate database (Supabase)
+  # 2. MIGRATE NEON, THEN BUILD, SMOKE TEST, AND PUBLISH ---------------------
+  neon-migrate:
+    name: Migrate Neon database
     needs: build-test
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: production
-    concurrency:
-      group: db-migrate
-      cancel-in-progress: false
+    timeout-minutes: 15
     env:
-      DB_CONNECTION: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+      ConnectionStrings__Default: ${{ secrets.NEON_CONNECTION_STRING }}
     steps:
       - uses: actions/checkout@v4
 
@@ -132,37 +115,31 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Check secret
+      - name: Validate Neon connection secret
+        shell: bash
         run: |
-          if [ -z "$DB_CONNECTION" ]; then
-            echo "::error::SUPABASE_CONNECTION_STRING secret is not set."; exit 1
+          if [ -z "$ConnectionStrings__Default" ]; then
+            echo "::error::NEON_CONNECTION_STRING is not configured."
+            exit 1
           fi
 
-      - name: Restore tools (dotnet-ef)
+      - name: Restore .NET tools
         working-directory: backend
         run: dotnet tool restore
 
-      # dotnet-ef needs obj/project.assets.json, which only a project restore
-      # creates. This job runs on a fresh runner, so restore must happen here.
       - name: Restore project packages
         run: dotnet restore backend/backend.csproj
 
-      - name: Apply migrations
+      - name: Apply EF Core migrations to Neon
         working-directory: backend
-        run: dotnet ef database update --project backend.csproj --context AgriConnectDbContext --connection "$DB_CONNECTION"
+        run: dotnet ef database update --project backend.csproj --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
 
-      # Manual runs only: tick "seed" in the Actions UI. Safe to repeat.
-      - name: Seed reference data
-        if: github.event_name == 'workflow_dispatch' && inputs.seed
-        env:
-          ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
-          Jwt__Key: ci-seed-only-placeholder-not-used-for-token-generation
-        run: dotnet run --project backend/backend.csproj -c Release -- --seed-only
-
-  # 3. DOCKER BUILD AND SMOKE TEST -------------------------------------------
   docker:
     name: Docker build & smoke test
-    needs: build-test
+    needs: [build-test, neon-migrate]
+    if: >-
+      always() && needs.build-test.result == 'success' &&
+      (needs.neon-migrate.result == 'success' || needs.neon-migrate.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -247,59 +224,3 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=backend
-
-  # 4. DEPLOY SOURCE TO RAILWAY ----------------------------------------------
-  # Deploy from the repository so Railway applies railway.toml and the
-  # Dockerfile together, including the production start command.
-  deploy:
-    name: Deploy to Railway
-    needs: [migrate, docker]
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: production
-    concurrency:
-      group: railway-deploy-backend
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy Railway service
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_SERVICE: ${{ vars.RAILWAY_BACKEND_SERVICE }}
-        run: |
-          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_PROJECT_ID" ] || [ -z "$RAILWAY_SERVICE" ]; then
-            echo "::error::RAILWAY_TOKEN, RAILWAY_PROJECT_ID, and RAILWAY_BACKEND_SERVICE are required."
-            exit 1
-          fi
-          npx -y @railway/cli@4 up --project "$RAILWAY_PROJECT_ID" --service "$RAILWAY_SERVICE" --ci
-
-  # 5. HEALTH CHECK ----------------------------------------------------------
-  # BACKEND_HEALTH_URL should be https://<backend>/health (see Program.cs
-  # snippet). The API root returns 404, so do not point it there.
-  verify:
-    name: Health check
-    needs: deploy
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Wait for service
-        env:
-          HEALTH_URL: ${{ vars.BACKEND_HEALTH_URL }}
-        run: |
-          if [ -z "$HEALTH_URL" ]; then
-            echo "::error::BACKEND_HEALTH_URL is not configured."
-            exit 1
-          fi
-          sleep 45
-          for i in $(seq 1 20); do
-            code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
-            echo "Attempt $i: HTTP $code"
-            if [ "$code" = "200" ]; then echo "Healthy."; exit 0; fi
-            sleep 20
-          done
-          echo "::error::Service did not become healthy in time."
-          exit 1
