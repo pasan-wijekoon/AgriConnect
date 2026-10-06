@@ -1,10 +1,10 @@
-name: Agentic AI - CI/CD 
+name: Agentic AI - CI/CD
 
 # AgriConnect agentic-ai service: Python 3.12, uv, FastAPI + LangGraph.
 #
 # Pull request : test -> build image + smoke test (nothing is pushed)
-# Push to main : test -> build + smoke test + push to GHCR & Docker Hub
-#                -> promote `deploy-agent` branch (Back4app builds from it)
+# Push to main : test -> build + smoke test -> push to GHCR
+#                -> redeploy the Railway service (it pulls the new image)
 #                -> health check
 #
 # No real LLM key is used in CI. The service ships with LLM_PROVIDER=mock,
@@ -16,14 +16,14 @@ on:
     paths:
       - "agentic-ai/**"
       - "docker/agentic-ai/**"
-      - ".github/workflows/agentic-ai-cicd.yaml"
+      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
 
   push:
     branches: [main]
     paths:
       - "agentic-ai/**"
       - "docker/agentic-ai/**"
-      - ".github/workflows/agentic-ai-cicd.yaml"
+      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
 
   workflow_dispatch:
 
@@ -39,7 +39,6 @@ env:
   LLM_PROVIDER: mock
   CONTAINER_PORT: "8000"
   GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-agentic-ai
-  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/agriconnect-agentic-ai
 
 jobs:
 
@@ -67,8 +66,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: agentic-ai/uv.lock
 
-      # --locked fails if uv.lock is out of date with pyproject.toml,
-      # so dependency drift is caught in CI instead of in production.
+      # --locked fails if uv.lock is out of date with pyproject.toml.
       - name: Install dependencies
         run: uv sync --locked
 
@@ -89,13 +87,12 @@ jobs:
             echo "No tests found - skipping."
             exit 0
           fi
-          # pytest + pytest-asyncio are added on the fly here. Better long-term fix:
-          # run `uv add --dev pytest pytest-asyncio` in agentic-ai/ and commit
-          # pyproject.toml + uv.lock, then this can become plain `uv run pytest -q`.
+          # Long-term fix: `uv add --dev pytest pytest-asyncio`, commit
+          # pyproject.toml + uv.lock, then use plain `uv run pytest -q`.
           uv run --with pytest --with pytest-asyncio pytest -q
 
   # =========================================================
-  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH (main only)
+  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH TO GHCR (main only)
   # =========================================================
   docker:
     name: Docker build, smoke test & publish
@@ -114,7 +111,6 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
-      # Build once and load it locally so we can run it before publishing.
       - name: Build image for smoke test
         uses: docker/build-push-action@v6
         with:
@@ -127,8 +123,7 @@ jobs:
           cache-from: type=gha,scope=agentic-ai
           cache-to: type=gha,scope=agentic-ai,mode=max
 
-      # FastAPI always serves /openapi.json, so no custom health route is needed
-      # to prove the container starts and the app imports inside the image.
+      # FastAPI always serves /openapi.json, so no custom health route is needed.
       - name: Smoke test container
         run: |
           docker run -d --name agent \
@@ -154,29 +149,20 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Log in to Docker Hub
-        if: env.SHOULD_PUSH == 'true'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.AGRICONNECT_PAT }}
 
       - name: Generate tags & labels
         if: env.SHOULD_PUSH == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ env.GHCR_IMAGE }}
-            ${{ env.DOCKERHUB_IMAGE }}
+          images: ${{ env.GHCR_IMAGE }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
 
       # Layers are cached from the build above, so this step is fast.
-      - name: Push to GHCR and Docker Hub
+      - name: Push to GHCR
         if: env.SHOULD_PUSH == 'true'
         uses: docker/build-push-action@v6
         with:
@@ -189,52 +175,52 @@ jobs:
           cache-from: type=gha,scope=agentic-ai
 
   # =========================================================
-  # 3. DEPLOY TO BACK4APP
-  #    Moves `deploy-agent` to this commit; Back4app watches that
-  #    branch and builds + releases it.
+  # 3. DEPLOY TO RAILWAY
+  #    Pushing an image does not redeploy by itself, so we tell Railway
+  #    to redeploy; it then pulls ghcr.io/<owner>/agriconnect-agentic-ai:latest.
+  #    RAILWAY_TOKEN must be a PROJECT token (scoped to one environment).
   # =========================================================
   deploy:
-    name: Deploy to Back4app
+    name: Deploy to Railway
     needs: docker
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     environment: production
-    permissions:
-      contents: write
 
     concurrency:
-      group: back4app-deploy-agentic-ai
+      group: railway-deploy-agentic-ai
       cancel-in-progress: false
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Promote commit to deploy-agent branch
+      - name: Redeploy Railway service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git push origin "${{ github.sha }}:refs/heads/deploy-agent" --force
+          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE" ]; then
+            echo "RAILWAY_TOKEN secret and RAILWAY_SERVICE variable are required."
+            exit 1
+          fi
+          npx -y @railway/cli@latest redeploy --service "$RAILWAY_SERVICE" --yes
 
       - name: Summary
         run: |
           {
-            echo "## Agentic AI deployed"
+            echo "## Agentic AI deployed to Railway"
             echo ""
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
-            echo "Tests and container smoke test passed, images published, \`deploy-agent\` updated."
+            echo "Tests and smoke test passed, image published, Railway redeploy triggered."
             echo ""
-            echo "Images:"
+            echo "Image:"
+            echo "- \`${{ env.GHCR_IMAGE }}:latest\`"
             echo "- \`${{ env.GHCR_IMAGE }}:sha-${{ github.sha }}\`"
-            echo "- \`${{ env.DOCKERHUB_IMAGE }}:sha-${{ github.sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
   # =========================================================
   # 4. HEALTH CHECK (skipped unless AGENT_HEALTH_URL is set)
-  #    Use .../openapi.json if the service has no /health route.
+  #    Skip it if the service has no public domain (private networking).
   # =========================================================
   verify:
     name: Health check
@@ -253,14 +239,17 @@ jobs:
             exit 0
           fi
 
-          for i in $(seq 1 24); do
+          # Give Railway time to pull the image and swap containers.
+          sleep 45
+
+          for i in $(seq 1 20); do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
             echo "Attempt $i: HTTP $code"
             if [ "$code" = "200" ]; then
               echo "Service is healthy."
               exit 0
             fi
-            sleep 30
+            sleep 20
           done
 
           echo "Service did not become healthy in time."
