@@ -1,0 +1,45 @@
+# Agentic AI service (Python / FastAPI / LangGraph) - install and run pytest with the mock
+# LLM provider, so no API key is needed.
+# Deployment itself is done by Render's Git integration (render.yaml).
+name: Agentic AI build and test
+
+on:
+  push:
+    branches: [main, development, integration, test-oder]
+    paths:
+      - 'agentic-ai/**'
+      - '.github/workflows/agentic-ai-build-and-deploy.yaml'
+  pull_request:
+    branches: [main, development, integration]
+    paths:
+      - 'agentic-ai/**'
+      - '.github/workflows/agentic-ai-build-and-deploy.yaml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: agentic-ai
+
+    env:
+      LLM_PROVIDER: mock
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv and Python 3.12
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.12'
+          enable-cache: true
+          cache-dependency-glob: agentic-ai/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run tests
+        run: uv run pytest -q
