@@ -199,7 +199,7 @@ Configure this variable on the Railway backend service:
 ConnectionStrings__Default=<rotated Supabase PostgreSQL connection string>
 ```
 
-Never commit the connection string. The previously shared Supabase password must be rotated before deployment. Database migrations are not run by CI yet because the backend does not currently contain an EF Core migration set; add migrations before introducing an automated production migration step.
+Never commit the connection string. The previously shared Supabase password must be rotated before deployment. The backend workflow applies committed EF Core migrations before deploying the Railway service.
 
 ## Deployment (planned)
 
