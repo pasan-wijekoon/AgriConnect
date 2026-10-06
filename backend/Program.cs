@@ -1,4 +1,12 @@
+using System.Text;
+using AgriConnect.Api.Config;
+using AgriConnect.Api.Services;
+using AgriConnect.Api.Services.Agents;
+using AgriConnect.Api.Services.Analytics;
+using AgriConnect.Api.Services.Reports;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
