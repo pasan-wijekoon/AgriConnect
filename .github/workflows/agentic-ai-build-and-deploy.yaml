@@ -1,24 +1,31 @@
-name: Agentic AI - Build & Deploy (SnapDeploy)
+name: Agent - CI/CD (GHCR + Docker Hub -> Back4app)
+
+# Push to main:
+#   1. test    -> install deps, lint (if configured), run pytest with a MOCKED LLM
+#   2. docker  -> build image, push to GHCR and Docker Hub
+#   3. deploy  -> fast-forward the `deploy-agent` branch; Back4app watches it
+#   4. verify  -> optional health check
+# Pull requests run steps 1 and 2 only, and nothing is pushed.
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - "agentic-ai/**"
-      - "docker/agentic-ai/**"
-      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
+      - "agent/**"
+      - "docker/agent/**"
+      - ".github/workflows/agent-cicd.yaml"
 
   push:
     branches: [main]
     paths:
-      - "agentic-ai/**"
-      - "docker/agentic-ai/**"
-      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
+      - "agent/**"
+      - "docker/agent/**"
+      - ".github/workflows/agent-cicd.yaml"
 
   workflow_dispatch:
 
 concurrency:
-  group: agentic-ai-${{ github.ref }}
+  group: agent-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -26,210 +33,184 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
-  IMAGE_NAME: agriconnect-agentic-ai
-  SNAPDEPLOY_API: https://snapdeploy.dev/api/mobile
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agent
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/agent
 
 jobs:
 
   # =========================================================
-  # 1. TEST
+  # 1. INSTALL, LINT, TEST
+  #    Tests must not call the real LLM (slow, costly, flaky).
+  #    A dummy key is passed so client libraries initialise.
   # =========================================================
   test:
-    name: Install & Test (Python)
+    name: Lint & test (Python)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    defaults:
-      run:
-        working-directory: agentic-ai
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: agentic-ai/pyproject.toml
+          cache: pip
+          cache-dependency-path: agent/requirements*.txt
 
       - name: Install dependencies
-        run: uv sync --extra dev
-
-      - name: Import check
-        env:
-          LLM_PROVIDER: gemini
-          ENVIRONMENT: test
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: uv run python -c "import src.app.main"
-
-      - name: Run tests
-        env:
-          LLM_PROVIDER: gemini
-          ENVIRONMENT: test
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          INTERNAL_API_SECRET: ci-test-secret
+        working-directory: agent
         run: |
-          if [ -d tests ] || find . -name 'test_*.py' -not -path './.venv/*' | grep -q .; then
-            uv run pytest -q
-          else
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install pytest ruff
+
+      - name: Lint
+        working-directory: agent
+        run: ruff check .
+
+      - name: Test (mocked LLM)
+        working-directory: agent
+        env:
+          ANTHROPIC_API_KEY: test-key-not-real
+        run: |
+          if [ -z "$(find . -name 'test_*.py' -o -name '*_test.py')" ]; then
             echo "No tests found - skipping."
+            exit 0
           fi
+          pytest -q
 
   # =========================================================
-  # 2. BUILD & PUSH DOCKER IMAGE TO GHCR
+  # 2. BUILD IMAGE, PUSH TO GHCR + DOCKER HUB (main only)
   # =========================================================
   docker:
-    name: Build & Push Docker Image
+    name: Docker build & publish
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     permissions:
       contents: read
       packages: write
 
-    outputs:
-      image: ${{ steps.image.outputs.image }}
+    env:
+      SHOULD_PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Compute Docker image reference
-        id: image
-        shell: bash
-        run: |
-          OWNER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
-          IMAGE="ghcr.io/${OWNER}/${IMAGE_NAME}"
-          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
-          echo "Docker image: ${IMAGE}"
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        if: github.event_name != 'pull_request'
+      - name: Log in to GHCR
+        if: env.SHOULD_PUSH == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.AGRICONNECT_PAT }}
 
-      - name: Build and Push Docker image
+      - name: Log in to Docker Hub
+        if: env.SHOULD_PUSH == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate tags & labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.GHCR_IMAGE }}
+            ${{ env.DOCKERHUB_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long
+            type=ref,event=pr
+
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/agentic-ai/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          file: docker/agent/Dockerfile
+          push: ${{ env.SHOULD_PUSH == 'true' }}
           platforms: linux/amd64
-          tags: |
-            ${{ steps.image.outputs.image }}:${{ github.sha }}
-            ${{ steps.image.outputs.image }}:latest
-          cache-from: type=gha,scope=agentic-ai
-          cache-to: type=gha,scope=agentic-ai,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=agent
+          cache-to: type=gha,scope=agent,mode=max
 
   # =========================================================
-  # 3. DEPLOY TO SNAPDEPLOY (pulls image from GHCR)
+  # 3. DEPLOY TO BACK4APP
+  #    Moves `deploy-agent` to this commit; Back4app builds from it.
   # =========================================================
   deploy:
-    name: Deploy Agentic AI to SnapDeploy
+    name: Deploy to Back4app
     needs: docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    permissions:
+      contents: write
 
-    if: >
-      github.event_name != 'pull_request' &&
-      github.ref == 'refs/heads/main'
+    concurrency:
+      group: back4app-deploy-agent
+      cancel-in-progress: false
 
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Promote commit to deploy-agent branch
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git push origin "${{ github.sha }}:refs/heads/deploy-agent" --force
+
+      - name: Summary
+        run: |
+          {
+            echo "## Agent deployed"
+            echo ""
+            echo "**Commit:** \`${{ github.sha }}\`"
+            echo ""
+            echo "Tests passed, image published, \`deploy-agent\` branch updated."
+            echo ""
+            echo "Images:"
+            echo "- \`${{ env.GHCR_IMAGE }}:sha-${{ github.sha }}\`"
+            echo "- \`${{ env.DOCKERHUB_IMAGE }}:sha-${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # =========================================================
+  # 4. OPTIONAL HEALTH CHECK (skipped if AGENT_HEALTH_URL unset)
+  # =========================================================
+  verify:
+    name: Health check
+    needs: deploy
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    environment:
-      name: production
-
     steps:
-      - name: Check deployment secrets
+      - name: Wait for service to respond
         env:
-          SNAPDEPLOY_AGENTIC_AI_API_KEY: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_API_KEY }}
-          SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID }}
+          HEALTH_URL: ${{ vars.AGENT_HEALTH_URL }}
         run: |
-          for v in SNAPDEPLOY_AGENTIC_AI_API_KEY SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID; do
-            if [ -z "${!v}" ]; then
-              echo "::error::$v is not set"
-              exit 1
-            fi
-          done
-          echo "All required secrets are configured."
-
-      - name: Restart container to pull latest image
-        env:
-          API_KEY: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_API_KEY }}
-          CONTAINER_ID: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_CONTAINER_ID }}
-        run: |
-          call() {
-            # $1 = action (stop|start)
-            CODE=$(curl -sS -o resp.json -w "%{http_code}" \
-              -X POST "${SNAPDEPLOY_API}/containers/${CONTAINER_ID}/$1" \
-              -H "X-API-Key: ${API_KEY}" \
-              -H "X-SnapDeploy-Client: mcp/ci")
-            echo "$1 -> HTTP $CODE"
-            cat resp.json; echo
-            if [ "$CODE" = "402" ] || [ "$CODE" = "429" ]; then
-              echo "::error::SnapDeploy plan limit reached (HTTP $CODE). Not retrying."
-              exit 1
-            fi
-            echo "$CODE"
-          }
-
-          echo "Pulling ${{ needs.docker.outputs.image }}:latest on SnapDeploy..."
-
-          # Stop errors are tolerated (container may already be asleep/stopped).
-          call stop > /dev/null || true
-          sleep 5
-
-          START_CODE=$(call start | tail -n 1)
-          if [ "${START_CODE:0:1}" != "2" ]; then
-            echo "::error::Failed to start container (HTTP $START_CODE)"
-            exit 1
-          fi
-          echo "Container start requested."
-
-      - name: Health check
-        env:
-          APP_URL: ${{ secrets.SNAPDEPLOY_AGENTIC_AI_URL }}
-          HEALTH_PATH: /health
-        run: |
-          if [ -z "$APP_URL" ]; then
-            echo "SNAPDEPLOY_AGENTIC_AI_URL not set - skipping health check."
+          if [ -z "$HEALTH_URL" ]; then
+            echo "AGENT_HEALTH_URL not set - skipping."
             exit 0
           fi
 
-          for i in $(seq 1 30); do
-            CODE=$(curl -sS -o /dev/null -w "%{http_code}" "${APP_URL%/}${HEALTH_PATH}" || echo 000)
-            echo "[$i/30] ${APP_URL%/}${HEALTH_PATH} -> HTTP $CODE"
-            if [ "$CODE" = "200" ]; then
+          for i in $(seq 1 24); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then
               echo "Service is healthy."
               exit 0
             fi
-            sleep 10
+            sleep 30
           done
 
-          echo "::error::Health check did not pass in time."
+          echo "Service did not become healthy in time."
           exit 1
-
-      - name: Deployment summary
-        run: |
-          {
-            echo "## Agentic AI Deployment"
-            echo ""
-            echo "**Platform:** SnapDeploy (image from GHCR)"
-            echo "**LLM Provider:** Gemini"
-            echo "**Image:** \`${{ needs.docker.outputs.image }}:${{ github.sha }}\`"
-            echo "**Commit:** \`${{ github.sha }}\`"
-            echo ""
-            echo "Deployment triggered successfully."
-          } >> "$GITHUB_STEP_SUMMARY"
