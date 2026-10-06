@@ -1,4 +1,4 @@
-name: Agent - CI/CD (GHCR + Docker Hub -> Back4app)
+name: Agentic AI - CI/CD 
 
 # Push to main:
 #   1. test    -> install deps, lint (if configured), run pytest with a MOCKED LLM
