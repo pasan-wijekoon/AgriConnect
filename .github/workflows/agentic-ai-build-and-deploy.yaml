@@ -1,7 +1,14 @@
-name: Agentic AI - Build & Deploy
+name: Agentic AI - Build & Deploy (Northflank)
 
 on:
   pull_request:
+    branches: [main]
+    paths:
+      - "agentic-ai/**"
+      - "docker/agentic-ai/**"
+      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
+
+  push:
     branches: [main]
     paths:
       - "agentic-ai/**"
@@ -36,7 +43,6 @@ jobs:
         working-directory: agentic-ai
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -59,8 +65,7 @@ jobs:
           LLM_PROVIDER: gemini
           ENVIRONMENT: test
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          uv run python -c "import src.app.main"
+        run: uv run python -c "import src.app.main"
 
       - name: Run tests
         env:
@@ -75,28 +80,24 @@ jobs:
             echo "No tests found - skipping."
           fi
 
-
   # =========================================================
   # 2. BUILD & PUSH DOCKER IMAGE TO GHCR
   # =========================================================
   docker:
     name: Build & Push Docker Image
-
     needs: test
-
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     permissions:
       contents: read
       packages: write
-      id-token: write   # required for provenance attestation push to GHCR
 
     outputs:
       image: ${{ steps.image.outputs.image }}
+      tag: ${{ github.sha }}
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -105,13 +106,9 @@ jobs:
         shell: bash
         run: |
           OWNER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
-
           IMAGE="ghcr.io/${OWNER}/${IMAGE_NAME}"
-
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
-
-          echo "Docker image:"
-          echo "${IMAGE}"
+          echo "Docker image: ${IMAGE}"
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -122,32 +119,26 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.AGRICONNECT_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/agentic-ai/Dockerfile
-
           push: ${{ github.event_name != 'pull_request' }}
-
           tags: |
             ${{ steps.image.outputs.image }}:${{ github.sha }}
             ${{ steps.image.outputs.image }}:latest
-
           cache-from: type=gha,scope=agentic-ai
           cache-to: type=gha,scope=agentic-ai,mode=max
 
-
   # =========================================================
-  # 3. DEPLOY TO RAILWAY
+  # 3. DEPLOY TO NORTHFLANK
   # =========================================================
   deploy:
-    name: Deploy Agentic AI to Railway
-
-    needs:
-      - docker
+    name: Deploy Agentic AI to Northflank
+    needs: docker
 
     if: >
       github.event_name != 'pull_request' &&
@@ -160,62 +151,35 @@ jobs:
       name: production
 
     steps:
-
       - name: Check deployment secrets
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NORTHFLANK_API_KEY: ${{ secrets.NORTHFLANK_API_KEY }}
+          NORTHFLANK_PROJECT_ID: ${{ secrets.NORTHFLANK_PROJECT_ID }}
+          NORTHFLANK_SERVICE_ID: ${{ secrets.NORTHFLANK_SERVICE_ID }}
         run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::error::RAILWAY_AGENTIC_AI_TOKEN is not set"
-            exit 1
-          fi
-
-          if [ -z "$RAILWAY_PROJECT_ID" ]; then
-            echo "::error::RAILWAY_AGENTIC_AI_PROJECT_ID is not set"
-            exit 1
-          fi
-
-          if [ -z "$RAILWAY_SERVICE_ID" ]; then
-            echo "::error::RAILWAY_AGENTIC_AI_SERVICE_ID is not set"
-            exit 1
-          fi
-
-          if [ -z "$GEMINI_API_KEY" ]; then
-            echo "::error::GEMINI_API_KEY is not set"
-            exit 1
-          fi
-
+          for v in NORTHFLANK_API_KEY NORTHFLANK_PROJECT_ID NORTHFLANK_SERVICE_ID; do
+            if [ -z "${!v}" ]; then
+              echo "::error::$v is not set"
+              exit 1
+            fi
+          done
           echo "All required secrets are configured."
 
-      - name: Install Railway CLI
-        run: |
-          npm install -g @railway/cli
-
-      - name: Deploy Agentic AI
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
-        run: |
-          echo "Deploying Agentic AI..."
-          railway redeploy --service "$RAILWAY_SERVICE_ID" --yes
-          echo "Railway deployment triggered successfully."
+      - name: Deploy image to Northflank
+        uses: northflank/deploy-to-northflank@v1
+        with:
+          northflank-api-key: ${{ secrets.NORTHFLANK_API_KEY }}
+          project-id: ${{ secrets.NORTHFLANK_PROJECT_ID }}
+          service-id: ${{ secrets.NORTHFLANK_SERVICE_ID }}
+          image-path: ${{ needs.docker.outputs.image }}:${{ needs.docker.outputs.tag }}
 
       - name: Deployment summary
-        env:
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
         run: |
           {
             echo "## Agentic AI Deployment"
             echo ""
-            echo "**Platform:** Railway"
-            echo "**LLM Provider:** Gemini"
-            echo "**Project ID:** \`$RAILWAY_PROJECT_ID\`"
-            echo "**Service ID:** \`$RAILWAY_SERVICE_ID\`"
+            echo "**Platform:** Northflank"
+            echo "**Image:** \`${{ needs.docker.outputs.image }}:${{ needs.docker.outputs.tag }}\`"
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
             echo "Deployment triggered successfully."
