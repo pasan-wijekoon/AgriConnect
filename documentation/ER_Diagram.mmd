@@ -1,0 +1,253 @@
+erDiagram
+    %% Solid lines = FK constraint enforced in PostgreSQL. Dashed lines = Guid reference column with no FK constraint.
+
+    User {
+        uuid Id PK
+        string FullName
+        string Email UK
+        string PasswordHash
+        string Role "Farmer|Buyer|Officer|Administrator"
+        string Phone
+        string Region "free text"
+        string AvatarUrl
+        uuid CollectionCentreId "officer binding, no FK"
+        datetimeoffset CreatedAt
+        bool IsActive
+    }
+    Crop {
+        uuid Id PK
+        string Name UK
+        string Category
+        datetimeoffset CreatedAt
+    }
+    Region {
+        uuid Id PK
+        string Name UK
+        uuid CollectionCentreId "no FK"
+        datetimeoffset CreatedAt
+    }
+    CollectionCentre {
+        uuid Id PK
+        string Name
+        decimal Latitude
+        decimal Longitude
+        int Capacity "greater than 0"
+        uuid RegionId "no FK"
+    }
+    Listing {
+        uuid Id PK
+        uuid FarmerId FK
+        uuid CropId FK
+        uuid RegionId FK
+        decimal Quantity
+        string Unit
+        string ClaimedGrade
+        datetime PickupWindowStart
+        datetime PickupWindowEnd
+        string Status "Draft|PendingApproval|Published|Withdrawn|SoldOut"
+        decimal MinPrice
+        string Description
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+    ListingPhoto {
+        uuid Id PK
+        uuid ListingId FK
+        text Url
+        datetime UploadedAt
+    }
+    PriceSuggestion {
+        uuid Id PK
+        uuid ListingId FK, UK
+        decimal SuggestedPriceMin
+        decimal SuggestedPriceMax
+        decimal Confidence
+        string ReasoningSummary
+        uuid AgentWorkflowId "no FK"
+        string Status "Proposed|Approved|Rejected|Revised"
+        bool AutoRejectedByValidation
+        string ValidationSummary
+        string CheckpointName
+        uuid DecidedByUserId "no FK"
+        datetime DecidedAt
+        string OfficerNote
+    }
+    TodayPriceCatalogItem {
+        uuid Id PK
+        string Name
+        string Category
+        string Unit
+        string DefaultRegion
+        string ImageUrl
+        int DisplayOrder
+        bool IsActive
+    }
+    UploadedImage {
+        uuid Id PK
+        string FileName UK
+        string ContentType
+        bytea Data
+        long Size
+        uuid UploadedByUserId "no FK"
+        datetimeoffset CreatedAt
+    }
+    Inspection {
+        uuid Id PK
+        uuid ListingId FK
+        uuid OfficerId FK
+        string ConfirmedGrade
+        string Notes
+        datetime InspectedAt
+    }
+    InspectionPhoto {
+        uuid Id PK
+        uuid InspectionId FK
+        text Url
+        datetime UploadedAt
+    }
+    GradeDiscrepancyFlag {
+        uuid Id PK
+        uuid ListingId FK
+        uuid InspectionId FK
+        string ClaimedGrade
+        string ConfirmedGrade
+        datetime FlaggedAt
+        datetime ResolvedAt
+        string ResolutionNotes
+        uuid ResolvedByOfficerId FK
+    }
+    AgentWorkflow {
+        uuid Id PK
+        string TriggerType
+        uuid TriggerEntityId "polymorphic, no FK"
+        string ObjectiveText
+        jsonb PlanSteps
+        jsonb ToolCallLog
+        jsonb ValidationResult
+        string ApprovalStatus "Pending|Approved|Rejected|RevisionRequested"
+        uuid ApprovedByOfficerId FK
+        string FinalOutcome
+    }
+    Order {
+        uuid Id PK
+        uuid ListingId "no FK"
+        uuid BuyerId "no FK"
+        decimal Quantity "greater than 0"
+        string Status "Pending|Approved|Scheduled|Completed|Cancelled"
+        string DeliveryPreference "Pickup|Delivery"
+        decimal BuyerLatitude
+        decimal BuyerLongitude
+        datetimeoffset CreatedAt
+        datetimeoffset UpdatedAt
+    }
+    StockReservation {
+        uuid Id PK
+        uuid OrderId FK, UK
+        uuid ListingId "no FK"
+        decimal ReservedQuantity
+        datetimeoffset ExpiresAt
+        datetimeoffset BuyerReminderSentAt
+        datetimeoffset OfficerReminderSentAt
+    }
+    PickupSchedule {
+        uuid Id PK
+        uuid OrderId FK, UK
+        uuid CollectionCentreId FK
+        datetimeoffset SlotStart
+        datetimeoffset SlotEnd
+        string Status "Proposed|Confirmed|Cancelled"
+    }
+    Notification {
+        uuid Id PK
+        uuid UserId "no FK"
+        string Type
+        string Title
+        string Message
+        datetimeoffset ReadAt
+        datetimeoffset CreatedAt
+    }
+    AuditLog {
+        uuid Id PK
+        uuid ActorId "no FK"
+        string Action
+        string EntityType
+        uuid EntityId "polymorphic"
+        datetimeoffset Timestamp
+        jsonb Details
+    }
+    PriceTrendSnapshot {
+        uuid Id PK
+        uuid CropId "no FK"
+        uuid RegionId "no FK"
+        date Period "unique with Crop+Region"
+        decimal AvgPrice
+        decimal MinPrice
+        decimal MaxPrice
+        int SampleCount
+    }
+    ShortageOversupplyEvent {
+        uuid Id PK
+        uuid CropId "no FK"
+        uuid RegionId "no FK"
+        string Type "Shortage|Oversupply"
+        string Severity "Low|Medium|High"
+        datetimeoffset DetectedAt
+        text Notes
+    }
+    PriceAnomalyFlag {
+        uuid Id PK
+        uuid ListingId "no FK"
+        uuid CropId "no FK"
+        uuid RegionId "no FK"
+        decimal ListingPrice
+        decimal DeviationPercent
+        string Status "Open|Reviewed|Dismissed"
+        datetimeoffset FlaggedAt
+    }
+    ReportExport {
+        uuid Id PK
+        uuid RequestedBy "no FK"
+        string Type
+        date DateRangeStart
+        date DateRangeEnd
+        datetimeoffset GeneratedAt
+        string FileUrl
+    }
+
+    %% ---- Enforced foreign keys ----
+    Crop ||--o{ Listing : "CropId"
+    Region ||--o{ Listing : "RegionId"
+    User ||--o{ Listing : "FarmerId"
+    Listing ||--o{ ListingPhoto : "cascade"
+    Listing ||--o| PriceSuggestion : "1 to 1"
+    Listing ||--o{ Inspection : "ListingId"
+    User ||--o{ Inspection : "OfficerId"
+    Inspection ||--o{ InspectionPhoto : "cascade"
+    Listing ||--o{ GradeDiscrepancyFlag : "ListingId"
+    Inspection |o--o{ GradeDiscrepancyFlag : "InspectionId"
+    User |o--o{ GradeDiscrepancyFlag : "ResolvedByOfficerId"
+    User |o--o{ AgentWorkflow : "ApprovedByOfficerId"
+    Order ||--o| StockReservation : "cascade, 1 to 1"
+    Order ||--o| PickupSchedule : "cascade, 1 to 1"
+    CollectionCentre ||--o{ PickupSchedule : "restrict"
+
+    %% ---- Logical references (no FK constraint) ----
+    Listing ||..o{ Order : "ListingId"
+    User ||..o{ Order : "BuyerId"
+    Listing ||..o{ StockReservation : "ListingId"
+    Region ||..o{ CollectionCentre : "RegionId"
+    CollectionCentre |o..o{ Region : "CollectionCentreId"
+    CollectionCentre |o..o{ User : "officer centre"
+    User ||..o{ Notification : "UserId"
+    User ||..o{ AuditLog : "ActorId"
+    AgentWorkflow |o..o{ PriceSuggestion : "AgentWorkflowId"
+    User |o..o{ PriceSuggestion : "DecidedByUserId"
+    User |o..o{ UploadedImage : "UploadedByUserId"
+    User ||..o{ ReportExport : "RequestedBy"
+    Crop ||..o{ PriceTrendSnapshot : "CropId"
+    Region ||..o{ PriceTrendSnapshot : "RegionId"
+    Crop ||..o{ ShortageOversupplyEvent : "CropId"
+    Region ||..o{ ShortageOversupplyEvent : "RegionId"
+    Listing ||..o{ PriceAnomalyFlag : "ListingId"
+    Crop ||..o{ PriceAnomalyFlag : "CropId"
+    Region ||..o{ PriceAnomalyFlag : "RegionId"
