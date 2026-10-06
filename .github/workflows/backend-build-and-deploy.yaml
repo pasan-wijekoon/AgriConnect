@@ -139,9 +139,14 @@ jobs:
         working-directory: backend
         run: dotnet tool restore
 
+      # dotnet-ef needs obj/project.assets.json, which only a project restore
+      # creates. This job runs on a fresh runner, so restore must happen here.
+      - name: Restore project packages
+        run: dotnet restore backend/backend.csproj
+
       - name: Apply migrations
         working-directory: backend
-        run: dotnet ef database update --connection "$DB_CONNECTION"
+        run: dotnet ef database update --project backend.csproj --connection "$DB_CONNECTION"
 
       # Manual runs only: tick "seed" in the Actions UI. Safe to repeat.
       - name: Seed reference data
