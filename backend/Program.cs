@@ -76,23 +76,6 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-app.MapGet("/db-check", async (IConfiguration config) =>
-{
-    try
-    {
-        // Postgres example (Npgsql)
-        await using var conn = new Npgsql.NpgsqlConnection(config.GetConnectionString("Default"));
-        await conn.OpenAsync();
-        await using var cmd = new Npgsql.NpgsqlCommand("SELECT 1", conn);
-        var result = await cmd.ExecuteScalarAsync();
-        return Results.Ok(new { connected = true, result });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem(ex.Message);
-    }
-});
-
 // ---- Component A — Produce Listings & Price Discovery (auth + marketplace) ----
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<AgenticAiService>();
@@ -303,6 +286,29 @@ app.Use(async (context, next) =>
 });
 
 app.UseAuthorization();
+
+// ---- Database connectivity check (useful for Railway deployments) ----
+// FIX: this endpoint used to sit above `var app = builder.Build();`, which caused
+// CS0841 (using 'app' before it is declared) and the follow-on CS8031 errors.
+// Endpoints must be mapped on `app`, i.e. AFTER Build(). It reuses the EF Core
+// DbContext (same connection string as the rest of the app), so no direct Npgsql
+// reference is needed. The real exception is logged server-side only, never
+// returned to the caller, so connection details are not leaked publicly.
+app.MapGet("/db-check", async (AgriConnectDbContext db, ILogger<Program> logger) =>
+{
+    try
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+        return canConnect
+            ? Results.Ok(new { connected = true })
+            : Results.Json(new { connected = false }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Database connectivity check failed");
+        return Results.Json(new { connected = false }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+}).AllowAnonymous();
 
 if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only"))
 {
