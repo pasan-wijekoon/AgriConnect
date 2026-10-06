@@ -190,7 +190,7 @@ builder.Services.AddHttpClient<AgriConnect.Api.Services.Agents.LogisticsAgentCli
 // per Component A's own reasoning (AllowAnyOrigin()+credentials is a CSRF risk) —
 // harmless here since AllowAnyOrigin() was never used, just explicit defense.
 const string WebClientCorsPolicy = "WebClient";
-var allowedOrigins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://localhost:5000")
+var allowedOrigins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://localhost:5000,https://agriconnect-wheat.vercel.app")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(options =>
 {
