@@ -211,6 +211,32 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Development and explicit seed runs need the same deterministic fixtures used by
+// the integration suite. Production remains data-only unless a caller explicitly
+// supplies --seed or --seed-only (for example, the deployment workflow).
+if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only"))
+{
+    using var seedScope = app.Services.CreateScope();
+    var seedDb = seedScope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+    var seedLogger = seedScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    var shared = await SharedReferenceSeeder.SeedAsync(seedDb, seedLogger);
+    var logistics = await DataSeeder.SeedAsync(seedDb, seedLogger);
+    var analytics = AnalyticsFixtures.Seed(seedDb);
+
+    Console.WriteLine(
+        $"[Seed] Shared: {shared.UsersAdded} users; " +
+        $"Logistics: {logistics.CollectionCentresAdded} centres, {logistics.OrdersAdded} orders; " +
+        $"Analytics: {analytics.SnapshotsAdded} snapshots, {analytics.AnomalyFlagsAdded} flags, " +
+        $"{analytics.SupplyEventsAdded} events.");
+}
+
+if (args.Contains("--seed-only"))
+{
+    Console.WriteLine("Seeding completed. Exiting (--seed-only flag specified).");
+    return;
+}
+
 // ---- Startup diagnostics: print DB connectivity + server status to the terminal ----
 using (var scope = app.Services.CreateScope())
 {

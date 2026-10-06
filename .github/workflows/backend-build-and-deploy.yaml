@@ -100,6 +100,9 @@ jobs:
           dotnet tool restore
           dotnet ef database update --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
 
+      - name: Seed test fixtures
+        run: dotnet run --project backend/backend.csproj -c Release -- --seed-only
+
       - name: Test
         run: |
           mapfile -t projects < <(find . -name '*Tests.csproj')
