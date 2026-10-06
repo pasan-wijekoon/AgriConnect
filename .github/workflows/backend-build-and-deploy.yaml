@@ -1,4 +1,11 @@
-name: Backend - CI & Publish (GHCR + Docker Hub)
+name: Backend - CI/CD
+
+# AgriConnect backend: ASP.NET Core (.NET 10).
+#
+# Pull request : build + test -> build image (nothing is pushed)
+# Push to main : build + test -> build + push to GHCR
+#                -> redeploy the Railway service (it pulls the new image)
+#                -> health check
 
 on:
   pull_request:
@@ -6,14 +13,14 @@ on:
     paths:
       - "backend/**"
       - "docker/backend/**"
-      - ".github/workflows/backend-ci-back4app.yaml"
+      - ".github/workflows/backend-build-and-deploy.yaml"
 
   push:
     branches: [main]
     paths:
       - "backend/**"
       - "docker/backend/**"
-      - ".github/workflows/backend-ci-back4app.yaml"
+      - ".github/workflows/backend-build-and-deploy.yaml"
 
   workflow_dispatch:
 
@@ -28,9 +35,7 @@ env:
   DOTNET_VERSION: "10.0.302"
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
-  IMAGE_NAME: backend            # change to your image/repo name
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/backend
-  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/backend
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-backend
 
 jobs:
 
@@ -79,7 +84,7 @@ jobs:
           done
 
   # =========================================================
-  # 2. BUILD IMAGE (PRs) / BUILD + PUSH TO GHCR & DOCKER HUB (main)
+  # 2. BUILD IMAGE (PRs) / BUILD + PUSH TO GHCR (main)
   # =========================================================
   docker:
     name: Docker build & publish
@@ -88,7 +93,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
-      packages: write          # required to push to GHCR
+      packages: write # required to push to GHCR
 
     env:
       SHOULD_PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
@@ -106,27 +111,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        if: env.SHOULD_PUSH == 'true'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Generate tags & labels
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ env.GHCR_IMAGE }}
-            ${{ env.DOCKERHUB_IMAGE }}
+          images: ${{ env.GHCR_IMAGE }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=long
             type=ref,event=pr
 
       - name: Build and push
-        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -139,25 +134,81 @@ jobs:
           cache-to: type=gha,scope=backend,mode=max
 
   # =========================================================
-  # 3. SUMMARY
+  # 3. DEPLOY TO RAILWAY
+  #    Pushing an image does not redeploy by itself, so we tell Railway
+  #    to redeploy; it then pulls ghcr.io/<owner>/agriconnect-backend:latest.
+  #    RAILWAY_TOKEN must be a PROJECT token (scoped to one environment).
   # =========================================================
-  summary:
-    name: Deployment note
+  deploy:
+    name: Deploy to Railway
     needs: docker
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
+    environment: production
+
+    concurrency:
+      group: railway-deploy-backend
+      cancel-in-progress: false
 
     steps:
-      - name: Write summary
+      - name: Redeploy Railway service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_BACKEND_SERVICE }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE" ]; then
+            echo "RAILWAY_TOKEN secret and RAILWAY_BACKEND_SERVICE variable are required."
+            exit 1
+          fi
+          npx -y @railway/cli@latest redeploy --service "$RAILWAY_SERVICE" --yes
+
+      - name: Summary
         run: |
           {
-            echo "## Backend CI passed"
+            echo "## Backend deployed to Railway"
             echo ""
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
-            echo "Image published to:"
+            echo "Tests passed, image published, Railway redeploy triggered."
+            echo ""
+            echo "Image:"
             echo "- \`${{ env.GHCR_IMAGE }}:latest\`"
-            echo "- \`${{ env.DOCKERHUB_IMAGE }}:latest\`"
-            echo "- Both also tagged \`sha-${{ github.sha }}\`"
+            echo "- \`${{ env.GHCR_IMAGE }}:sha-${{ github.sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # =========================================================
+  # 4. HEALTH CHECK (skipped unless BACKEND_HEALTH_URL is set)
+  # =========================================================
+  verify:
+    name: Health check
+    needs: deploy
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Wait for service to respond
+        env:
+          HEALTH_URL: ${{ vars.BACKEND_HEALTH_URL }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "BACKEND_HEALTH_URL not set - skipping."
+            exit 0
+          fi
+
+          # Give Railway time to pull the image and swap containers.
+          sleep 45
+
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "Service is healthy."
+              exit 0
+            fi
+            sleep 20
+          done
+
+          echo "Service did not become healthy in time."
+          exit 1
