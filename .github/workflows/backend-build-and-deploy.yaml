@@ -1,4 +1,4 @@
-name: Backend - Build & Deploy
+name: Backend - Build & Deploy (SnapDeploy)
 
 on:
   pull_request:
@@ -7,7 +7,14 @@ on:
       - "backend/**"
       - "docker/backend/**"
       - ".github/workflows/backend-build-and-deploy.yaml"
-      
+
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "docker/backend/**"
+      - ".github/workflows/backend-build-and-deploy.yaml"
+
   workflow_dispatch:
 
 concurrency:
@@ -22,8 +29,13 @@ env:
   IMAGE_NAME: agriconnect-backend
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  SNAPDEPLOY_API: https://snapdeploy.dev/api/mobile
 
 jobs:
+
+  # =========================================================
+  # 1. BUILD & TEST
+  # =========================================================
   build-test:
     name: Build & test (.NET)
     runs-on: ubuntu-latest
@@ -65,6 +77,9 @@ jobs:
             dotnet test "$p" -c Release
           done
 
+  # =========================================================
+  # 2. BUILD & PUSH DOCKER IMAGE TO GHCR
+  # =========================================================
   docker:
     name: Build & push image (GHCR)
     needs: build-test
@@ -103,54 +118,107 @@ jobs:
           context: .
           file: docker/backend/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/amd64
           tags: |
             ${{ steps.ref.outputs.image }}:${{ github.sha }}
             ${{ steps.ref.outputs.image }}:latest
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
+  # =========================================================
+  # 3. DEPLOY TO SNAPDEPLOY (pulls image from GHCR)
+  # =========================================================
   deploy:
-    name: Deploy to Railway
+    name: Deploy Backend to SnapDeploy
     needs: docker
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    if: >
+      github.event_name != 'pull_request' &&
+      github.ref == 'refs/heads/main'
 
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
-    environment: production
+    environment:
+      name: production
 
     steps:
-      - name: Install Railway CLI
-        run: |
-          npm install -g @railway/cli
-
-      - name: Deploy to Railway
+      - name: Check deployment secrets
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-          IMAGE: ${{ needs.docker.outputs.image }}:${{ github.sha }}
+          SNAPDEPLOY_BACKEND_API_KEY: ${{ secrets.SNAPDEPLOY_BACKEND_API_KEY }}
+          SNAPDEPLOY_BACKEND_CONTAINER_ID: ${{ secrets.SNAPDEPLOY_BACKEND_CONTAINER_ID }}
         run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::error::Secret RAILWAY_TOKEN is not set"
+          for v in SNAPDEPLOY_BACKEND_API_KEY SNAPDEPLOY_BACKEND_CONTAINER_ID; do
+            if [ -z "${!v}" ]; then
+              echo "::error::$v is not set"
+              exit 1
+            fi
+          done
+          echo "All required secrets are configured."
+
+      - name: Restart container to pull latest image
+        env:
+          API_KEY: ${{ secrets.SNAPDEPLOY_BACKEND_API_KEY }}
+          CONTAINER_ID: ${{ secrets.SNAPDEPLOY_BACKEND_CONTAINER_ID }}
+        run: |
+          call() {
+            # $1 = action (stop|start)
+            CODE=$(curl -sS -o resp.json -w "%{http_code}" \
+              -X POST "${SNAPDEPLOY_API}/containers/${CONTAINER_ID}/$1" \
+              -H "X-API-Key: ${API_KEY}" \
+              -H "X-SnapDeploy-Client: mcp/ci")
+            echo "$1 -> HTTP $CODE" >&2
+            cat resp.json >&2; echo >&2
+            if [ "$CODE" = "402" ] || [ "$CODE" = "429" ]; then
+              echo "::error::SnapDeploy plan limit reached (HTTP $CODE). Not retrying." >&2
+            fi
+            echo "$CODE"
+          }
+
+          echo "Pulling ${{ needs.docker.outputs.image }}:latest on SnapDeploy..."
+
+          # Stop errors are tolerated (container may already be asleep/stopped).
+          call stop > /dev/null || true
+          sleep 5
+
+          START_CODE=$(call start | tail -n 1)
+          if [ "${START_CODE:0:1}" != "2" ]; then
+            echo "::error::Failed to start container (HTTP $START_CODE)"
             exit 1
           fi
+          echo "Container start requested."
 
-          if [ -z "$RAILWAY_PROJECT_ID" ]; then
-            echo "::error::Secret RAILWAY_PROJECT_ID is not set"
-            exit 1
+      - name: Health check
+        env:
+          APP_URL: ${{ secrets.SNAPDEPLOY_BACKEND_URL }}
+          HEALTH_PATH: /health
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "SNAPDEPLOY_BACKEND_URL not set - skipping health check."
+            exit 0
           fi
 
-          if [ -z "$RAILWAY_SERVICE_ID" ]; then
-            echo "::error::Secret RAILWAY_SERVICE_ID is not set"
-            exit 1
-          fi
+          for i in $(seq 1 30); do
+            CODE=$(curl -sS -o /dev/null -w "%{http_code}" "${APP_URL%/}${HEALTH_PATH}" || echo 000)
+            echo "[$i/30] ${APP_URL%/}${HEALTH_PATH} -> HTTP $CODE"
+            if [ "$CODE" = "200" ]; then
+              echo "Service is healthy."
+              exit 0
+            fi
+            sleep 10
+          done
 
-          echo "Deploying ${IMAGE} to Railway..."
+          echo "::error::Health check did not pass in time."
+          exit 1
 
-          railway redeploy \
-            --project "$RAILWAY_PROJECT_ID" \
-            --service "$RAILWAY_SERVICE_ID" \
-            --yes
-
-          echo "Railway deployment requested." >> "$GITHUB_STEP_SUMMARY"
+      - name: Deployment summary
+        run: |
+          {
+            echo "## Backend Deployment"
+            echo ""
+            echo "**Platform:** SnapDeploy (image from GHCR)"
+            echo "**Image:** \`${{ needs.docker.outputs.image }}:${{ github.sha }}\`"
+            echo "**Commit:** \`${{ github.sha }}\`"
+            echo ""
+            echo "Deployment triggered successfully."
+          } >> "$GITHUB_STEP_SUMMARY"
