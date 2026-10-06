@@ -37,38 +37,23 @@ jobs:
 
     steps:
 
-      # -----------------------------------------------------
-      # Checkout
-      # -----------------------------------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # -----------------------------------------------------
-      # Setup Python
-      # -----------------------------------------------------
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      # -----------------------------------------------------
-      # Setup uv
-      # -----------------------------------------------------
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           cache-dependency-glob: agentic-ai/pyproject.toml
 
-      # -----------------------------------------------------
-      # Install dependencies
-      # -----------------------------------------------------
       - name: Install dependencies
         run: uv sync --extra dev
 
-      # -----------------------------------------------------
-      # Import check
-      # -----------------------------------------------------
       - name: Import check
         env:
           LLM_PROVIDER: gemini
@@ -77,9 +62,6 @@ jobs:
         run: |
           uv run python -c "import src.app.main"
 
-      # -----------------------------------------------------
-      # Run tests
-      # -----------------------------------------------------
       - name: Run tests
         env:
           LLM_PROVIDER: gemini
@@ -114,15 +96,9 @@ jobs:
 
     steps:
 
-      # -----------------------------------------------------
-      # Checkout
-      # -----------------------------------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # -----------------------------------------------------
-      # Compute Docker image reference
-      # -----------------------------------------------------
       - name: Compute Docker image reference
         id: image
         shell: bash
@@ -136,26 +112,17 @@ jobs:
           echo "Docker image:"
           echo "${IMAGE}"
 
-      # -----------------------------------------------------
-      # Setup Docker Buildx
-      # -----------------------------------------------------
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # -----------------------------------------------------
-      # Login to GHCR
-      # -----------------------------------------------------
       - name: Login to GitHub Container Registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.AGRICONNECT_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # -----------------------------------------------------
-      # Build & Push Docker image
-      # -----------------------------------------------------
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -193,9 +160,6 @@ jobs:
 
     steps:
 
-      # -----------------------------------------------------
-      # Check required secrets
-      # -----------------------------------------------------
       - name: Check deployment secrets
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
@@ -203,7 +167,6 @@ jobs:
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-
           if [ -z "$RAILWAY_TOKEN" ]; then
             echo "::error::RAILWAY_AGENTIC_AI_TOKEN is not set"
             exit 1
@@ -226,65 +189,23 @@ jobs:
 
           echo "All required secrets are configured."
 
-
-      # -----------------------------------------------------
-      # Install Railway CLI
-      # -----------------------------------------------------
       - name: Install Railway CLI
         run: |
           npm install -g @railway/cli
 
-
-      # -----------------------------------------------------
-      # Verify Railway service
-      # -----------------------------------------------------
-      - name: Verify Railway service
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
-        run: |
-
-          echo "Railway Project ID:"
-          echo "$RAILWAY_PROJECT_ID"
-
-          echo "Railway Service ID:"
-          echo "$RAILWAY_SERVICE_ID"
-
-          railway status \
-            --project "$RAILWAY_PROJECT_ID" \
-            --service "$RAILWAY_SERVICE_ID"
-
-
-      # -----------------------------------------------------
-      # Deploy / Redeploy Railway service
-      # -----------------------------------------------------
       - name: Deploy Agentic AI
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
-
         run: |
-
           echo "Deploying Agentic AI..."
-
-          railway redeploy \
-            --project "$RAILWAY_PROJECT_ID" \
-            --service "$RAILWAY_SERVICE_ID" \
-            --yes
-
+          railway redeploy --service "$RAILWAY_SERVICE_ID" --yes
           echo "Railway deployment triggered successfully."
 
-
-      # -----------------------------------------------------
-      # Deployment summary
-      # -----------------------------------------------------
       - name: Deployment summary
         env:
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
-
         run: |
           {
             echo "## Agentic AI Deployment"
