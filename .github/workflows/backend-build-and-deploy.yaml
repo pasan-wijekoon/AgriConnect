@@ -185,14 +185,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          docker network create agriconnect-ci
+          docker run -d --name agriconnect-postgres-ci \
+            --network agriconnect-ci \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=agriconnect_test \
+            postgres:16
+
+          trap 'docker logs agriconnect-backend-ci || true; docker logs agriconnect-postgres-ci || true; docker rm -f agriconnect-backend-ci agriconnect-postgres-ci || true; docker network rm agriconnect-ci || true' EXIT
+          for i in $(seq 1 30); do
+            if docker exec agriconnect-postgres-ci pg_isready -U postgres -d agriconnect_test >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+
           docker run -d --name agriconnect-backend-ci \
+            --network agriconnect-ci \
             -p 5000:5000 \
             -e ASPNETCORE_URLS=http://+:5000 \
             -e Jwt__Key=ci-only-signing-key-012345678901234567890123456789 \
-            -e ConnectionStrings__Default='Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres' \
+            -e ConnectionStrings__Default='Host=agriconnect-postgres-ci;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres' \
             agriconnect-backend:ci
 
-          trap 'docker logs agriconnect-backend-ci || true; docker rm -f agriconnect-backend-ci || true' EXIT
           for i in $(seq 1 30); do
             code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 3 http://127.0.0.1:5000/health || true)
             echo "Attempt $i: HTTP $code"
