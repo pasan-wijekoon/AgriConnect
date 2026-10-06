@@ -1,8 +1,4 @@
-name: Backend - CI (Back4app Containers deploys from GitHub)
-
-# Back4app Containers builds and deploys from your GitHub repo using its own
-# GitHub App, so this workflow only has to prove the code and Dockerfile are
-# good BEFORE (or as) a push reaches main. No image push, no deploy secrets.
+name: Backend - CI & Publish (GHCR + Docker Hub)
 
 on:
   pull_request:
@@ -32,6 +28,9 @@ env:
   DOTNET_VERSION: "10.0.302"
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  IMAGE_NAME: backend            # change to your image/repo name
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/backend
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/backend
 
 jobs:
 
@@ -80,26 +79,62 @@ jobs:
           done
 
   # =========================================================
-  # 2. VERIFY DOCKER IMAGE BUILDS (same Dockerfile Back4app will build)
+  # 2. BUILD IMAGE (PRs) / BUILD + PUSH TO GHCR & DOCKER HUB (main)
   # =========================================================
-  docker-build-check:
-    name: Verify Docker build (no push)
+  docker:
+    name: Docker build & publish
     needs: build-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write          # required to push to GHCR
+
+    env:
+      SHOULD_PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: docker/setup-buildx-action@v3
 
-      - name: Build image (not pushed)
+      - name: Log in to GHCR
+        if: env.SHOULD_PUSH == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        if: env.SHOULD_PUSH == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate tags & labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.GHCR_IMAGE }}
+            ${{ env.DOCKERHUB_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long
+            type=ref,event=pr
+
+      - name: Build and push
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/backend/Dockerfile
-          push: false
+          push: ${{ env.SHOULD_PUSH == 'true' }}
           platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
@@ -108,8 +143,8 @@ jobs:
   # =========================================================
   summary:
     name: Deployment note
-    needs: docker-build-check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -119,8 +154,10 @@ jobs:
           {
             echo "## Backend CI passed"
             echo ""
-            echo "**Platform:** Back4app Containers (builds from GitHub on push)"
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
-            echo "Tests and Docker build succeeded. Back4app builds and deploys this commit from the repo automatically."
+            echo "Image published to:"
+            echo "- \`${{ env.GHCR_IMAGE }}:latest\`"
+            echo "- \`${{ env.DOCKERHUB_IMAGE }}:latest\`"
+            echo "- Both also tagged \`sha-${{ github.sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
