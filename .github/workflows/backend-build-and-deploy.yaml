@@ -1,17 +1,25 @@
 name: Backend - CI/CD
 
-# AgriConnect backend: ASP.NET Core (.NET 10).
+# AgriConnect backend: ASP.NET Core (.NET 10) + Supabase Postgres + Railway.
 #
-# Pull request : build + test -> build image (nothing is pushed)
-# Push to main : build + test -> build + push to GHCR
-#                -> redeploy the Railway service (it pulls the new image)
-#                -> health check
+# Pull request : build + test -> docker build (nothing pushed)
+# Push to main : build + test -> migrate DB (Supabase) + build/push image (GHCR)
+#                -> redeploy Railway -> health check
+# Manual run   : "seed" input seeds crops/regions/users once into the DB.
+#
+# Required GitHub secrets : SUPABASE_CONNECTION_STRING, RAILWAY_TOKEN
+#                           (optional) AGRICONNECT_PAT with write:packages
+# Required GitHub variables: RAILWAY_BACKEND_SERVICE, BACKEND_HEALTH_URL
+#
+# Runtime secrets (ConnectionStrings__Default, Jwt__Key, ALLOWED_ORIGINS,
+# AgenticAi__BaseUrl) live in Railway Variables, NOT in this file.
 
 on:
   pull_request:
     branches: [main]
     paths:
       - "backend/**"
+      - "backend.Tests/**"
       - "docker/backend/**"
       - ".github/workflows/backend-build-and-deploy.yaml"
 
@@ -19,10 +27,16 @@ on:
     branches: [main]
     paths:
       - "backend/**"
+      - "backend.Tests/**"
       - "docker/backend/**"
       - ".github/workflows/backend-build-and-deploy.yaml"
 
   workflow_dispatch:
+    inputs:
+      seed:
+        description: "Seed reference data + demo users into the database"
+        type: boolean
+        default: false
 
 concurrency:
   group: backend-${{ github.ref }}
@@ -32,21 +46,20 @@ permissions:
   contents: read
 
 env:
-  DOTNET_VERSION: "10.0.302"
+  DOTNET_VERSION: "10.0.x"
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
   GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-backend
 
 jobs:
 
-  # =========================================================
-  # 1. BUILD & TEST
-  # =========================================================
+  # 1. BUILD & TEST ----------------------------------------------------------
+  # Tests use the EF Core in-memory provider, so no database secret is needed
+  # (and PRs from forks work).
   build-test:
     name: Build & test (.NET)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
       - uses: actions/checkout@v4
 
@@ -54,57 +67,65 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('backend/**/*.csproj') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
 
-      - name: Restore
-        run: dotnet restore backend/backend.csproj
-
-      - name: Build
-        run: dotnet build backend/backend.csproj -c Release --no-restore
-
-      # Same command you run locally, but the value comes from the
-      # SUPABASE_CONNECTION_STRING GitHub secret, never from the workflow file.
-      # The secret holds ONLY the connection string, e.g.
-      #   Host=...;Port=5432;Database=postgres;Username=...;Password=...;SSL Mode=Require;Trust Server Certificate=true
-      - name: Configure database connection (user-secrets)
-        env:
-          DB_CONNECTION: ${{ secrets.SUPABASE_CONNECTION_STRING }}
-        run: |
-          if [ -z "$DB_CONNECTION" ]; then
-            echo "::warning::SUPABASE_CONNECTION_STRING is not set (normal for PRs from forks). Database tests may fail."
-            exit 0
-          fi
-
-          # Adds a UserSecretsId to the csproj in this CI workspace only if it is missing.
-          dotnet user-secrets init --project backend/backend.csproj || true
-          dotnet user-secrets set "ConnectionStrings:Default" "$DB_CONNECTION" --project backend/backend.csproj
+      - run: dotnet restore backend/backend.csproj
+      - run: dotnet build backend/backend.csproj -c Release --no-restore
 
       - name: Test
-        env:
-          # Also exposed as an environment variable. ASP.NET reads
-          # ConnectionStrings__Default as ConnectionStrings:Default.
-          ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
         run: |
-          mapfile -t projects < <(find backend -name '*Tests.csproj')
+          mapfile -t projects < <(find . -name '*Tests.csproj')
+          if [ ${#projects[@]} -eq 0 ]; then echo "No test projects."; exit 0; fi
+          for p in "${projects[@]}"; do dotnet test "$p" -c Release; done
 
-          if [ ${#projects[@]} -eq 0 ]; then
-            echo "No test projects found - skipping."
-            exit 0
+  # 2. MIGRATE (main only) ---------------------------------------------------
+  # Applies EF Core migrations to Supabase BEFORE the new image goes live,
+  # so the app never starts against an out-of-date schema.
+  migrate:
+    name: Migrate database (Supabase)
+    needs: build-test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    concurrency:
+      group: db-migrate
+      cancel-in-progress: false
+    env:
+      DB_CONNECTION: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Check secret
+        run: |
+          if [ -z "$DB_CONNECTION" ]; then
+            echo "::error::SUPABASE_CONNECTION_STRING secret is not set."; exit 1
           fi
 
-          for p in "${projects[@]}"; do
-            dotnet test "$p" -c Release
-          done
+      - name: Restore tools (dotnet-ef)
+        working-directory: backend
+        run: dotnet tool restore
 
-  # =========================================================
-  # 2. BUILD IMAGE (PRs) / BUILD + PUSH TO GHCR (main)
-  # =========================================================
+      - name: Apply migrations
+        working-directory: backend
+        run: dotnet ef database update --connection "$DB_CONNECTION"
+
+      # Manual runs only: tick "seed" in the Actions UI. Safe to repeat.
+      - name: Seed reference data
+        if: github.event_name == 'workflow_dispatch' && inputs.seed
+        env:
+          ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+        run: dotnet run --project backend/backend.csproj -c Release -- --seed-only
+
+  # 3. DOCKER BUILD (PR) / BUILD + PUSH TO GHCR (main) -----------------------
   docker:
     name: Docker build & publish
     needs: build-test
@@ -112,18 +133,13 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
-      packages: write # required to push to GHCR
-
+      packages: write
     env:
       SHOULD_PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: docker/setup-buildx-action@v3
 
-      # Uses your AGRICONNECT_PAT secret if it exists, otherwise the built-in
-      # GITHUB_TOKEN. The PAT needs the write:packages scope.
       - name: Log in to GHCR
         if: env.SHOULD_PUSH == 'true'
         uses: docker/login-action@v3
@@ -132,8 +148,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.AGRICONNECT_PAT || secrets.GITHUB_TOKEN }}
 
-      - name: Generate tags & labels
-        id: meta
+      - id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.GHCR_IMAGE }}
@@ -142,8 +157,7 @@ jobs:
             type=sha,format=long
             type=ref,event=pr
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/backend/Dockerfile
@@ -154,27 +168,21 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
-  # =========================================================
-  # 3. DEPLOY TO RAILWAY
-  #    Pushing an image does not redeploy by itself, so we tell Railway
-  #    to redeploy; it then pulls ghcr.io/<owner>/agriconnect-backend:latest.
-  #    RAILWAY_TOKEN must be a PROJECT token (scoped to one environment).
-  #
-  #    The running backend gets its database string from the Railway service
-  #    variable ConnectionStrings__Default (set once in Railway, not here).
-  # =========================================================
+  # 4. DEPLOY TO RAILWAY -----------------------------------------------------
+  # Runs only after BOTH the migration and the image push succeeded.
+  # Railway service source must be the image:
+  #   ghcr.io/<owner>/agriconnect-backend:latest
+  # RAILWAY_TOKEN must be a PROJECT token.
   deploy:
     name: Deploy to Railway
-    needs: docker
+    needs: [migrate, docker]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production
-
     concurrency:
       group: railway-deploy-backend
       cancel-in-progress: false
-
     steps:
       - name: Redeploy Railway service
         env:
@@ -187,52 +195,27 @@ jobs:
           fi
           npx -y @railway/cli@4 redeploy --service "$RAILWAY_SERVICE" --yes
 
-      - name: Summary
-        run: |
-          {
-            echo "## Backend deployed to Railway"
-            echo ""
-            echo "**Commit:** \`${{ github.sha }}\`"
-            echo ""
-            echo "Tests passed, image published, Railway redeploy triggered."
-            echo ""
-            echo "Image:"
-            echo "- \`${{ env.GHCR_IMAGE }}:latest\`"
-            echo "- \`${{ env.GHCR_IMAGE }}:sha-${{ github.sha }}\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  # =========================================================
-  # 4. HEALTH CHECK (skipped unless BACKEND_HEALTH_URL is set)
-  # =========================================================
+  # 5. HEALTH CHECK ----------------------------------------------------------
+  # BACKEND_HEALTH_URL should be https://<backend>/health (see Program.cs
+  # snippet). The API root returns 404, so do not point it there.
   verify:
     name: Health check
     needs: deploy
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
-      - name: Wait for service to respond
+      - name: Wait for service
         env:
           HEALTH_URL: ${{ vars.BACKEND_HEALTH_URL }}
         run: |
-          if [ -z "$HEALTH_URL" ]; then
-            echo "BACKEND_HEALTH_URL not set - skipping."
-            exit 0
-          fi
-
-          # Give Railway time to pull the image and swap containers.
+          if [ -z "$HEALTH_URL" ]; then echo "BACKEND_HEALTH_URL not set - skipping."; exit 0; fi
           sleep 45
-
           for i in $(seq 1 20); do
             code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
             echo "Attempt $i: HTTP $code"
-            if [ "$code" = "200" ]; then
-              echo "Service is healthy."
-              exit 0
-            fi
+            if [ "$code" = "200" ]; then echo "Healthy."; exit 0; fi
             sleep 20
           done
-
           echo "::error::Service did not become healthy in time."
           exit 1
