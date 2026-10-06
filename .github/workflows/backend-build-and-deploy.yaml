@@ -2,7 +2,7 @@ name: Backend - CI/CD
 
 # AgriConnect backend: ASP.NET Core (.NET 10) + Supabase Postgres + Railway.
 #
-# Pull request : build + test -> docker build (nothing pushed)
+# Pull request : build + test (throwaway Postgres) -> docker build (nothing pushed)
 # Push to main : build + test -> migrate DB (Supabase) + build/push image (GHCR)
 #                -> redeploy Railway -> health check
 # Manual run   : "seed" input seeds crops/regions/users once into the DB.
@@ -54,12 +54,29 @@ env:
 jobs:
 
   # 1. BUILD & TEST ----------------------------------------------------------
-  # Tests use the EF Core in-memory provider, so no database secret is needed
-  # (and PRs from forks work).
+  # Integration tests need a real PostgreSQL. A disposable container is started
+  # for the job and destroyed afterwards. The credentials below are CI-only and
+  # NOT your Supabase credentials, so no secret is needed (fork PRs work too).
   build-test:
     name: Build & test (.NET)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: agriconnect_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d agriconnect_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      ConnectionStrings__Default: "Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres"
     steps:
       - uses: actions/checkout@v4
 
@@ -75,6 +92,14 @@ jobs:
 
       - run: dotnet restore backend/backend.csproj
       - run: dotnet build backend/backend.csproj -c Release --no-restore
+
+      # Creates the schema in the throwaway database so the seeder and tests
+      # find their tables. Harmless if the app also migrates on startup.
+      - name: Apply migrations to test database
+        working-directory: backend
+        run: |
+          dotnet tool restore
+          dotnet ef database update --connection "$ConnectionStrings__Default"
 
       - name: Test
         run: |
