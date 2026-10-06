@@ -376,6 +376,9 @@ if (args.Contains("--seed-only"))
 }
 
 app.MapControllers();
+
+// Unauthenticated liveness endpoint used by Render and CI/CD deployment checks.
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.Run();
 
 // Exposes the top-level-statements Program class (implicitly `internal`) to

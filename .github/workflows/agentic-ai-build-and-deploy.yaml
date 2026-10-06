@@ -1,45 +1,105 @@
-# Agentic AI service (Python / FastAPI / LangGraph) - install and run pytest with the mock
-# LLM provider, so no API key is needed.
-# Deployment itself is done by Render's Git integration (render.yaml).
-name: Agentic AI build and test
+# Agentic AI CI/CD: test, publish an immutable GHCR image, and deploy it to Render.
+name: Agentic AI CI/CD
 
 on:
   push:
     branches: [main, development, integration, test-oder]
-    paths:
-      - 'agentic-ai/**'
-      - '.github/workflows/agentic-ai-build-and-deploy.yaml'
+    paths: ['agentic-ai/**', 'docker/agentic-ai/**', '.github/workflows/agentic-ai-build-and-deploy.yaml']
   pull_request:
     branches: [main, development, integration]
-    paths:
-      - 'agentic-ai/**'
-      - '.github/workflows/agentic-ai-build-and-deploy.yaml'
+    paths: ['agentic-ai/**', 'docker/agentic-ai/**', '.github/workflows/agentic-ai-build-and-deploy.yaml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: agentic-ai-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: ghcr.io/pasan-wijekoon/agriconnect-agentic-ai
+  IMAGE_TAG: sha-${{ github.sha }}
 
 jobs:
-  build-and-test:
+  test:
+    name: Test Agentic AI
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     defaults:
       run:
         working-directory: agentic-ai
-
     env:
       LLM_PROVIDER: mock
-
+      TOOLS_MODE: mock
     steps:
-      - name: Check out the repository
+      - name: Check out
         uses: actions/checkout@v4
-
       - name: Set up uv and Python 3.12
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: '3.12'
           enable-cache: true
           cache-dependency-glob: agentic-ai/uv.lock
-
       - name: Install dependencies
         run: uv sync --extra dev
-
       - name: Run tests
         run: uv run pytest -q
+
+  image:
+    name: Build and publish Agentic AI image
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/agentic-ai/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy Agentic AI to Render
+    needs: image
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Trigger Render image deploy
+        env:
+          HOOK: ${{ secrets.RENDER_AGENTIC_AI_DEPLOY_HOOK_URL }}
+          IMAGE: ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+        run: |
+          test -n "$HOOK" || { echo "::error::Render Agentic AI deploy hook is missing"; exit 1; }
+          ENCODED_IMAGE=$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["IMAGE"], safe=""))')
+          curl --fail --silent --show-error --request POST "${HOOK}&imgURL=${ENCODED_IMAGE}"
+      - name: Wait for health endpoint
+        env:
+          URL: ${{ vars.AGENTIC_AI_HEALTH_URL }}
+        run: |
+          if [ -z "$URL" ]; then echo "Health URL not configured; deploy triggered."; exit 0; fi
+          for i in $(seq 1 40); do
+            if curl --fail --silent --max-time 20 "$URL" > /dev/null; then exit 0; fi
+            sleep 15
+          done
+          echo "::error::Agentic AI health check failed"
+          exit 1
