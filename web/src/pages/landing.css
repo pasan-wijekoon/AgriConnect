@@ -1,0 +1,243 @@
+.lp {
+  --lp-bg: #0b0f0e;
+  --lp-card: #141a18;
+  --lp-border: #232b28;
+  --lp-text: #f1f4f2;
+  --lp-muted: #9ba6a1;
+  --lp-accent: #2fae6b;
+  --lp-accent-text: #4fd68d;
+  min-height: 100vh;
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.lp a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px clamp(16px, 4vw, 40px);
+  background: rgba(11, 15, 14, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.lp-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--lp-accent);
+  color: #06120c;
+}
+
+.lp-nav-links {
+  display: flex;
+  gap: 24px;
+  color: var(--lp-muted);
+  font-size: 14px;
+}
+
+.lp-nav-links a:hover {
+  color: var(--lp-text);
+}
+
+.lp-nav-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.lp-btn-primary {
+  background: var(--lp-accent);
+  color: #06120c !important;
+}
+
+.lp-btn-primary:hover {
+  background: #279a5e;
+}
+
+.lp-btn-ghost {
+  border-color: var(--lp-border);
+}
+
+.lp-btn-ghost:hover {
+  background: #1a211e;
+}
+
+.lp-btn-lg {
+  padding: 13px 24px;
+  font-size: 16px;
+}
+
+.lp-hero {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: clamp(48px, 10vw, 110px) 20px clamp(40px, 8vw, 80px);
+  text-align: center;
+}
+
+.lp-pill {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 174, 107, 0.35);
+  background: rgba(47, 174, 107, 0.12);
+  color: var(--lp-accent-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lp-hero h1 {
+  margin: 20px 0 16px;
+  font-size: clamp(32px, 6vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.lp-hero h1 span {
+  color: var(--lp-accent-text);
+}
+
+.lp-hero p {
+  margin: 0 auto;
+  max-width: 620px;
+  color: var(--lp-muted);
+  font-size: clamp(15px, 2.4vw, 18px);
+  line-height: 1.6;
+}
+
+.lp-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.lp-section {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(32px, 6vw, 64px) 20px;
+}
+
+.lp-section h2,
+.lp-cta h2 {
+  margin: 0 0 28px;
+  text-align: center;
+  font-size: clamp(22px, 4vw, 32px);
+}
+
+.lp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.lp-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.lp-card {
+  padding: 22px;
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  border-radius: 14px;
+}
+
+.lp-card h3 {
+  margin: 12px 0 8px;
+  font-size: 17px;
+}
+
+.lp-card p,
+.lp-card li {
+  color: var(--lp-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.lp-card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.lp-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(47, 174, 107, 0.15);
+  color: var(--lp-accent-text);
+  font-weight: 700;
+}
+
+.lp-cta {
+  margin: 20px auto 0;
+  max-width: 720px;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.lp-footer {
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--lp-muted);
+  font-size: 13px;
+  border-top: 1px solid var(--lp-border);
+}
+
+@media (max-width: 640px) {
+  .lp-nav-links {
+    display: none;
+  }
+
+  .lp-nav-actions .lp-btn {
+    padding: 8px 12px;
+  }
+}
+
+/* The app-wide stylesheet sets its own (dark-on-light) heading colour; on this dark page headings must use the page text colour. */
+.lp h1,
+.lp h2,
+.lp h3 {
+  color: var(--lp-text);
+}
+
+.lp .lp-hero h1 span {
+  color: var(--lp-accent-text);
+}

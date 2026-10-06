@@ -1,0 +1,247 @@
+[
+  {
+    "case": "login as Farmer",
+    "pass": true,
+    "detail": "status 200, api role 'Farmer'"
+  },
+  {
+    "case": "login as Buyer",
+    "pass": true,
+    "detail": "status 200, api role 'Buyer'"
+  },
+  {
+    "case": "login as Officer",
+    "pass": true,
+    "detail": "status 200, api role 'Officer'"
+  },
+  {
+    "case": "login as Administrator",
+    "pass": true,
+    "detail": "status 200, api role 'Administrator'"
+  },
+  {
+    "case": "GET filters with no token",
+    "pass": true,
+    "detail": "expected 401, got 401"
+  },
+  {
+    "case": "GET filters as Farmer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET filters as Buyer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET filters as Officer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET filters as Administrator",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET price-trends with no token",
+    "pass": true,
+    "detail": "expected 401, got 401"
+  },
+  {
+    "case": "GET price-trends as Farmer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET price-trends as Buyer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET price-trends as Officer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET price-trends as Administrator",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET anomalies with no token",
+    "pass": true,
+    "detail": "expected 401, got 401"
+  },
+  {
+    "case": "GET anomalies as Farmer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "GET anomalies as Buyer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "GET anomalies as Officer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET anomalies as Administrator",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET shortages with no token",
+    "pass": true,
+    "detail": "expected 401, got 401"
+  },
+  {
+    "case": "GET shortages as Farmer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "GET shortages as Buyer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "GET shortages as Officer",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET shortages as Administrator",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "POST snapshots/refresh with no token",
+    "pass": true,
+    "detail": "expected 401, got 401"
+  },
+  {
+    "case": "POST snapshots/refresh as Farmer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "POST snapshots/refresh as Buyer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "POST snapshots/refresh as Officer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "POST snapshots/refresh as Administrator",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "GET reports with no token",
+    "pass": true,
+    "detail": "expected 401, got 401"
+  },
+  {
+    "case": "GET reports as Farmer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "GET reports as Buyer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "GET reports as Officer",
+    "pass": true,
+    "detail": "expected 403, got 403"
+  },
+  {
+    "case": "GET reports as Administrator",
+    "pass": true,
+    "detail": "expected 200, got 200"
+  },
+  {
+    "case": "price-trends returns weekly points with real prices",
+    "pass": true,
+    "detail": "16 points for Carrots"
+  },
+  {
+    "case": "crops without prices are flagged",
+    "pass": true,
+    "detail": "3 of 10 crops have data"
+  },
+  {
+    "case": "anomaly queue and shortages return seeded data",
+    "pass": true,
+    "detail": "8 anomaly flags, 4 shortage events"
+  },
+  {
+    "case": "Farmer creates a listing",
+    "pass": true,
+    "detail": "status 201, listing status 'PendingApproval'"
+  },
+  {
+    "case": "Farmer sees it in My Listings",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "case": "Buyer cannot create a listing",
+    "pass": true,
+    "detail": "status 403"
+  },
+  {
+    "case": "Buyer cannot see the unpublished listing",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "case": "Officer sees it waiting for inspection",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "case": "Farmer cannot use the officer inspection queue",
+    "pass": true,
+    "detail": "status 403"
+  },
+  {
+    "case": "Officer publish is gated until inspected (expect refusal, not 5xx)",
+    "pass": true,
+    "detail": "status 422: {'type': 'https://tools.ietf.org/html/rfc4918#section-11.2', 'title': 'Unprocessable Entity', 'status': 422, 'detail': 'Quality Verification Gate Bloc"
+  },
+  {
+    "case": "Buyer cannot order an unpublished listing",
+    "pass": true,
+    "detail": "status 400: {'type': 'https://tools.ietf.org/html/rfc9110#section-15.5.1', 'title': 'Bad Request', 'status': 400, 'detail': 'Listing"
+  },
+  {
+    "case": "D integration: a new overpriced listing creates an anomaly flag",
+    "pass": false,
+    "detail": "flags before 8, after 8"
+  },
+  {
+    "case": "Buyer lists own orders",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "case": "Officer lists orders",
+    "pass": true,
+    "detail": "status 200"
+  },
+  {
+    "case": "Administrator lists orders",
+    "pass": true,
+    "detail": "status 200"
+  }
+]

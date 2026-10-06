@@ -1,17 +1,58 @@
-# mobile
+# AgriConnect — Mobile App
 
-A new Flutter project.
+Flutter app for Farmers and Buyers. It talks only to the ASP.NET Core API.
 
-## Getting Started
+## Setup
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Run
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Start the API first (`backend/`, `dotnet run`), then:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run
+```
+
+The app calls `http://localhost:5000`, or `http://10.0.2.2:5000` on the Android emulator (the
+emulator's address for the host machine). Point it elsewhere with:
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://api.example.com
+```
+
+The app uses the real login (JWT). Sign in with a demo account (password `password`) —
+`buyer@agriconnect.lk` or `farmer@agriconnect.lk` — or create an account from the landing screen.
+Officers and Administrators use the web console. Navigation is role-based: Buyers get
+Home / Market / Orders / Centres / Account, Farmers get Home / Listings / Orders / Prices / Account.
+
+## Check
+
+```bash
+flutter analyze
+```
+
+```bash
+flutter test
+```
+
+## Structure
+
+```
+lib/
+├── main.dart            # App shell and routes
+├── models/              # JSON models
+├── providers/           # Screen state (ChangeNotifier)
+├── screens/             # One folder per screen; home/ lists the entry points
+└── services/            # API clients
+```
+
+Each component adds its screen under `screens/` and a tile on `screens/home/home_screen.dart`.
+
+## Component D — Market prices (Student 4)
+
+`screens/price_trends/` — a read-only weekly price trend so farmers can judge whether to list
+now: current average, change against 4 weeks ago, a chart with the lowest–highest range, and a
+weekly table. Data: `GET /api/analytics/price-trends` and `GET /api/analytics/filters`.
