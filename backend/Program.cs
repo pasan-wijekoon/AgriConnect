@@ -1,7 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using backend.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 
 // Swashbuckle (classic Swagger) 
@@ -18,4 +23,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();      
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.Run();

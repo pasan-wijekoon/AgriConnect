@@ -185,7 +185,21 @@ Platform targets are available via `flutter run -d <android|ios|macos|windows|li
 
 ## CI/CD
 
-Workflow files exist under `.github/workflows/` for the backend, the agentic AI service, the frontend, and Android builds; pipelines are scaffolded and not yet populated.
+The backend workflow at `.github/workflows/backend-build-and-deploy.yaml` builds the API on pull requests and deploys the `main` branch to Railway.
+
+Configure these secrets in the GitHub `production` environment:
+
+- `RAILWAY_TOKEN` — a project-scoped Railway token
+- `RAILWAY_PROJECT_ID` — the Railway project ID
+- `RAILWAY_SERVICE_ID` — the Railway backend service ID
+
+Configure this variable on the Railway backend service:
+
+```text
+ConnectionStrings__Default=<rotated Supabase PostgreSQL connection string>
+```
+
+Never commit the connection string. The previously shared Supabase password must be rotated before deployment. Database migrations are not run by CI yet because the backend does not currently contain an EF Core migration set; add migrations before introducing an automated production migration step.
 
 ## Deployment (planned)
 
