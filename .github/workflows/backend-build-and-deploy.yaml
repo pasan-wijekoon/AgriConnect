@@ -155,6 +155,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.seed
         env:
           ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+          Jwt__Key: ci-seed-only-placeholder-not-used-for-token-generation
         run: dotnet run --project backend/backend.csproj -c Release -- --seed-only
 
   # 3. DOCKER BUILD AND SMOKE TEST -------------------------------------------

@@ -13,8 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+var connectionString = builder.Configuration.GetConnectionString("Default");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "ConnectionStrings:Default is not configured. Set ConnectionStrings__Default in the hosting environment.");
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(connectionString));
 
 // Every error response is RFC 7807 ProblemDetails.
 builder.Services.AddProblemDetails();
@@ -22,7 +29,7 @@ builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 // PostgreSQL via EF Core.
 builder.Services.AddDbContext<AgriConnectDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(connectionString));
 
 // ---- Authentication (integration decision, 2026-09-27, updated same day when
 // Component A's real auth was merged in) ----
@@ -45,10 +52,13 @@ builder.Services.AddDbContext<AgriConnectDbContext>(options =>
 // needing a full register-then-login round trip per test — a deliberate scope decision,
 // not an oversight; see PROGRESS.md. DevAuthenticationHandler.cs is left in the repo,
 // unregistered — superseded, not deleted.
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException(
-        "Jwt:Key is not configured. Set it via appsettings.Development.json, " +
-        "an environment variable (Jwt__Key), or `dotnet user-secrets`.");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey)
+    || (builder.Environment.IsProduction() && jwtKey == "dev-secret-key-change-in-production"))
+{
+    throw new InvalidOperationException(
+        "Jwt:Key is not configured with a production-safe value. Set Jwt__Key in the hosting environment.");
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -211,6 +221,16 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Apply schema changes before any seed operation or request is allowed to run.
+// EF Core's PostgreSQL migration lock makes this safe when multiple instances
+// start during a deployment; the deployment workflow still applies migrations
+// ahead of Railway as the normal path.
+using (var migrationScope = app.Services.CreateScope())
+{
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+    await migrationDb.Database.MigrateAsync();
+}
+
 // Development and explicit seed runs need the same deterministic fixtures used by
 // the integration suite. Production remains data-only unless a caller explicitly
 // supplies --seed or --seed-only (for example, the deployment workflow).
@@ -263,6 +283,8 @@ app.Lifetime.ApplicationStarted.Register(() =>
 app.UseExceptionHandler();
 // Gives empty 401/403/404 responses a ProblemDetails body too.
 app.UseStatusCodePages();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -272,5 +294,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();      
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/health", async (AgriConnectDbContext db, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var connected = await db.Database.CanConnectAsync(cancellationToken);
+        return connected
+            ? Results.Ok(new { status = "ok", database = "connected" })
+            : Results.Json(new { status = "unhealthy", database = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+    catch (Exception)
+    {
+        return Results.Json(new { status = "unhealthy", database = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
 app.Run();
