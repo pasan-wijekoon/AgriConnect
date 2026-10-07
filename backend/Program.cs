@@ -84,6 +84,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<AgenticAiService>();
 builder.Services.AddScoped<TodayPriceCatalogService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<LoginAttemptTracker>(); // SEC-06: throttles repeated failed sign-ins (state is per instance)
 builder.Services.AddScoped<ListingService>();
 
 // ---- Component D — Market Price Analytics & Reporting ----
@@ -280,6 +281,12 @@ app.Lifetime.ApplicationStarted.Register(() =>
     Console.WriteLine($"[Startup] Backend: RUNNING on {urls}");
 });
 
+// ZAP 10021: stop browsers from MIME-sniffing API responses (e.g. an uploaded file served as script).
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    await next();
+});
 app.UseExceptionHandler();
 // Gives empty 401/403/404 responses a ProblemDetails body too.
 app.UseStatusCodePages();

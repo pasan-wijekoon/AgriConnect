@@ -432,6 +432,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
           {/* Crop Filter */}
           <select
             className="form-select"
+            aria-label="Filter by crop"
             value={selectedCrop}
             onChange={(e) => setSelectedCrop(e.target.value)}
           >
@@ -446,6 +447,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
           {/* Region Filter */}
           <select
             className="form-select"
+            aria-label="Filter by region"
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
           >
@@ -461,6 +463,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
           {activeTab === 'my' && (
             <select
               className="form-select"
+              aria-label="Filter by status"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
             >
