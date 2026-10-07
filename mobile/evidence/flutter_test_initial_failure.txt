@@ -1,0 +1,23 @@
+00:00 +0: loading C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart
+00:00 +0: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart: (setUpAll)
+00:00 +0: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart: parses listing fields from a valid API response
+00:00 +1: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart: uses the model defaults when listing fields are missing from JSON
+00:00 +2: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart: (tearDownAll)
+00:00 +2: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_card_test.dart: listing card displays crop, floor price, grade, and quantity
+00:05 +3: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: negative and non-numeric floor prices show errors and block listing submission
+00:10 +4: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_form_test.dart: negative and non-numeric floor prices show errors and block listing submission
+00:11 +5: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/login_form_test.dart: empty login submission shows required-field errors without a session
+00:15 +6: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/navigation_test.dart: tapping a listing opens its detail screen with listing data
+test/widget_test.dart:16:35: Error: Couldn't find constructor 'AgriConnect'.
+    await tester.pumpWidget(const AgriConnect());
+                                  ^^^^^^^^^^^
+00:17 +7 -1: loading C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart [E]
+  Failed to load "C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart":
+  Compilation failed for testPath=C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart: test/widget_test.dart:16:35: Error: Couldn't find constructor 'AgriConnect'.
+      await tester.pumpWidget(const AgriConnect());
+                                    ^^^^^^^^^^^
+  .
+00:18 +7 -1: Some tests failed.
+
+Failing tests:
+  C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart: loading C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget_test.dart

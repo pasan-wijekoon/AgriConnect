@@ -1,0 +1,17 @@
+00:00 +0: loading C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart
+00:00 +0 -1: loading C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart [E]
+  Error: Flutter failed to copy file from "C:\Users\Ruwan\AppData\Local\Temp\flutter_tools.e42d2633\flutter_test_compiler.3f842a33\output.dill" to "C:\Users\Ruwan\AppData\Local\Temp\flutter_tools.e42d2633\flutter_test_listener.1f9e2c40\listener.dart.dill". The target device is full.
+  FileSystemException: Cannot copy file to 'C:\Users\Ruwan\AppData\Local\Temp\flutter_tools.e42d2633\flutter_test_listener.1f9e2c40\listener.dart.dill', path = 'C:\Users\Ruwan\AppData\Local\Temp\flutter_tools.e42d2633\flutter_test_compiler.3f842a33\output.dill' (OS Error: There is not enough space on the disk, errno = 112)
+  Free up space and try again.
+  package:flutter_tools/src/base/common.dart 34:3               throwToolExit
+  package:flutter_tools/src/base/error_handling_io.dart 1451:3  _throwFileSystemException
+  package:flutter_tools/src/base/error_handling_io.dart 1441:3  _handleWindowsException
+  package:flutter_tools/src/base/error_handling_io.dart 1293:5  _onFileSystemException
+  package:flutter_tools/src/base/error_handling_io.dart 1072:7  _run
+  ===== asynchronous gap ===========================
+  package:flutter_tools/src/test/test_compiler.dart 261:41      TestCompiler._onCompilationRequest
+  
+00:00 +0 -1: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart: (setUpAll)
+00:00 +0 -1: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart: parses listing fields from a valid API response
+00:00 +1 -1: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/unit/api_client_test.dart: uses the model defaults when listing fields are missing from JSON
+00:00 +2 -1: C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/test/widget/listing_card_test.dart: listing card displays crop, floor price, grade, and quantity
