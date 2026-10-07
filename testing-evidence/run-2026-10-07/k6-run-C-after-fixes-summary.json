@@ -1,0 +1,330 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "teardown": {
+                "groups": {},
+                "checks": {
+                        "FR9 reserved quantity never exceeds available stock": {
+                            "fails": 0,
+                            "name": "FR9 reserved quantity never exceeds available stock",
+                            "path": "::teardown::FR9 reserved quantity never exceeds available stock",
+                            "id": "ff8bc0c2812bb6ae1541bfbc9c75ebc2",
+                            "passes": 1
+                        },
+                        "FR9 exactly the orders that fit were accepted": {
+                            "name": "FR9 exactly the orders that fit were accepted",
+                            "path": "::teardown::FR9 exactly the orders that fit were accepted",
+                            "id": "a29613f4585462b2e267ee9e98805b2d",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        "FR9 available stock never negative": {
+                            "name": "FR9 available stock never negative",
+                            "path": "::teardown::FR9 available stock never negative",
+                            "id": "2bde57fcf75a53d1ea8bbe0e5873f73c",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        "FR9 available stock reduced by exactly the reserved amount": {
+                            "name": "FR9 available stock reduced by exactly the reserved amount",
+                            "path": "::teardown::FR9 available stock reduced by exactly the reserved amount",
+                            "id": "11faf1f4a1b465cbf3db78c0b1ab3eda",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    },
+                "name": "teardown",
+                "path": "::teardown",
+                "id": "a8a9942382e8ffe2e56ef29e664b8229"
+            }
+        },
+        "checks": {
+            "listings 200": {
+                "fails": 0,
+                "name": "listings 200",
+                "path": "::listings 200",
+                "id": "652fb154c94172cafd553ce1c9624550",
+                "passes": 14713
+            },
+            "listings has items": {
+                "name": "listings has items",
+                "path": "::listings has items",
+                "id": "d92e059a91a15d06bbc2383dfd67faf9",
+                "passes": 14713,
+                "fails": 0
+            },
+            "trends 200": {
+                "name": "trends 200",
+                "path": "::trends 200",
+                "id": "466372da88bf077ae825efb6f7b04f2e",
+                "passes": 14713,
+                "fails": 0
+            },
+            "trends has points": {
+                "path": "::trends has points",
+                "id": "536439c663f62b850e18ef7eab2c8ae1",
+                "passes": 14713,
+                "fails": 0,
+                "name": "trends has points"
+            },
+            "centres 200": {
+                "passes": 14713,
+                "fails": 0,
+                "name": "centres 200",
+                "path": "::centres 200",
+                "id": "1eded7550c22b796e95c993908ac9c8f"
+            },
+            "login 200": {
+                "name": "login 200",
+                "path": "::login 200",
+                "id": "48b06dc5cde7f6ebb606ad7da726a2a5",
+                "passes": 580,
+                "fails": 0
+            },
+            "login returns token": {
+                "name": "login returns token",
+                "path": "::login returns token",
+                "id": "78c4c109214e8b5bb2cd4dc9ec3b7320",
+                "passes": 580,
+                "fails": 0
+            },
+            "order answered 201/409/400, never 5xx": {
+                "fails": 0,
+                "name": "order answered 201/409/400, never 5xx",
+                "path": "::order answered 201/409/400, never 5xx",
+                "id": "8b51e11f3491018cd1c1d01297fc4905",
+                "passes": 60
+            }
+        }
+    },
+    "metrics": {
+        "http_req_failed": {
+            "passes": 23,
+            "fails": 44800,
+            "value": 0.0005131294201637552
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_receiving": {
+            "avg": 1.7763723848024584,
+            "min": -2.37485,
+            "med": 0.094357,
+            "max": 114.016872,
+            "p(90)": 5.854685600000001,
+            "p(95)": 9.560988500000002
+        },
+        "http_req_connecting": {
+            "avg": 0.07151444376770853,
+            "min": 0,
+            "med": 0,
+            "max": 96.016759,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_reqs": {
+            "rate": 418.7256777181478,
+            "count": 44823
+        },
+        "iterations": {
+            "count": 15353,
+            "rate": 143.42403074329525
+        },
+        "vus_max": {
+            "value": 210,
+            "min": 210,
+            "max": 210
+        },
+        "http_req_sending": {
+            "p(90)": 0.0430166,
+            "p(95)": 0.06369280000000001,
+            "avg": 0.024519255806171005,
+            "min": 0.003934,
+            "med": 0.015687,
+            "max": 12.598815
+        },
+        "vus": {
+            "value": 0,
+            "min": 0,
+            "max": 197
+        },
+        "orders_rejected_insufficient_stock": {
+            "count": 23,
+            "rate": 0.2148604642151886
+        },
+        "checks{phase:fr9}": {
+            "passes": 4,
+            "fails": 0,
+            "thresholds": {
+                "rate==1": false
+            },
+            "value": 1
+        },
+        "checks{scenario:order_race}": {
+            "passes": 60,
+            "fails": 0,
+            "thresholds": {
+                "rate==1": false
+            },
+            "value": 1
+        },
+        "data_received": {
+            "count": 57501408,
+            "rate": 537164.3137350852
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 30.454814,
+            "max": 762.98792,
+            "p(90)": 82.97672089999999,
+            "p(95)": 103.21929249999998,
+            "avg": 39.166389966874995,
+            "min": 2.260657
+        },
+        "orders_unexpected_status": {
+            "count": 0,
+            "rate": 0,
+            "thresholds": {
+                "count==0": false
+            }
+        },
+        "http_req_duration": {
+            "med": 30.4864,
+            "max": 838.604591,
+            "p(90)": 83.11537860000001,
+            "p(95)": 103.3521515,
+            "avg": 39.563441907034324,
+            "min": 2.260657
+        },
+        "http_req_duration{scenario:browse_load}": {
+            "avg": 14.014498177210072,
+            "min": 2.260657,
+            "med": 9.949615999999999,
+            "max": 280.554483,
+            "p(90)": 27.233455300000003,
+            "p(95)": 36.0121674,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "http_req_duration{scenario:login_load}": {
+            "max": 198.4394,
+            "p(90)": 165.447523,
+            "p(95)": 174.7026321,
+            "avg": 146.14761022241376,
+            "min": 104.594445,
+            "med": 145.51563249999998,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "http_req_failed{scenario:browse_load}": {
+            "passes": 0,
+            "fails": 7398,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "iteration_duration": {
+            "avg": 316.16437801374354,
+            "min": 11.359451,
+            "med": 312.491635,
+            "max": 838.829381,
+            "p(90)": 411.78075,
+            "p(95)": 447.5759076
+        },
+        "orders_created": {
+            "rate": 0.3456450946070425,
+            "count": 37
+        },
+        "checks": {
+            "passes": 74789,
+            "fails": 0,
+            "value": 1
+        },
+        "data_sent": {
+            "count": 34454896,
+            "rate": 321869.3456106976
+        },
+        "http_req_waiting": {
+            "min": 2.221286,
+            "med": 29.376044,
+            "max": 838.51993,
+            "p(90)": 77.85869420000002,
+            "p(95)": 98.16502940000001,
+            "avg": 37.76255026642587
+        },
+        "http_req_blocked": {
+            "med": 0.005077,
+            "max": 96.082924,
+            "p(90)": 0.009125,
+            "p(95)": 0.011544800000000003,
+            "avg": 0.07964470863172901,
+            "min": 0.001131
+        },
+        "checks{scenario:browse_load}": {
+            "passes": 12330,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        }
+    },
+    "setup_data": {
+        "buyer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImYwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAxMCIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkJ1eWVyIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoiYnV5ZXJAYWdyaWNvbm5lY3QubGsiLCJqdGkiOiJiMTFkNjJjMC02MmU0LTRlNWEtYTc3ZS1jODFiNzRhZmZlYjMiLCJleHAiOjE3OTE0MTAzMjksImlzcyI6IkFncmlDb25uZWN0IiwiYXVkIjoiQWdyaUNvbm5lY3QifQ.Nu_PSMZjwSyExAmK10IBGRmqSw-Tp4vwz99_9xmXphw",
+        "cropId": "a1000000-0000-0000-0000-000000000005",
+        "existing": [
+            "430f9473-58ee-4bb1-8b3e-b781e7cce343",
+            "4bdd3cfe-cbe6-43b9-b725-28175742207f",
+            "4e8e46cc-12e9-414a-97cc-1aa334845224",
+            "dd31df01-6535-4af7-975e-dcd920c93ec7",
+            "9a46b556-8613-4692-8b39-60aea17534d8",
+            "8f7f95e3-1059-48ca-831d-1ccce08b0877",
+            "407c8e73-578d-41d0-a6d5-895319e40698",
+            "4b1f959e-be16-49c0-a824-2a429373c53b",
+            "2146bf6e-6810-4f63-9538-da3a271fc94a",
+            "eb34e2a7-f98e-4150-9c39-045cb0ae720b",
+            "edfbd8b2-d5f4-4767-bd04-b25b88b8e527",
+            "85475149-239c-404a-9de7-4748ed15b8f3",
+            "4bb4d1ee-3fb7-4da3-9580-bf74f0556b25",
+            "ffa67a5f-c17e-42bd-aa4e-e3da667dfdef",
+            "cdb2c964-3291-4213-aad8-e20ad927ec37",
+            "dcacee8f-330e-4f4e-babc-f6183e83b239",
+            "99a31346-f229-4fa3-8fa8-7c1595828205",
+            "f2608b3e-74e5-491a-a0a8-10a26b895f5c",
+            "a9dba819-8cb0-4f42-81cf-e87e756f7afa",
+            "1c656bfa-bd0d-4206-8f44-b3fa8de9e761",
+            "88945f95-9fe9-4af4-9eb6-b0c452d2baf7",
+            "c5aa0f88-ee88-4281-82db-929828684ef4",
+            "e5bad66e-422b-408b-93a9-0787105745bb",
+            "37a83f64-ae4e-47da-8c0c-9e6bf69034aa",
+            "b8e370f6-6e2d-4e84-bb74-0d539197fcaa",
+            "546e7705-941d-4777-89d9-a1644698a7a1",
+            "feda9000-2bca-4cf1-9cc7-dc3fa69f5d04",
+            "6f578d23-6a6b-4af3-a63a-deb22a26da1f",
+            "3ad6ff4d-8de2-4a3e-9c72-414f722a2359",
+            "2f709200-5236-424f-b358-05da04e28404",
+            "176ca31f-3d07-4443-8bed-4dcf3978a3bb",
+            "872e38ee-777e-40fb-aa62-a276bbb8e726",
+            "3eab6594-8c8b-4226-87e0-f3d15d322876",
+            "007e6283-36f1-4721-ba6a-970dc0e05d4e",
+            "7a106a66-33db-4093-977e-73a712bd090f",
+            "23126f38-f545-4cb6-8722-fdac494bbf95",
+            "f24f1020-d5cf-4853-b525-33cede862cbb",
+            "9b46000b-236c-4495-a1e0-9a0a0601228e",
+            "f6a05ab5-671e-4856-926d-3387a86636ed"
+        ],
+        "listingId": "4f2b1001-0000-0000-0000-000000000001",
+        "officer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImYwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDA1MCIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6Ik9mZmljZXIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJvZmZpY2VyQGFncmljb25uZWN0LmxrIiwianRpIjoiZjkyNWVhYjMtY2QyMi00ZTkzLWI4MzUtN2UzODlmN2M4NmE4IiwiZXhwIjoxNzkxNDEwMzI5LCJpc3MiOiJBZ3JpQ29ubmVjdCIsImF1ZCI6IkFncmlDb25uZWN0In0.Ciqyt3h0VscwwjS3Nj0bhFmnDy8sQrQFipXd5JUETIs",
+        "availableBefore": 370
+    }
+}

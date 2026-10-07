@@ -1,0 +1,32 @@
+<testsuites id="" name="" tests="12" failures="0" skipped="0" errors="0" time="50.596141">
+<testsuite name="analytics.spec.ts" timestamp="2026-10-07T10:14:32.824Z" hostname="chromium" tests="4" failures="0" skipped="0" time="13.92" errors="0">
+<testcase name="Market price analytics (back office) › COMP-02 Price Trends opens on a crop that has prices and draws the chart" classname="analytics.spec.ts" time="4.056">
+</testcase>
+<testcase name="Market price analytics (back office) › COMP-03 crops without price history are labelled in the filter" classname="analytics.spec.ts" time="3.173">
+</testcase>
+<testcase name="Market price analytics (back office) › COMP-04 switching to a crop with no data shows an empty state, not a broken chart" classname="analytics.spec.ts" time="3.366">
+</testcase>
+<testcase name="Market price analytics (back office) › COMP-05 the back-office sidebar reaches the other analytics pages" classname="analytics.spec.ts" time="3.325">
+</testcase>
+</testsuite>
+<testsuite name="auth.spec.ts" timestamp="2026-10-07T10:14:32.824Z" hostname="chromium" tests="6" failures="0" skipped="0" time="19.178" errors="0">
+<testcase name="Sign in and sessions › WEB-E-03 a wrong password shows an error and stays on the login page" classname="auth.spec.ts" time="3.107">
+</testcase>
+<testcase name="Sign in and sessions › COMP-01 a farmer can sign in and sees the farmer workspace" classname="auth.spec.ts" time="3.457">
+</testcase>
+<testcase name="Sign in and sessions › WEB-E-04 removing the session sends the user back to the login page" classname="auth.spec.ts" time="3.079">
+</testcase>
+<testcase name="Sign in and sessions › WEB-E-04b the session survives a reload while signed in" classname="auth.spec.ts" time="3.138">
+</testcase>
+<testcase name="Role isolation (XP-W-05) › a buyer never sees officer tools or the back-office link" classname="auth.spec.ts" time="3.45">
+</testcase>
+<testcase name="Role isolation (XP-W-05) › an officer is offered the back office and can open it" classname="auth.spec.ts" time="2.947">
+</testcase>
+</testsuite>
+<testsuite name="workflow.spec.ts" timestamp="2026-10-07T10:14:32.824Z" hostname="chromium" tests="2" failures="0" skipped="0" time="14.195" errors="0">
+<testcase name="XP-W-01 buyer orders, officer approves and confirms the AI-proposed slot, order completes" classname="workflow.spec.ts" time="10.848">
+</testcase>
+<testcase name="XP-W-03 a buyer cannot open the officer order page by URL" classname="workflow.spec.ts" time="3.347">
+</testcase>
+</testsuite>
+</testsuites>
