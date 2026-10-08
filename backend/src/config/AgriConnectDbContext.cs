@@ -312,6 +312,20 @@ public class AgriConnectDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
 
+            // DB-03 / DB-04 (SE3110 testing): every other write-heavy table (Order,
+            // StockReservation, PickupSchedule, CollectionCentre) enforces its core
+            // numeric invariant with a CHECK constraint — Listing never got one, so
+            // a negative/zero price or quantity written by anything other than the
+            // validated CreateListingDto (a maintenance script, direct SQL, future
+            // code) would have been silently accepted. MinPrice stays nullable
+            // (farmer's floor price is optional, FR3) — the constraint only fires
+            // when a value is actually present.
+            entity.ToTable("Listings", t =>
+            {
+                t.HasCheckConstraint("CK_Listing_Quantity", "\"Quantity\" > 0");
+                t.HasCheckConstraint("CK_Listing_MinPrice", "\"MinPrice\" IS NULL OR \"MinPrice\" > 0");
+            });
+
             entity.Property(e => e.Quantity).IsRequired();
             entity.Property(e => e.PickupWindowStart).IsRequired();
             entity.Property(e => e.PickupWindowEnd).IsRequired();

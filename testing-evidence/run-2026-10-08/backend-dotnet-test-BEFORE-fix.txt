@@ -1,0 +1,41 @@
+Command:
+ConnectionStrings__Default="Host=localhost;Port=5432;Database=agriconnect_qmse;Username=postgres;Password=1234" \
+  dotnet test backend.Tests/backend.Tests.csproj --filter "FullyQualifiedName~ListingConstraintTests" \
+  --logger "console;verbosity=normal" --logger "trx;LogFileName=defect-B-01-before.trx"
+
+Purpose: DB-03 / DB-04 — prove that the Listings table accepts a negative or
+zero MinPrice / Quantity before the CHECK constraints in migration
+20261008043951_AddListingPriceQuantityCheckConstraints are applied.
+
+Result (schema before the fix):
+  Failed backend.Tests.services.ListingConstraintTests.DB03_NegativeMinPrice_IsRejectedByTheDatabase
+    Assert.Throws() Failure: No exception was thrown
+    Expected: typeof(Microsoft.EntityFrameworkCore.DbUpdateException)
+  Failed backend.Tests.services.ListingConstraintTests.DB03_ZeroMinPrice_IsRejectedByTheDatabase
+    Assert.Throws() Failure: No exception was thrown
+  Failed backend.Tests.services.ListingConstraintTests.DB04_NegativeQuantity_IsRejectedByTheDatabase
+    Assert.Throws() Failure: No exception was thrown
+  Failed backend.Tests.services.ListingConstraintTests.DB04_ZeroQuantity_IsRejectedByTheDatabase
+    Assert.Throws() Failure: No exception was thrown
+  Passed backend.Tests.services.ListingConstraintTests.DB03_PositiveMinPrice_IsAccepted
+  Passed backend.Tests.services.ListingConstraintTests.DB03_NullMinPrice_IsAccepted_FloorPriceIsOptional
+  Passed backend.Tests.services.ListingConstraintTests.DB04_PositiveQuantity_IsAccepted
+
+Test Run Failed.
+Total tests: 7
+     Passed: 3
+     Failed: 4
+ Total time: 3.0251 Seconds
+
+Confirms defect DEF-B-01: the database layer silently accepted listings with
+MinPrice <= 0 or Quantity <= 0 — the only guard was the API's DataAnnotations
+validation on CreateListingDto, with no defence-in-depth at the database
+itself (every other write-heavy table in the schema — Order, StockReservation,
+PickupSchedule, CollectionCentre — has an equivalent CHECK constraint).
+
+Also observed during this run: when the new migration was subsequently applied
+to this same database, PostgreSQL itself refused it (SqlState 23514 —
+"check constraint CK_Listing_MinPrice is violated by some row") because the
+four invalid rows these tests had just inserted were still present. That
+refusal is independent, server-side confirmation that the defect is real
+and had already let invalid data through, not just a test assertion.

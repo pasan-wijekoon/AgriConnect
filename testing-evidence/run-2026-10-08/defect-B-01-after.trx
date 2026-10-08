@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="8fc444e0-e1cc-4f20-bb48-ac2b010f2d88" name="sanus@SXNU-VIVOBOOK 2026-10-08 10:10:40" runUser="SXNU-VIVOBOOK\sanus" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-08T10:10:40.7858746+05:30" queuing="2026-10-08T10:10:40.7858749+05:30" start="2026-10-08T10:10:37.4527403+05:30" finish="2026-10-08T10:10:40.7934447+05:30" />
+  <TestSettings name="default" id="16a9d1c8-1082-4f2b-b19b-d54bfbd8a114">
+    <Deployment runDeploymentRoot="sanus_SXNU-VIVOBOOK_2026-10-08_10_10_40" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="dfd0e7a8-2853-4d68-b38c-b212178151ce" testId="2ecf5a9d-d3c3-605b-c3a8-c543df6224a6" testName="backend.Tests.services.ListingConstraintTests.DB04_NegativeQuantity_IsRejectedByTheDatabase" computerName="SXNU-VIVOBOOK" duration="00:00:01.8243183" startTime="2026-10-08T10:10:38.7115387+05:30" endTime="2026-10-08T10:10:40.5508007+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dfd0e7a8-2853-4d68-b38c-b212178151ce" />
+    <UnitTestResult executionId="d211ab02-4ed5-48b6-879c-edc8f6043202" testId="8ff40e29-185e-e46b-8991-5f11adeca31c" testName="backend.Tests.services.ListingConstraintTests.DB03_PositiveMinPrice_IsAccepted" computerName="SXNU-VIVOBOOK" duration="00:00:00.0055455" startTime="2026-10-08T10:10:40.6817220+05:30" endTime="2026-10-08T10:10:40.6875514+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d211ab02-4ed5-48b6-879c-edc8f6043202" />
+    <UnitTestResult executionId="47cb8436-4690-4f18-acb7-8efb37685f6e" testId="874f9e14-a0d6-f5f8-1884-3f82e76e1076" testName="backend.Tests.services.ListingConstraintTests.DB03_NegativeMinPrice_IsRejectedByTheDatabase" computerName="SXNU-VIVOBOOK" duration="00:00:00.0062360" startTime="2026-10-08T10:10:40.6685914+05:30" endTime="2026-10-08T10:10:40.6749104+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="47cb8436-4690-4f18-acb7-8efb37685f6e" />
+    <UnitTestResult executionId="ff5a01d7-5001-454e-a716-2bf7a9444137" testId="174eac11-1e21-c061-bd68-29dee6fb06b4" testName="backend.Tests.services.ListingConstraintTests.DB03_NullMinPrice_IsAccepted_FloorPriceIsOptional" computerName="SXNU-VIVOBOOK" duration="00:00:00.0857855" startTime="2026-10-08T10:10:40.5673851+05:30" endTime="2026-10-08T10:10:40.6396120+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ff5a01d7-5001-454e-a716-2bf7a9444137" />
+    <UnitTestResult executionId="e188c969-d8cc-44e1-a820-c0a472197464" testId="899149a7-626e-4160-5507-445f07245736" testName="backend.Tests.services.ListingConstraintTests.DB04_ZeroQuantity_IsRejectedByTheDatabase" computerName="SXNU-VIVOBOOK" duration="00:00:00.0084075" startTime="2026-10-08T10:10:40.6596667+05:30" endTime="2026-10-08T10:10:40.6682270+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e188c969-d8cc-44e1-a820-c0a472197464" />
+    <UnitTestResult executionId="a82a36c8-cb6b-462c-a605-da554e414dbb" testId="9bbb745c-2ee2-8ace-8ad8-caf1c82c3d71" testName="backend.Tests.services.ListingConstraintTests.DB03_ZeroMinPrice_IsRejectedByTheDatabase" computerName="SXNU-VIVOBOOK" duration="00:00:00.0191946" startTime="2026-10-08T10:10:40.6404848+05:30" endTime="2026-10-08T10:10:40.6593646+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a82a36c8-cb6b-462c-a605-da554e414dbb" />
+    <UnitTestResult executionId="69f7b30a-6ac0-49c5-8454-3eaa01e306f4" testId="379b6b2d-ae59-effa-ba5f-4b617015bc13" testName="backend.Tests.services.ListingConstraintTests.DB04_PositiveQuantity_IsAccepted" computerName="SXNU-VIVOBOOK" duration="00:00:00.0061982" startTime="2026-10-08T10:10:40.6752644+05:30" endTime="2026-10-08T10:10:40.6815559+05:30" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="69f7b30a-6ac0-49c5-8454-3eaa01e306f4" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="backend.Tests.services.ListingConstraintTests.DB04_ZeroQuantity_IsRejectedByTheDatabase" storage="d:\projects\produce listings &amp; price discovery\produce listings &amp; price discovery\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="899149a7-626e-4160-5507-445f07245736">
+      <Execution id="e188c969-d8cc-44e1-a820-c0a472197464" />
+      <TestMethod codeBase="D:\Projects\Produce Listings &amp; Price Discovery\Produce Listings &amp; Price Discovery\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.services.ListingConstraintTests" name="DB04_ZeroQuantity_IsRejectedByTheDatabase" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.services.ListingConstraintTests.DB04_NegativeQuantity_IsRejectedByTheDatabase" storage="d:\projects\produce listings &amp; price discovery\produce listings &amp; price discovery\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="2ecf5a9d-d3c3-605b-c3a8-c543df6224a6">
+      <Execution id="dfd0e7a8-2853-4d68-b38c-b212178151ce" />
+      <TestMethod codeBase="D:\Projects\Produce Listings &amp; Price Discovery\Produce Listings &amp; Price Discovery\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.services.ListingConstraintTests" name="DB04_NegativeQuantity_IsRejectedByTheDatabase" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.services.ListingConstraintTests.DB03_PositiveMinPrice_IsAccepted" storage="d:\projects\produce listings &amp; price discovery\produce listings &amp; price discovery\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="8ff40e29-185e-e46b-8991-5f11adeca31c">
+      <Execution id="d211ab02-4ed5-48b6-879c-edc8f6043202" />
+      <TestMethod codeBase="D:\Projects\Produce Listings &amp; Price Discovery\Produce Listings &amp; Price Discovery\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.services.ListingConstraintTests" name="DB03_PositiveMinPrice_IsAccepted" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.services.ListingConstraintTests.DB03_NullMinPrice_IsAccepted_FloorPriceIsOptional" storage="d:\projects\produce listings &amp; price discovery\produce listings &amp; price discovery\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="174eac11-1e21-c061-bd68-29dee6fb06b4">
+      <Execution id="ff5a01d7-5001-454e-a716-2bf7a9444137" />
+      <TestMethod codeBase="D:\Projects\Produce Listings &amp; Price Discovery\Produce Listings &amp; Price Discovery\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.services.ListingConstraintTests" name="DB03_NullMinPrice_IsAccepted_FloorPriceIsOptional" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.services.ListingConstraintTests.DB03_ZeroMinPrice_IsRejectedByTheDatabase" storage="d:\projects\produce listings &amp; price discovery\produce listings &amp; price discovery\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="9bbb745c-2ee2-8ace-8ad8-caf1c82c3d71">
+      <Execution id="a82a36c8-cb6b-462c-a605-da554e414dbb" />
+      <TestMethod codeBase="D:\Projects\Produce Listings &amp; Price Discovery\Produce Listings &amp; Price Discovery\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.services.ListingConstraintTests" name="DB03_ZeroMinPrice_IsRejectedByTheDatabase" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.services.ListingConstraintTests.DB03_NegativeMinPrice_IsRejectedByTheDatabase" storage="d:\projects\produce listings &amp; price discovery\produce listings &amp; price discovery\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="874f9e14-a0d6-f5f8-1884-3f82e76e1076">
+      <Execution id="47cb8436-4690-4f18-acb7-8efb37685f6e" />
+      <TestMethod codeBase="D:\Projects\Produce Listings &amp; Price Discovery\Produce Listings &amp; Price Discovery\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.services.ListingConstraintTests" name="DB03_NegativeMinPrice_IsRejectedByTheDatabase" />
+    </UnitTest>
+    <UnitTest name="backend.Tests.services.ListingConstraintTests.DB04_PositiveQuantity_IsAccepted" storage="d:\projects\produce listings &amp; price discovery\produce listings &amp; price discovery\agriconnect\backend.tests\bin\debug\net10.0\backend.tests.dll" id="379b6b2d-ae59-effa-ba5f-4b617015bc13">
+      <Execution id="69f7b30a-6ac0-49c5-8454-3eaa01e306f4" />
+      <TestMethod codeBase="D:\Projects\Produce Listings &amp; Price Discovery\Produce Listings &amp; Price Discovery\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="backend.Tests.services.ListingConstraintTests" name="DB04_PositiveQuantity_IsAccepted" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="2ecf5a9d-d3c3-605b-c3a8-c543df6224a6" executionId="dfd0e7a8-2853-4d68-b38c-b212178151ce" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8ff40e29-185e-e46b-8991-5f11adeca31c" executionId="d211ab02-4ed5-48b6-879c-edc8f6043202" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="874f9e14-a0d6-f5f8-1884-3f82e76e1076" executionId="47cb8436-4690-4f18-acb7-8efb37685f6e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="174eac11-1e21-c061-bd68-29dee6fb06b4" executionId="ff5a01d7-5001-454e-a716-2bf7a9444137" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="899149a7-626e-4160-5507-445f07245736" executionId="e188c969-d8cc-44e1-a820-c0a472197464" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9bbb745c-2ee2-8ace-8ad8-caf1c82c3d71" executionId="a82a36c8-cb6b-462c-a605-da554e414dbb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="379b6b2d-ae59-effa-ba5f-4b617015bc13" executionId="69f7b30a-6ac0-49c5-8454-3eaa01e306f4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="7" executed="7" passed="7" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.10)&#xD;
+[xUnit.net 00:00:00.31]   Discovering: backend.Tests&#xD;
+[xUnit.net 00:00:00.53]   Discovered:  backend.Tests&#xD;
+[xUnit.net 00:00:00.58]   Starting:    backend.Tests&#xD;
+[xUnit.net 00:00:02.60]   Finished:    backend.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

@@ -1,0 +1,30 @@
+Command:
+ConnectionStrings__Default="Host=localhost;Port=5432;Database=agriconnect_qmse;Username=postgres;Password=1234" \
+  dotnet test backend.Tests/backend.Tests.csproj --logger "console;verbosity=normal" \
+  --logger "trx;LogFileName=full-suite-adithya-after-fix.trx"
+
+Fix applied: migration 20261008043951_AddListingPriceQuantityCheckConstraints
+adds CK_Listing_Quantity ("Quantity" > 0) and CK_Listing_MinPrice ("MinPrice"
+IS NULL OR "MinPrice" > 0) to the Listings table (AgriConnectDbContext.cs,
+ConfigureComponentA). Applied with:
+  dotnet ef database update --context AgriConnectDbContext
+
+Retest of the 7 ListingConstraintTests (DB-03 / DB-04): all pass.
+  Passed DB03_NegativeMinPrice_IsRejectedByTheDatabase
+  Passed DB03_ZeroMinPrice_IsRejectedByTheDatabase
+  Passed DB03_PositiveMinPrice_IsAccepted
+  Passed DB03_NullMinPrice_IsAccepted_FloorPriceIsOptional
+  Passed DB04_NegativeQuantity_IsRejectedByTheDatabase
+  Passed DB04_ZeroQuantity_IsRejectedByTheDatabase
+  Passed DB04_PositiveQuantity_IsAccepted
+
+Full backend suite, same run (no regressions from the new CHECK constraints):
+
+Test Run Successful.
+Total tests: 385
+     Passed: 385
+ Total time: 26.0928 Seconds
+
+(385 = the 378 tests already on the QMSE-test branch, which also passed
+378/378 on a from-scratch run before this fix, plus the 7 new
+ListingConstraintTests added for DEF-B-01.)
