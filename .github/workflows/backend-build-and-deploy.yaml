@@ -1,22 +1,6 @@
 name: Backend - CI/CD
 
-# AgriConnect backend: ASP.NET Core (.NET 10) + Supabase PostgreSQL, hosted on AWS EC2.
-#
-# Pull request : build + test (throwaway Postgres) -> Docker build + smoke test
-# Push to main : build + test -> Docker build + smoke test -> push image to GHCR
-#                -> apply EF Core migrations to Supabase -> deploy to AWS -> verify
-#
-# The migration runs only after the image has been built, smoke-tested and published,
-# and before any container is replaced, so a bad migration fails the pipeline while
-# the old version keeps serving traffic.
-#
-# One-time setup (Settings -> Secrets and variables -> Actions):
-#   secrets  : EC2_HOST, EC2_SSH_KEY, INTERNAL_API_SECRET, JWT_KEY, SUPABASE_CONNECTION_STRING
-#              CI_DB_PASSWORD (optional: password for the throwaway test database, letters/digits only)
-#   variables: API_DOMAIN (e.g. api.example.com or 13-124-1-2.sslip.io), ALLOWED_ORIGINS (your Vercel URL),
-#              EC2_USER (optional, default ec2-user)
-# INTERNAL_API_SECRET is one repo secret shared with the agentic-ai pipeline.
-# GHCR uses the built-in GITHUB_TOKEN, so no personal access token is needed.
+
 
 on:
   pull_request:
