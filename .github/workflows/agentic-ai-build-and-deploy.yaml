@@ -1,30 +1,34 @@
 name: Agentic AI - CI/CD
 
-# AgriConnect agentic-ai service: Python 3.12, uv, FastAPI + LangGraph.
+# Pipeline overview
+#   test   : uv sync + import check + pytest, using the mock LLM (no secrets, safe for fork PRs)
+#   docker : builds docker/agentic-ai/Dockerfile (every run); pushes to GHCR only on push to main
+#   deploy : redeploys the Railway service (push to main only), then optional health check
 #
-# Pull request : test -> build image + smoke test (nothing is pushed)
-# Push to main : test -> build + smoke test -> push to GHCR
-#                -> redeploy the Railway service (it pulls the new image)
-#                -> health check
+# One-time setup
+#   Settings > Environments > production  (add required reviewers if you want a manual gate)
+#     Secrets:   RAILWAY_AGENTIC_AI_TOKEN
+#                RAILWAY_AGENTIC_AI_PROJECT_ID
+#                RAILWAY_AGENTIC_AI_SERVICE_ID
+#   Settings > Secrets and variables > Actions > Variables (optional):
+#                AGENTIC_AI_HEALTH_URL    e.g. https://<service>.up.railway.app/health
 #
-# No real LLM key is used in CI. The service ships with LLM_PROVIDER=mock,
-# so tests and the container smoke test run deterministically and for free.
+# Images are pushed as ghcr.io/<owner>/agriconnect-agentic-ai:sha-<commit> and :latest.
+# Make sure the Railway service pulls this image (and has access to the package if it is private).
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "agentic-ai/**"
-      - "docker/agentic-ai/**"
-      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
-
   push:
-    branches: [main]
+    branches: [main, development, integration, test-oder]
     paths:
       - "agentic-ai/**"
       - "docker/agentic-ai/**"
       - ".github/workflows/agentic-ai-build-and-deploy.yaml"
-
+  pull_request:
+    branches: [main, development, integration]
+    paths:
+      - "agentic-ai/**"
+      - "docker/agentic-ai/**"
+      - ".github/workflows/agentic-ai-build-and-deploy.yaml"
   workflow_dispatch:
 
 concurrency:
@@ -49,11 +53,14 @@ jobs:
     name: Lint & test (uv)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     defaults:
       run:
         working-directory: agentic-ai
-
+    env:
+      LLM_PROVIDER: mock
+      TOOLS_MODE: mock
+      ENVIRONMENT: test
+      INTERNAL_API_SECRET: ci-test-secret
     steps:
       - uses: actions/checkout@v4
 
@@ -63,6 +70,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
+          python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
           cache-dependency-glob: agentic-ai/uv.lock
 
@@ -149,7 +157,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.AGRICONNECT_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate tags & labels
         if: env.SHOULD_PUSH == 'true'

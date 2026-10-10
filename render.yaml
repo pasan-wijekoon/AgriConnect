@@ -1,0 +1,69 @@
+# Render Blueprint: PostgreSQL + ASP.NET Core API + Agentic AI service.
+# The React web app is deployed separately on Vercel (web/vercel.json).
+# Values marked "sync: false" are asked for in the Render dashboard when the Blueprint is
+# created; see documentation/Deployment.md for what to enter.
+databases:
+  - name: agriconnect-db
+    databaseName: agriconnect
+    user: agriconnect
+    plan: free
+
+services:
+  - type: web
+    name: agriconnect-agentic-ai
+    runtime: docker
+    dockerfilePath: ./docker/agentic-ai/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: ENVIRONMENT
+        value: production
+      - key: LLM_PROVIDER
+        value: mock
+      - key: INTERNAL_API_SECRET
+        generateValue: true
+      - key: MAPS_API_BASE_URL
+        value: https://router.project-osrm.org/
+      - key: BACKEND_API_BASE_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  - type: web
+    name: agriconnect-api
+    runtime: docker
+    dockerfilePath: ./docker/backend/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: PORT
+        value: "5000"
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Database__MigrateOnStartup
+        value: "true"
+      - key: Database__SeedOnStartup
+        value: "true"
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: Jwt__Key
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: AgenticAi__BaseUrl
+        sync: false
+      - key: AgenticAi__InternalApiSecret
+        fromService:
+          type: web
+          name: agriconnect-agentic-ai
+          envVarKey: INTERNAL_API_SECRET
+      - key: AgenticAi__ApiKey
+        fromService:
+          type: web
+          name: agriconnect-agentic-ai
+          envVarKey: INTERNAL_API_SECRET
+      - key: MapsApi__BaseUrl
+        value: https://router.project-osrm.org/

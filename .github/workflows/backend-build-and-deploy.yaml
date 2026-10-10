@@ -1,226 +1,141 @@
-name: Backend - CI
-
-# AgriConnect backend: ASP.NET Core (.NET 10) + Neon PostgreSQL.
-#
-# Pull request : build + test (throwaway Postgres) -> Docker build + smoke test
-# Push to main : build + test -> Neon migration -> Docker build + smoke test
-#                -> push image to GHCR
-#
-# Required GitHub secrets: AgriConnect_PAT, NEON_CONNECTION_STRING
+# Backend CI/CD: test, publish an immutable GHCR image, and deploy it to Render.
+name: Backend CI/CD
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - "backend.Tests/**"
-      - "docker/backend/**"
-      - ".github/workflows/backend-build-and-deploy.yaml"
-
   push:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - "backend.Tests/**"
-      - "docker/backend/**"
-      - ".github/workflows/backend-build-and-deploy.yaml"
-
+    branches: [main, development, integration]
+    paths: ['backend/**', 'backend.Tests/**', 'docker/backend/**', '*.sln', 'Directory.Build.props', 'Directory.Packages.props', 'global.json', '.config/dotnet-tools.json', '.github/workflows/backend-build-and-deploy.yaml']
+  pull_request:
+    branches: [main, development, integration]
+    paths: ['backend/**', 'backend.Tests/**', 'docker/backend/**', '*.sln', 'Directory.Build.props', 'Directory.Packages.props', 'global.json', '.config/dotnet-tools.json', '.github/workflows/backend-build-and-deploy.yaml']
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
 
 concurrency:
   group: backend-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-permissions:
-  contents: read
-
 env:
-  DOTNET_VERSION: "10.0.x"
-  DOTNET_NOLOGO: "true"
-  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-backend
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  IMAGE: ghcr.io/pasan-wijekoon/agriconnect-backend
+  IMAGE_TAG: sha-${{ github.sha }}
 
 jobs:
-
-  # 1. BUILD & TEST ----------------------------------------------------------
-  # Integration tests need a real PostgreSQL. A disposable container is started
-  # for the job and destroyed afterwards. The credentials below are CI-only and
-  # NOT your Supabase credentials, so no secret is needed (fork PRs work too).
-  build-test:
-    name: Build & test (.NET)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: agriconnect_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d agriconnect_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-    env:
-      ConnectionStrings__Default: "Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres"
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
-          restore-keys: nuget-${{ runner.os }}-
-
-      - run: dotnet restore backend/backend.csproj
-      - run: dotnet build backend/backend.csproj -c Release --no-restore
-
-      # Creates the schema in the throwaway database so the seeder and tests
-      # find their tables. Harmless if the app also migrates on startup.
-      - name: Apply migrations to test database
-        working-directory: backend
-        run: |
-          dotnet tool restore
-          dotnet ef database update --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
-
-      - name: Seed test fixtures
-        run: dotnet run --project backend/backend.csproj -c Release -- --seed-only
-
-      - name: Test
-        run: |
-          mapfile -t projects < <(find . -name '*Tests.csproj')
-          if [ ${#projects[@]} -eq 0 ]; then echo "No test projects."; exit 0; fi
-          for p in "${projects[@]}"; do dotnet test "$p" -c Release; done
-
-  # 2. MIGRATE NEON, THEN BUILD, SMOKE TEST, AND PUBLISH ---------------------
-  neon-migrate:
-    name: Migrate Neon database
-    needs: build-test
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      ConnectionStrings__Default: ${{ secrets.NEON_CONNECTION_STRING }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Validate Neon connection secret
-        shell: bash
-        run: |
-          if [ -z "$ConnectionStrings__Default" ]; then
-            echo "::error::NEON_CONNECTION_STRING is not configured."
-            exit 1
-          fi
-
-      - name: Restore .NET tools
-        working-directory: backend
-        run: dotnet tool restore
-
-      - name: Restore project packages
-        run: dotnet restore backend/backend.csproj
-
-      - name: Apply EF Core migrations to Neon
-        working-directory: backend
-        run: dotnet ef database update --project backend.csproj --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
-
-  docker:
-    name: Docker build & smoke test
-    needs: [build-test, neon-migrate]
-    if: >-
-      always() && needs.build-test.result == 'success' &&
-      (needs.neon-migrate.result == 'success' || needs.neon-migrate.result == 'skipped')
+  test:
+    name: Build and test backend
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    permissions:
-      contents: read
-      packages: write
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: agriconnect
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d agriconnect"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ConnectionStrings__Default: Host=localhost;Port=5432;Database=agriconnect;Username=postgres;Password=postgres
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/build-push-action@v6
-        name: Build backend image for smoke test
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
         with:
-          context: .
-          file: docker/backend/Dockerfile
-          load: true
-          platforms: linux/amd64
-          tags: agriconnect-backend:ci
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,scope=backend,mode=max
+          dotnet-version: 10.0.x
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', '**/packages.lock.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore
+        run: dotnet restore backend.Tests/backend.Tests.csproj
+      - name: Build Release
+        run: dotnet build backend.Tests/backend.Tests.csproj -c Release --no-restore
+      - name: Apply EF Core migrations
+        working-directory: backend
+        run: dotnet tool restore; dotnet ef database update -c Release --no-build
+      - name: Run tests
+        run: dotnet test backend.Tests/backend.Tests.csproj -c Release --no-build --logger "trx;LogFileName=backend-tests.trx" --results-directory TestResults
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-report
+          path: TestResults/*.trx
+          if-no-files-found: warn
 
-      - name: Smoke test backend container
-        shell: bash
-        run: |
-          set -euo pipefail
-          docker network create agriconnect-ci
-          docker run -d --name agriconnect-postgres-ci \
-            --network agriconnect-ci \
-            -e POSTGRES_USER=postgres \
-            -e POSTGRES_PASSWORD=postgres \
-            -e POSTGRES_DB=agriconnect_test \
-            postgres:16
-
-          trap 'docker logs agriconnect-backend-ci || true; docker logs agriconnect-postgres-ci || true; docker rm -f agriconnect-backend-ci agriconnect-postgres-ci || true; docker network rm agriconnect-ci || true' EXIT
-          for i in $(seq 1 30); do
-            if docker exec agriconnect-postgres-ci pg_isready -U postgres -d agriconnect_test >/dev/null 2>&1; then break; fi
-            sleep 2
-          done
-
-          docker run -d --name agriconnect-backend-ci \
-            --network agriconnect-ci \
-            -p 5000:5000 \
-            -e ASPNETCORE_URLS=http://+:5000 \
-            -e Jwt__Key=ci-only-signing-key-012345678901234567890123456789 \
-            -e ConnectionStrings__Default='Host=agriconnect-postgres-ci;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres' \
-            agriconnect-backend:ci
-
-          for i in $(seq 1 30); do
-            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 3 http://127.0.0.1:5000/health || true)
-            echo "Attempt $i: HTTP $code"
-            if [ "$code" = "200" ]; then exit 0; fi
-            sleep 2
-          done
-          echo "::error::Backend container did not become healthy."
-          exit 1
-
+  image:
+    name: Build and publish backend image
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.AgriConnect_PAT }}
-
-      - name: Generate GHCR tags and labels
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.GHCR_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
-
-      - name: Push backend image to GHCR
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/backend/Dockerfile
-          push: true
           platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=backend
+          push: true
+          tags: ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy backend to Render
+    needs: image
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Verify Agentic AI dependency
+        env:
+          URL: ${{ vars.AGENTIC_AI_HEALTH_URL }}
+        run: |
+          if [ -z "$URL" ]; then echo "Agentic AI health URL not configured; skipping check."; exit 0; fi
+          for i in $(seq 1 40); do
+            if curl --fail --silent --max-time 20 "$URL" > /dev/null; then exit 0; fi
+            sleep 15
+          done
+          echo "::error::Agentic AI dependency is unavailable"
+          exit 1
+      - name: Trigger Render image deploy
+        env:
+          HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL }}
+          IMAGE: ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+        run: |
+          test -n "$HOOK" || { echo "::error::Render backend deploy hook is missing"; exit 1; }
+          ENCODED_IMAGE=$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["IMAGE"], safe=""))')
+          curl --fail --silent --show-error --request POST "${HOOK}&imgURL=${ENCODED_IMAGE}"
+      - name: Wait for backend health endpoint
+        env:
+          URL: ${{ vars.BACKEND_HEALTH_URL }}
+        run: |
+          test -n "$URL" || { echo "::error::BACKEND_HEALTH_URL is missing"; exit 1; }
+          for i in $(seq 1 40); do
+            if curl --fail --silent --max-time 20 "$URL" > /dev/null; then exit 0; fi
+            sleep 15
+          done
+          echo "::error::Backend health check failed"
+          exit 1

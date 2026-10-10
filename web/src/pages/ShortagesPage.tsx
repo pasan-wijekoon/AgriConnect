@@ -28,9 +28,9 @@ export function ShortagesPage() {
     <>
       <PageHeader
         title="Shortages & oversupply"
-        description="Recurring supply imbalances per crop and region (FR17)."
+        description="Find recurring supply imbalances by crop and region, then inspect the affected events."
       />
-      <div className="filters">
+      <div className="filters analytics-filter-panel" aria-label="Supply imbalance filters">
         <Field label="Type">
           <select value={type} onChange={(e) => setType(e.target.value as SupplyType | '')}>
             <option value="">Shortage and oversupply</option>
@@ -44,6 +44,9 @@ export function ShortagesPage() {
             {SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </Field>
+        <button type="button" className="btn btn-quiet filter-reset" onClick={() => { setType(''); setSeverity(''); setSelected(null) }}>
+          Reset filters
+        </button>
       </div>
 
       {data.error && <ErrorNotice error={data.error} onRetry={data.reload} />}
@@ -90,7 +93,7 @@ function Shortages({ filters, events, selected, onSelect }: {
         />
       </div>
 
-      <Card title="Supply heatmap">
+      <Card title="Supply heatmap" className="heatmap-card">
         <p className="muted card-intro">Each cell shows the most severe event for that crop and region. Select a cell to list its events.</p>
         <div className="table-wrap">
           <table className="heatmap">
@@ -128,6 +131,7 @@ function Shortages({ filters, events, selected, onSelect }: {
       </Card>
 
       <Card
+        className="event-card"
         title={selected ? `Events — ${cropName.get(selected.cropId)}, ${regionName.get(selected.regionId)}` : 'All events'}
         actions={selected && <button type="button" className="btn btn-quiet" onClick={() => onSelect(null)}>Show all</button>}
       >

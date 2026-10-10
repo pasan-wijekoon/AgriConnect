@@ -39,7 +39,7 @@ function PageShell({ children, actions }: { children: ReactNode; actions?: React
     <>
       <PageHeader
         title="Price trends"
-        description="Historical prices per crop and region, from published listings (FR15)."
+        description="Track how wholesale prices are moving by crop, region, and time period."
         actions={actions}
       />
       {children}
@@ -120,14 +120,14 @@ function PriceTrends({ filters }: { filters: AnalyticsFilters }) {
     <PageShell
       actions={
         role === 'Administrator' && (
-          <button type="button" className="btn" onClick={rebuild} disabled={refreshing}>
+          <button type="button" className="btn" title="Rebuild historical price snapshots from published listings" onClick={rebuild} disabled={refreshing}>
             <Icon name="refresh" />
             {refreshing ? 'Rebuilding…' : 'Rebuild snapshots'}
           </button>
         )
       }
     >
-      <div className="filters">
+      <div className="filters analytics-filter-panel" aria-label="Price trend filters">
         <Field label="Crop">
           <select value={cropId} onChange={(e) => setCropId(e.target.value)}>
             {filters.crops.map((c) => (
@@ -153,14 +153,22 @@ function PriceTrends({ filters }: { filters: AnalyticsFilters }) {
             <option value="month">Month</option>
           </select>
         </Field>
+        <button
+          type="button"
+          className="btn btn-quiet filter-reset"
+          onClick={() => { setCropId((filters.crops.find((c) => c.hasPriceHistory) ?? filters.crops[0]).id); setRegion(ALL); setWeeks(16); setBucket('week'); setShowTable(false) }}
+        >
+          Reset filters
+        </button>
       </div>
 
       {refreshMessage && <SuccessNotice onDismiss={() => setRefreshMessage(null)}>{refreshMessage}</SuccessNotice>}
       {refreshError && <ErrorNotice error={refreshError} />}
       {trend.error && <ErrorNotice error={trend.error} onRetry={trend.reload} />}
 
-      <div className={`stack${trend.loading && data ? ' refetching' : ''}`}>
+      <div className={`stack${trend.loading && data ? ' refetching' : ''}`} aria-busy={trend.loading}>
         {!data && trend.loading && <p className="muted">Loading prices…</p>}
+        {data && trend.loading && <p className="inline-loading" role="status">Updating price trend…</p>}
         {data && points.length === 0 && (
           <EmptyState title={`No prices for ${cropName}`}>
             Nothing was recorded for {scope} in this period. Try a longer period or another region.
@@ -178,7 +186,7 @@ function PriceTrends({ filters }: { filters: AnalyticsFilters }) {
                 label={`Change vs ${bucket === 'week' ? '4 weeks' : '1 month'} ago`}
                 value={
                   change === null ? '—' : (
-                    <span className="change">
+                    <span className={`change ${change >= 0 ? 'change-up' : 'change-down'}`}>
                       <Icon name={change >= 0 ? 'up' : 'down'} />
                       {change >= 0 ? 'Up' : 'Down'} {formatPercent(change)}
                     </span>
@@ -196,9 +204,11 @@ function PriceTrends({ filters }: { filters: AnalyticsFilters }) {
 
             <Card
               title={`${cropName} — average price per kg`}
+              className="trend-card"
               actions={
-                <button type="button" className="btn btn-quiet" onClick={() => setShowTable((v) => !v)} aria-pressed={showTable}>
-                  {showTable ? 'Hide table' : 'Show table'}
+                <button type="button" className="btn btn-table-toggle" onClick={() => setShowTable((v) => !v)} aria-pressed={showTable}>
+                  <Icon name={showTable ? 'chart' : 'grid'} />
+                  {showTable ? 'View chart' : 'View data table'}
                 </button>
               }
             >
@@ -230,7 +240,7 @@ function PriceTrends({ filters }: { filters: AnalyticsFilters }) {
                 }}
               />
               {grid.length > headlineSlots.filter((s) => s.point).length && region !== COMPARE && (
-                <p className="footnote muted">Breaks in the line are periods with no listings.</p>
+                <p className="footnote muted" role="note">Breaks in the line indicate periods with no listings.</p>
               )}
               {showTable && <TrendTable slots={headlineSlots} periodLabel={periodLabel} />}
             </Card>
