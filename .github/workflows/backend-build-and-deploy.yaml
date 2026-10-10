@@ -1,6 +1,22 @@
 name: Backend - CI/CD
 
-
+# AgriConnect backend: ASP.NET Core (.NET 10) + Supabase PostgreSQL, hosted on AWS EC2.
+#
+# Pull request : build + test (throwaway Postgres) -> Docker build + smoke test
+# Push to main : build + test -> Docker build + smoke test -> push image to GHCR
+#                -> apply EF Core migrations to Supabase -> deploy to AWS -> verify
+#
+# The migration runs only after the image has been built, smoke-tested and published,
+# and before any container is replaced, so a bad migration fails the pipeline while
+# the old version keeps serving traffic.
+#
+# One-time setup (Settings -> Secrets and variables -> Actions):
+#   secrets  : EC2_HOST, EC2_SSH_KEY, INTERNAL_API_SECRET, JWT_KEY, SUPABASE_CONNECTION_STRING
+#              CI_DB_PASSWORD (optional: password for the throwaway test database, letters/digits only)
+#   variables: API_DOMAIN (e.g. api.example.com or 13-124-1-2.sslip.io), ALLOWED_ORIGINS (your Vercel URL),
+#              EC2_USER (optional, default ec2-user)
+# INTERNAL_API_SECRET is one repo secret shared with the agentic-ai pipeline.
+# GHCR uses the built-in GITHUB_TOKEN, so no personal access token is needed.
 
 on:
   pull_request:
@@ -25,9 +41,10 @@ concurrency:
   group: backend-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# NOTE: keys MUST be lowercase. `Packages: write` is silently ignored.
 permissions:
   contents: read
-  Packages: write
+  packages: write
 
 env:
   DOTNET_VERSION: "10.0.x"
@@ -78,8 +95,6 @@ jobs:
       - run: dotnet restore backend/backend.csproj
       - run: dotnet build backend/backend.csproj -c Release --no-restore
 
-      # Creates the schema in the throwaway database so the seeder and tests
-      # find their tables. Harmless if the app also migrates on startup.
       - name: Apply migrations to test database
         working-directory: backend
         run: |
@@ -101,6 +116,7 @@ jobs:
     needs: build-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Explicit at job level too, in case the top-level block is ever changed.
     permissions:
       contents: read
       packages: write
@@ -121,8 +137,6 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
-      # Runs the production image (Production environment, migrations on an empty
-      # database, /health) against a throwaway Postgres. Supabase is not touched.
       - name: Smoke test backend container
         shell: bash
         env:
@@ -190,7 +204,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=backend
 
-      # The exact, immutable tag that gets deployed (never `latest`).
       - name: Compute deployable image reference
         id: ref
         run: |
@@ -198,8 +211,6 @@ jobs:
           echo "image=${image}" >> "$GITHUB_OUTPUT"
 
   # 3. MIGRATE SUPABASE ------------------------------------------------------
-  # Uses the SESSION pooler (port 5432). EF Core migrations take a PostgreSQL
-  # advisory lock, which does not work through the transaction pooler (port 6543).
   supabase-migrate:
     name: Migrate Supabase database
     needs: docker
@@ -239,8 +250,6 @@ jobs:
         run: dotnet ef database update --project backend.csproj --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
 
   # 4. DEPLOY TO AWS EC2 over SSH ------------------------------------------
-  # Starts the backend and a Caddy container (automatic HTTPS) on the same private
-  # Docker network as the agent. Rolls back to the previous image if /health never passes.
   deploy:
     name: Deploy to AWS
     needs: [docker, supabase-migrate]
@@ -250,7 +259,6 @@ jobs:
     environment:
       name: production
       url: https://${{ vars.API_DOMAIN }}
-    # One deploy at a time per host, shared with the agentic-ai pipeline.
     concurrency:
       group: aws-deploy
       cancel-in-progress: false
@@ -275,14 +283,12 @@ jobs:
           install -m 600 /dev/null ~/.ssh/deploy_key
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          # Values are shell-quoted (%q) and sent on stdin, so they never show up in a process list or log.
           {
             for v in IMAGE GHCR_USER GHCR_TOKEN INTERNAL_API_SECRET ConnectionStrings__Default Jwt__Key ALLOWED_ORIGINS API_DOMAIN; do
               printf 'export %s=%q\n' "$v" "${!v:-}"
             done
             cat <<'REMOTE'
           set -euo pipefail
-          # --- one-time host preparation (skipped when already done) ---
           if ! command -v docker >/dev/null; then
             dnf install -y docker
             systemctl enable --now docker
@@ -315,7 +321,6 @@ jobs:
             return 1
           }
 
-          # HTTPS front door: Caddy fetches and renews a Let's Encrypt certificate for $API_DOMAIN by itself.
           if ! docker inspect -f '{{.State.Running}}' caddy 2>/dev/null | grep -q true; then
             docker rm -f caddy >/dev/null 2>&1 || true
             docker run -d --name caddy --network agriconnect --restart unless-stopped --memory 128m \
@@ -338,8 +343,6 @@ jobs:
           } | ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$EC2_USER@$EC2_HOST" 'sudo bash -s'
 
   # 5. VERIFY THE PUBLIC ENDPOINT -------------------------------------------
-  # /health returns 200 only when the API can reach Supabase, so this proves HTTPS,
-  # the proxy and the database together.
   verify:
     name: Public health check
     needs: [docker, deploy]
