@@ -1,7 +1,5 @@
 name: Agentic AI - CI/CD
 
-
-
 on:
   pull_request:
     branches: [main]
@@ -23,10 +21,10 @@ concurrency:
   group: agentic-ai-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# NOTE: keys here MUST be lowercase. `Packages: write` is silently ignored.
 permissions:
   contents: read
-  Packages: write
-
+  packages: write
 
 env:
   PYTHON_VERSION: "3.12"
@@ -60,7 +58,6 @@ jobs:
           enable-cache: true
           cache-dependency-glob: agentic-ai/uv.lock
 
-      # --locked fails if uv.lock is out of date with pyproject.toml.
       - name: Install dependencies
         run: uv sync --locked
 
@@ -91,6 +88,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 25
+
+    # Explicit at job level too, in case the top-level block is ever changed.
     permissions:
       contents: read
       packages: write
@@ -155,7 +154,6 @@ jobs:
             type=raw,value=latest
             type=sha,format=long
 
-      # Layers are cached from the build above, so this step is fast.
       - name: Push to GHCR
         if: env.SHOULD_PUSH == 'true'
         uses: docker/build-push-action@v6
@@ -168,7 +166,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=agentic-ai
 
-      # The exact, immutable tag that gets deployed (never `latest`).
       - name: Compute deployable image reference
         id: ref
         run: |
@@ -177,10 +174,6 @@ jobs:
 
   # =========================================================
   # 3. DEPLOY TO AWS EC2 over SSH
-  #    Pulls the image from GHCR, replaces the container, waits for /health and rolls
-  #    back to the previous image if it never becomes healthy. The agent has no
-  #    public port; the backend reaches it at http://agentic-ai:8000 on a private
-  #    Docker network.
   # =========================================================
   deploy:
     name: Deploy to AWS
@@ -189,7 +182,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
-    # One deploy at a time per host, shared with the backend pipeline.
     concurrency:
       group: aws-deploy
       cancel-in-progress: false
@@ -213,14 +205,12 @@ jobs:
           install -m 600 /dev/null ~/.ssh/deploy_key
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          # Values are shell-quoted (%q) and sent on stdin, so they never show up in a process list or log.
           {
             for v in IMAGE GHCR_USER GHCR_TOKEN INTERNAL_API_SECRET LLM_PROVIDER DEFAULT_MODEL GEMINI_API_KEY; do
               printf 'export %s=%q\n' "$v" "${!v:-}"
             done
             cat <<'REMOTE'
           set -euo pipefail
-          # --- one-time host preparation (skipped when already done) ---
           if ! command -v docker >/dev/null; then
             dnf install -y docker
             systemctl enable --now docker
@@ -275,8 +265,6 @@ jobs:
             echo "| Agentic AI (private) | \`http://agentic-ai:8000\` |"
             echo ""
             echo "This service is **deliberately not public**. It has no internet address; the backend reaches it at the URL above on the server's private Docker network."
-            echo ""
-            echo "To check it from the server: \`sudo docker exec agentic-ai curl -s http://localhost:8000/health\`"
             echo ""
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
