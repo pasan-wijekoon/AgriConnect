@@ -1,5 +1,13 @@
 name: Agentic AI - CI/CD
 
+# Images are published to Docker Hub.
+# One-time setup (Settings -> Secrets and variables -> Actions):
+#   secrets  : DOCKERHUB_TOKEN (Docker Hub access token, Read & Write), EC2_HOST, EC2_SSH_KEY,
+#              INTERNAL_API_SECRET, GEMINI_API_KEY
+#   variables: DOCKERHUB_USERNAME (must be a variable, NOT a secret: secrets are masked and
+#              GitHub drops job outputs that contain them), EC2_USER (optional), LLM_PROVIDER (optional),
+#              DEFAULT_MODEL (optional)
+
 on:
   pull_request:
     branches: [main]
@@ -21,16 +29,15 @@ concurrency:
   group: agentic-ai-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# NOTE: keys here MUST be lowercase. `Packages: write` is silently ignored.
+# NOTE: keys here MUST be lowercase.
 permissions:
   contents: read
-  packages: write
 
 env:
   PYTHON_VERSION: "3.12"
   LLM_PROVIDER: mock
   CONTAINER_PORT: "8000"
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-agentic-ai
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/agriconnect-agentic-ai
 
 jobs:
 
@@ -81,7 +88,7 @@ jobs:
           uv run --with pytest --with pytest-asyncio pytest -q
 
   # =========================================================
-  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH TO GHCR (main only)
+  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH TO DOCKER HUB (main only)
   # =========================================================
   docker:
     name: Docker build, smoke test & publish
@@ -89,10 +96,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
-    # Explicit at job level too, in case the top-level block is ever changed.
     permissions:
       contents: read
-      packages: write
 
     env:
       SHOULD_PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
@@ -136,25 +141,24 @@ jobs:
           docker logs agent
           exit 1
 
-      - name: Log in to GHCR
+      - name: Log in to Docker Hub
         if: env.SHOULD_PUSH == 'true'
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Generate tags & labels
         if: env.SHOULD_PUSH == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.GHCR_IMAGE }}
+          images: ${{ env.DOCKERHUB_IMAGE }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
 
-      - name: Push to GHCR
+      - name: Push to Docker Hub
         if: env.SHOULD_PUSH == 'true'
         uses: docker/build-push-action@v6
         with:
@@ -169,7 +173,7 @@ jobs:
       - name: Compute deployable image reference
         id: ref
         run: |
-          image="$(echo "${GHCR_IMAGE}" | tr '[:upper:]' '[:lower:]'):sha-${GITHUB_SHA}"
+          image="$(echo "${DOCKERHUB_IMAGE}" | tr '[:upper:]' '[:lower:]'):sha-${GITHUB_SHA}"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
 
   # =========================================================
@@ -193,8 +197,8 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ vars.EC2_USER || 'ec2-user' }}
           IMAGE: ${{ needs.docker.outputs.image }}
-          GHCR_USER: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKERHUB_USER: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
           LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'mock' }}
           DEFAULT_MODEL: ${{ vars.DEFAULT_MODEL || 'gemini-2.5-flash' }}
@@ -206,7 +210,7 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           {
-            for v in IMAGE GHCR_USER GHCR_TOKEN INTERNAL_API_SECRET LLM_PROVIDER DEFAULT_MODEL GEMINI_API_KEY; do
+            for v in IMAGE DOCKERHUB_USER DOCKERHUB_TOKEN INTERNAL_API_SECRET LLM_PROVIDER DEFAULT_MODEL GEMINI_API_KEY; do
               printf 'export %s=%q\n' "$v" "${!v:-}"
             done
             cat <<'REMOTE'
@@ -220,7 +224,7 @@ jobs:
             echo '/swapfile none swap sw 0 0' >> /etc/fstab
           fi
           docker network inspect agriconnect >/dev/null 2>&1 || docker network create agriconnect >/dev/null
-          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin >/dev/null
           docker pull "$IMAGE"
           PREV="$(docker inspect -f '{{.Config.Image}}' agentic-ai 2>/dev/null || true)"
 
@@ -243,7 +247,7 @@ jobs:
           start "$IMAGE"
           if healthy; then
             echo "agentic-ai is healthy on $IMAGE"
-            docker logout ghcr.io >/dev/null 2>&1 || true
+            docker logout >/dev/null 2>&1 || true
             docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
             exit 0
           fi
