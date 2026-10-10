@@ -67,10 +67,10 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
   });
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+    <div className="marketplace-dashboard buyer-dashboard" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
       {/* Hero Banner with Depth Effect */}
       <div
-        className="glass-card"
+        className="glass-card dashboard-hero"
         style={{
           padding: '2.5rem',
           borderRadius: '20px',
@@ -137,7 +137,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
       </div>
 
       {/* Category Pills Bar */}
-      <div style={{
+      <div className="dashboard-category-tabs" style={{
         display: 'flex',
         gap: '10px',
         overflowX: 'auto',
@@ -167,7 +167,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
       </div>
 
       {/* Advanced Filter & Search Controls */}
-      <div className="glass-card" style={{ padding: '18px', marginBottom: '2rem' }}>
+      <div className="glass-card dashboard-filter-card" style={{ padding: '18px', marginBottom: '2rem' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -191,6 +191,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
           {/* Region Filter */}
           <select
             className="form-select"
+            aria-label="Filter by region"
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
           >
@@ -205,6 +206,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
           {/* Grade Filter */}
           <select
             className="form-select"
+            aria-label="Filter by grade"
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
           >
@@ -217,6 +219,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
           {/* Sort Control */}
           <select
             className="form-select"
+            aria-label="Sort listings"
             value={`${sortBy}:${sortDir}`}
             onChange={(e) => {
               const [sb, sd] = e.target.value.split(':');
@@ -252,7 +255,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
       </div>
 
       {/* Results Header */}
-      <div style={{
+      <div className="dashboard-results-header" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',

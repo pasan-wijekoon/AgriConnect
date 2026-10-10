@@ -80,7 +80,7 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
 
   return (
     <>
-      <div className="filters">
+      <div className="filters analytics-filter-panel anomaly-filter-panel" aria-label="Price check filters">
         <div className="tabs" role="tablist" aria-label="Show prices by status">
           {TABS.map((t) => (
             <button
@@ -108,12 +108,15 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
             {filters.crops.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </Field>
+        <button type="button" className="btn btn-quiet filter-reset" onClick={() => { setCropId(''); setPage(1) }}>
+          Reset filters
+        </button>
       </div>
 
       {message && <SuccessNotice onDismiss={() => setMessage(null)}>{message}</SuccessNotice>}
       {list.error && <ErrorNotice error={list.error} onRetry={list.reload} />}
 
-      <Card>
+      <Card className="anomaly-card">
         {!data && list.loading && <p className="muted">Loading prices…</p>}
         {data && data.items.length === 0 && (
           <EmptyState title={tab === 'Open' ? 'Nothing to check' : 'Nothing here'}>
@@ -149,7 +152,7 @@ function Queue({ filters }: { filters: AnalyticsFilters }) {
                       <td><StatusBadge status={f.status} /></td>
                       <td className="num">
                         <button type="button" className="btn btn-small" onClick={() => setInvestigating(f)} aria-label={`See details for ${place(f)}`}>
-                          See details
+                          Review price
                         </button>
                       </td>
                     </tr>

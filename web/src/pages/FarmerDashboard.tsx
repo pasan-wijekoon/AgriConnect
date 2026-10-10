@@ -146,13 +146,13 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
   const estimatedValuation = myListings.reduce((acc, curr) => acc + (curr.minPrice || 0) * curr.quantity, 0);
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+    <div className="marketplace-dashboard farmer-dashboard" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
 
       {/* Success Notification Toast */}
       <Toast toast={toast} onClose={() => setToast(null)} />
 
       {/* Top Welcome Header */}
-      <div style={{
+      <div className="dashboard-header" style={{
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
@@ -215,7 +215,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
       </div>
 
       {/* 3D KPI Metric Cards */}
-      <div style={{
+      <div className="dashboard-kpis" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
         gap: '16px',
@@ -283,7 +283,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
       </div>
 
       {/* Navigation Tabs (My Produce vs Public Marketplace) */}
-      <div style={{
+      <div className="dashboard-tabs" style={{
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
@@ -410,7 +410,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
       )}
 
       {/* Filter and Search Bar */}
-      <div className="glass-card" style={{ padding: '16px', marginBottom: '1.5rem' }}>
+      <div className="glass-card dashboard-filter-card" style={{ padding: '16px', marginBottom: '1.5rem' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -432,6 +432,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
           {/* Crop Filter */}
           <select
             className="form-select"
+            aria-label="Filter by crop"
             value={selectedCrop}
             onChange={(e) => setSelectedCrop(e.target.value)}
           >
@@ -446,6 +447,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
           {/* Region Filter */}
           <select
             className="form-select"
+            aria-label="Filter by region"
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
           >
@@ -461,6 +463,7 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onOpenTodayPri
           {activeTab === 'my' && (
             <select
               className="form-select"
+              aria-label="Filter by status"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
             >

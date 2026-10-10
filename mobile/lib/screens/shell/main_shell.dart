@@ -181,7 +181,12 @@ class _MainShellState extends State<MainShell> {
         indicatorColor: AppColors.successBg,
         destinations: [
           for (final t in _tabs)
-            NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.selectedIcon), label: t.label),
+            NavigationDestination(
+              key: ValueKey('tab_${t.label.toLowerCase()}'),
+              icon: Icon(t.icon),
+              selectedIcon: Icon(t.selectedIcon),
+              label: t.label,
+            ),
         ],
       ),
     );

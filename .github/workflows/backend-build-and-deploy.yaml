@@ -1,12 +1,22 @@
-name: Backend - CI
+name: Backend - CI/CD
 
-# AgriConnect backend: ASP.NET Core (.NET 10) + Neon PostgreSQL.
+# AgriConnect backend: ASP.NET Core (.NET 10) + Supabase PostgreSQL, hosted on AWS EC2.
 #
 # Pull request : build + test (throwaway Postgres) -> Docker build + smoke test
-# Push to main : build + test -> Neon migration -> Docker build + smoke test
-#                -> push image to GHCR
+# Push to main : build + test -> Docker build + smoke test -> push image to GHCR
+#                -> apply EF Core migrations to Supabase -> deploy to AWS -> verify
 #
-# Required GitHub secrets: AgriConnect_PAT, NEON_CONNECTION_STRING
+# The migration runs only after the image has been built, smoke-tested and published,
+# and before any container is replaced, so a bad migration fails the pipeline while
+# the old version keeps serving traffic.
+#
+# One-time setup (Settings -> Secrets and variables -> Actions):
+#   secrets  : EC2_HOST, EC2_SSH_KEY, INTERNAL_API_SECRET, JWT_KEY, SUPABASE_CONNECTION_STRING
+#              CI_DB_PASSWORD (optional: password for the throwaway test database, letters/digits only)
+#   variables: API_DOMAIN (e.g. api.example.com or 13-124-1-2.sslip.io), ALLOWED_ORIGINS (your Vercel URL),
+#              EC2_USER (optional, default ec2-user)
+# INTERNAL_API_SECRET is one repo secret shared with the agentic-ai pipeline.
+# GHCR uses the built-in GITHUB_TOKEN, so no personal access token is needed.
 
 on:
   pull_request:
@@ -44,8 +54,9 @@ jobs:
 
   # 1. BUILD & TEST ----------------------------------------------------------
   # Integration tests need a real PostgreSQL. A disposable container is started
-  # for the job and destroyed afterwards. The credentials below are CI-only and
-  # NOT your Supabase credentials, so no secret is needed (fork PRs work too).
+  # for the job and destroyed afterwards. Its password comes from the optional secret
+  # CI_DB_PASSWORD and falls back to 'postgres' when unset (fork PRs cannot read
+  # secrets, so they use the fallback). It is NOT your Supabase password.
   build-test:
     name: Build & test (.NET)
     runs-on: ubuntu-latest
@@ -55,7 +66,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD || 'postgres' }}
           POSTGRES_DB: agriconnect_test
         ports:
           - 5432:5432
@@ -65,7 +76,7 @@ jobs:
           --health-timeout 5s
           --health-retries 12
     env:
-      ConnectionStrings__Default: "Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres"
+      ConnectionStrings__Default: "Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=${{ secrets.CI_DB_PASSWORD || 'postgres' }}"
     steps:
       - uses: actions/checkout@v4
 
@@ -99,52 +110,17 @@ jobs:
           if [ ${#projects[@]} -eq 0 ]; then echo "No test projects."; exit 0; fi
           for p in "${projects[@]}"; do dotnet test "$p" -c Release; done
 
-  # 2. MIGRATE NEON, THEN BUILD, SMOKE TEST, AND PUBLISH ---------------------
-  neon-migrate:
-    name: Migrate Neon database
-    needs: build-test
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      ConnectionStrings__Default: ${{ secrets.NEON_CONNECTION_STRING }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Validate Neon connection secret
-        shell: bash
-        run: |
-          if [ -z "$ConnectionStrings__Default" ]; then
-            echo "::error::NEON_CONNECTION_STRING is not configured."
-            exit 1
-          fi
-
-      - name: Restore .NET tools
-        working-directory: backend
-        run: dotnet tool restore
-
-      - name: Restore project packages
-        run: dotnet restore backend/backend.csproj
-
-      - name: Apply EF Core migrations to Neon
-        working-directory: backend
-        run: dotnet ef database update --project backend.csproj --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
-
+  # 2. BUILD, SMOKE TEST, AND PUBLISH TO GHCR --------------------------------
   docker:
-    name: Docker build & smoke test
-    needs: [build-test, neon-migrate]
-    if: >-
-      always() && needs.build-test.result == 'success' &&
-      (needs.neon-migrate.result == 'success' || needs.neon-migrate.result == 'skipped')
+    name: Docker build, smoke test & publish
+    needs: build-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
       packages: write
+    outputs:
+      image: ${{ steps.ref.outputs.image }}
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -160,15 +136,19 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
+      # Runs the production image (Production environment, migrations on an empty
+      # database, /health) against a throwaway Postgres. Supabase is not touched.
       - name: Smoke test backend container
         shell: bash
+        env:
+          CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD || 'postgres' }}
         run: |
           set -euo pipefail
           docker network create agriconnect-ci
           docker run -d --name agriconnect-postgres-ci \
             --network agriconnect-ci \
             -e POSTGRES_USER=postgres \
-            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_PASSWORD="$CI_DB_PASSWORD" \
             -e POSTGRES_DB=agriconnect_test \
             postgres:16
 
@@ -183,7 +163,7 @@ jobs:
             -p 5000:5000 \
             -e ASPNETCORE_URLS=http://+:5000 \
             -e Jwt__Key=ci-only-signing-key-012345678901234567890123456789 \
-            -e ConnectionStrings__Default='Host=agriconnect-postgres-ci;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres' \
+            -e ConnectionStrings__Default="Host=agriconnect-postgres-ci;Port=5432;Database=agriconnect_test;Username=postgres;Password=${CI_DB_PASSWORD}" \
             agriconnect-backend:ci
 
           for i in $(seq 1 30); do
@@ -201,7 +181,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.AgriConnect_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate GHCR tags and labels
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -224,3 +204,196 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=backend
+
+      # The exact, immutable tag that gets deployed (never `latest`).
+      - name: Compute deployable image reference
+        id: ref
+        run: |
+          image="$(echo "${GHCR_IMAGE}" | tr '[:upper:]' '[:lower:]'):sha-${GITHUB_SHA}"
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+
+  # 3. MIGRATE SUPABASE ------------------------------------------------------
+  # Uses the SESSION pooler (port 5432). EF Core migrations take a PostgreSQL
+  # advisory lock, which does not work through the transaction pooler (port 6543).
+  supabase-migrate:
+    name: Migrate Supabase database
+    needs: docker
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: supabase-migrate
+      cancel-in-progress: false
+    env:
+      ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Validate Supabase connection secret
+        shell: bash
+        run: |
+          if [ -z "$ConnectionStrings__Default" ]; then
+            echo "::error::SUPABASE_CONNECTION_STRING is not configured."
+            exit 1
+          fi
+
+      - name: Restore .NET tools
+        working-directory: backend
+        run: dotnet tool restore
+
+      - name: Restore project packages
+        run: dotnet restore backend/backend.csproj
+
+      - name: Apply EF Core migrations to Supabase
+        working-directory: backend
+        run: dotnet ef database update --project backend.csproj --context AgriConnectDbContext --connection "$ConnectionStrings__Default"
+
+  # 4. DEPLOY TO AWS EC2 over SSH ------------------------------------------
+  # Starts the backend and a Caddy container (automatic HTTPS) on the same private
+  # Docker network as the agent. Rolls back to the previous image if /health never passes.
+  deploy:
+    name: Deploy to AWS
+    needs: [docker, supabase-migrate]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: https://${{ vars.API_DOMAIN }}
+    # One deploy at a time per host, shared with the agentic-ai pipeline.
+    concurrency:
+      group: aws-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ vars.EC2_USER || 'ec2-user' }}
+          IMAGE: ${{ needs.docker.outputs.image }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
+          ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+          Jwt__Key: ${{ secrets.JWT_KEY }}
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          API_DOMAIN: ${{ vars.API_DOMAIN }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # Values are shell-quoted (%q) and sent on stdin, so they never show up in a process list or log.
+          {
+            for v in IMAGE GHCR_USER GHCR_TOKEN INTERNAL_API_SECRET ConnectionStrings__Default Jwt__Key ALLOWED_ORIGINS API_DOMAIN; do
+              printf 'export %s=%q\n' "$v" "${!v:-}"
+            done
+            cat <<'REMOTE'
+          set -euo pipefail
+          # --- one-time host preparation (skipped when already done) ---
+          if ! command -v docker >/dev/null; then
+            dnf install -y docker
+            systemctl enable --now docker
+          fi
+          if ! swapon --show | grep -q .; then
+            fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
+            echo '/swapfile none swap sw 0 0' >> /etc/fstab
+          fi
+          docker network inspect agriconnect >/dev/null 2>&1 || docker network create agriconnect >/dev/null
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+          docker pull "$IMAGE"
+          export AgenticAi__ApiKey="$INTERNAL_API_SECRET"
+          export AgenticAi__InternalApiSecret="$INTERNAL_API_SECRET"
+          PREV="$(docker inspect -f '{{.Config.Image}}' backend 2>/dev/null || true)"
+
+          start() {
+            docker rm -f backend >/dev/null 2>&1 || true
+            docker run -d --name backend --network agriconnect --restart unless-stopped --memory 900m \
+              -e ASPNETCORE_ENVIRONMENT=Production -e ASPNETCORE_URLS=http://+:5000 \
+              -e AgenticAi__BaseUrl=http://agentic-ai:8000/ \
+              -e ConnectionStrings__Default -e Jwt__Key -e ALLOWED_ORIGINS \
+              -e AgenticAi__ApiKey -e AgenticAi__InternalApiSecret \
+              "$1" >/dev/null
+          }
+          healthy() {
+            for _ in $(seq 1 90); do
+              docker exec backend bash -c "exec 3<>/dev/tcp/127.0.0.1/5000 && printf 'GET /health HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 && head -n1 <&3 | grep -q ' 200 '" >/dev/null 2>&1 </dev/null && return 0
+              sleep 2
+            done
+            return 1
+          }
+
+          # HTTPS front door: Caddy fetches and renews a Let's Encrypt certificate for $API_DOMAIN by itself.
+          if ! docker inspect -f '{{.State.Running}}' caddy 2>/dev/null | grep -q true; then
+            docker rm -f caddy >/dev/null 2>&1 || true
+            docker run -d --name caddy --network agriconnect --restart unless-stopped --memory 128m \
+              -p 80:80 -p 443:443 -p 443:443/udp -v caddy_data:/data -v caddy_config:/config \
+              caddy:2-alpine caddy reverse-proxy --from "$API_DOMAIN" --to backend:5000 >/dev/null
+          fi
+
+          start "$IMAGE"
+          if healthy; then
+            echo "backend is healthy on $IMAGE"
+            docker logout ghcr.io >/dev/null 2>&1 || true
+            docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
+            exit 0
+          fi
+          echo "backend did NOT become healthy. Last logs:" >&2
+          docker logs --tail 60 backend >&2 || true
+          if [ -n "$PREV" ] && [ "$PREV" != "$IMAGE" ]; then echo "Rolling back to $PREV" >&2; start "$PREV" || true; fi
+          exit 1
+          REMOTE
+          } | ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$EC2_USER@$EC2_HOST" 'sudo bash -s'
+
+  # 5. VERIFY THE PUBLIC ENDPOINT -------------------------------------------
+  # /health returns 200 only when the API can reach Supabase, so this proves HTTPS,
+  # the proxy and the database together.
+  verify:
+    name: Public health check
+    needs: [docker, deploy]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Wait for the API to answer
+        env:
+          API_DOMAIN: ${{ vars.API_DOMAIN }}
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://${API_DOMAIN}/health" || true)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then echo "API is healthy."; exit 0; fi
+            sleep 10
+          done
+          echo "::error::API did not become healthy at https://${API_DOMAIN}/health"
+          exit 1
+
+      - name: Show service URLs
+        env:
+          API_DOMAIN: ${{ vars.API_DOMAIN }}
+        run: |
+          echo "Backend API   : https://${API_DOMAIN}"
+          echo "Health check  : https://${API_DOMAIN}/health"
+          echo "Agentic AI    : http://agentic-ai:8000 (private, only reachable from the backend)"
+          {
+            echo "## Backend deployed to AWS"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---|---|"
+            echo "| Backend API | https://${API_DOMAIN} |"
+            echo "| Health check | https://${API_DOMAIN}/health |"
+            echo "| Agentic AI (private) | \`http://agentic-ai:8000\` - internal only, used by the backend |"
+            echo ""
+            echo "**Commit:** \`${{ github.sha }}\`"
+            echo ""
+            echo "Image: \`${{ needs.docker.outputs.image }}\`"
+            echo ""
+            echo "Set \`VITE_API_BASE_URL=https://${API_DOMAIN}\` in Vercel to point the frontend at this API."
+          } >> "$GITHUB_STEP_SUMMARY"

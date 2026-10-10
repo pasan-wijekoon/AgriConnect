@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 /// The default differs by platform because "localhost" means different
 /// things to an Android emulator (which needs the host-loopback alias
 /// 10.0.2.2) versus iOS simulator/desktop/web (where localhost is correct).
+/// Set API_BASE_URL to the backend origin for a physical Android device, and
+/// use adb reverse to forward localhost traffic to the development computer.
 /// Uses `defaultTargetPlatform` (not `dart:io`'s `Platform`) so this compiles
 /// on Flutter web too.
 String get apiBaseUrl {
