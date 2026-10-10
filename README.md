@@ -183,9 +183,22 @@ Platform targets are available via `flutter run -d <android|ios|macos|windows|li
 
 ---
 
-## CI/CD
+## Backend CI
 
-Workflow files exist under `.github/workflows/` for the backend, the agentic AI service, the frontend, and Android builds; pipelines are scaffolded and not yet populated.
+The backend workflow at `.github/workflows/backend-build-and-deploy.yaml` runs build, test, and Docker smoke checks on pull requests. On successful pushes to `main`, it applies EF Core migrations to Neon and publishes the tested backend image to GHCR. Railway continues deploying the watched repository separately.
+
+Configure these GitHub secrets:
+
+- `AgriConnect_PAT` — GHCR publishing credential
+- `NEON_CONNECTION_STRING` — Neon PostgreSQL connection string in Npgsql format
+
+Configure this variable on the Railway backend service:
+
+```text
+ConnectionStrings__Default=<Neon PostgreSQL connection string>
+```
+
+Never commit the production connection string. Configure `ConnectionStrings__Default` in the Railway backend service with the same Neon connection string used by the workflow.
 
 ## Deployment (planned)
 

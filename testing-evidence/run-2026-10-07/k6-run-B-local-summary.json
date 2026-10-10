@@ -1,0 +1,290 @@
+{
+    "metrics": {
+        "checks{scenario:browse_load}": {
+            "passes": 11850,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "http_reqs": {
+            "count": 46246,
+            "rate": 429.0025699017963
+        },
+        "http_req_blocked": {
+            "avg": 0.07473490883535999,
+            "min": 0.001101,
+            "med": 0.005003,
+            "max": 119.137371,
+            "p(90)": 0.0093485,
+            "p(95)": 0.0118505
+        },
+        "http_req_duration{scenario:login_load}": {
+            "avg": 138.60123561694914,
+            "min": 101.999739,
+            "med": 138.07274999999998,
+            "max": 213.928237,
+            "p(90)": 161.1598002,
+            "p(95)": 166.4035814,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "http_req_receiving": {
+            "avg": 1.6793728707563884,
+            "min": 0.010848,
+            "med": 0.0862165,
+            "max": 63.83037,
+            "p(90)": 5.791047,
+            "p(95)": 9.073567
+        },
+        "checks": {
+            "passes": 77164,
+            "fails": 0,
+            "value": 1
+        },
+        "vus_max": {
+            "value": 210,
+            "min": 210,
+            "max": 210
+        },
+        "orders_unexpected_status": {
+            "count": 0,
+            "rate": 0,
+            "thresholds": {
+                "count==0": false
+            }
+        },
+        "http_req_waiting": {
+            "min": 2.568831,
+            "med": 27.8074655,
+            "max": 907.713738,
+            "p(90)": 66.93381,
+            "p(95)": 85.13010275,
+            "avg": 34.681443503330236
+        },
+        "http_req_failed": {
+            "fails": 46223,
+            "passes": 23,
+            "value": 0.0004973403105133417
+        },
+        "data_received": {
+            "count": 57750588,
+            "rate": 535725.2663006495
+        },
+        "orders_rejected_insufficient_stock": {
+            "count": 23,
+            "rate": 0.21336027132598095
+        },
+        "http_req_duration": {
+            "avg": 36.38450759823552,
+            "min": 2.63908,
+            "med": 28.840149500000003,
+            "max": 907.798194,
+            "p(90)": 72.0391865,
+            "p(95)": 90.821529
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 35.96479871775955,
+            "min": 2.63908,
+            "med": 28.821063,
+            "max": 907.798194,
+            "p(90)": 71.94351360000002,
+            "p(95)": 90.57033660000002
+        },
+        "http_req_sending": {
+            "avg": 0.02369122414911568,
+            "min": 0.003357,
+            "med": 0.015097,
+            "max": 8.049538,
+            "p(90)": 0.040586,
+            "p(95)": 0.06326175
+        },
+        "iteration_duration": {
+            "avg": 306.89149107989215,
+            "min": 13.453606,
+            "med": 296.407116,
+            "max": 908.133087,
+            "p(90)": 394.1433834,
+            "p(95)": 420.8751078
+        },
+        "checks{phase:fr9}": {
+            "fails": 0,
+            "passes": 4,
+            "thresholds": {
+                "rate==1": false
+            },
+            "value": 1
+        },
+        "data_sent": {
+            "count": 35553404,
+            "rate": 329812.3445218355
+        },
+        "orders_created": {
+            "count": 37,
+            "rate": 0.34323174082875196
+        },
+        "http_req_failed{scenario:browse_load}": {
+            "fails": 7110,
+            "passes": 0,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_connecting": {
+            "med": 0,
+            "max": 118.979359,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.06693276536349091,
+            "min": 0
+        },
+        "iterations": {
+            "count": 15834,
+            "rate": 146.88463200763402
+        },
+        "vus": {
+            "min": 0,
+            "max": 199,
+            "value": 2
+        },
+        "checks{scenario:order_race}": {
+            "passes": 60,
+            "fails": 0,
+            "thresholds": {
+                "rate==1": false
+            },
+            "value": 1
+        },
+        "http_req_tls_handshaking": {
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0
+        },
+        "http_req_duration{scenario:browse_load}": {
+            "med": 13.7041005,
+            "max": 390.086055,
+            "p(90)": 32.21805810000001,
+            "p(95)": 38.82643699999999,
+            "avg": 17.79040158607598,
+            "min": 3.062099,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        }
+    },
+    "setup_data": {
+        "buyer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImYwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAxMCIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkJ1eWVyIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoiYnV5ZXJAYWdyaWNvbm5lY3QubGsiLCJqdGkiOiJiNTVkMmFkYi00NzlhLTQzYjEtYjU4Yi1kNmI1NjNlOWI3YzciLCJleHAiOjE3OTE0MDkxOTMsImlzcyI6IkFncmlDb25uZWN0IiwiYXVkIjoiQWdyaUNvbm5lY3QifQ.OLq2ZH9fzi1MVNaZNn9ub_R4QjozG80cc-zInlji0vs",
+        "cropId": "a1000000-0000-0000-0000-000000000005",
+        "existing": [],
+        "listingId": "4f2b1001-0000-0000-0000-000000000001",
+        "officer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImYwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDA1MCIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6Ik9mZmljZXIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJvZmZpY2VyQGFncmljb25uZWN0LmxrIiwianRpIjoiZDYyODQ3NTAtNmYyNC00ZDJkLWEzMWMtMTk0MjVjZDk2YmVmIiwiZXhwIjoxNzkxNDA5MTkzLCJpc3MiOiJBZ3JpQ29ubmVjdCIsImF1ZCI6IkFncmlDb25uZWN0In0.wJOGq-TF6R9LJ-veqAyDVNaOiiQNaJUz-h7zTn121Bg",
+        "availableBefore": 370
+    },
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "teardown": {
+                "checks": {
+                    "FR9 reserved quantity never exceeds available stock": {
+                        "passes": 1,
+                        "fails": 0,
+                        "name": "FR9 reserved quantity never exceeds available stock",
+                        "path": "::teardown::FR9 reserved quantity never exceeds available stock",
+                        "id": "ff8bc0c2812bb6ae1541bfbc9c75ebc2"
+                    },
+                    "FR9 exactly the orders that fit were accepted": {
+                        "id": "a29613f4585462b2e267ee9e98805b2d",
+                        "passes": 1,
+                        "fails": 0,
+                        "name": "FR9 exactly the orders that fit were accepted",
+                        "path": "::teardown::FR9 exactly the orders that fit were accepted"
+                    },
+                    "FR9 available stock never negative": {
+                        "fails": 0,
+                        "name": "FR9 available stock never negative",
+                        "path": "::teardown::FR9 available stock never negative",
+                        "id": "2bde57fcf75a53d1ea8bbe0e5873f73c",
+                        "passes": 1
+                    },
+                    "FR9 available stock reduced by exactly the reserved amount": {
+                        "id": "11faf1f4a1b465cbf3db78c0b1ab3eda",
+                        "passes": 1,
+                        "fails": 0,
+                        "name": "FR9 available stock reduced by exactly the reserved amount",
+                        "path": "::teardown::FR9 available stock reduced by exactly the reserved amount"
+                    }
+                },
+                "name": "teardown",
+                "path": "::teardown",
+                "id": "a8a9942382e8ffe2e56ef29e664b8229",
+                "groups": {}
+            }
+        },
+        "checks": {
+            "listings 200": {
+                "passes": 15184,
+                "fails": 0,
+                "name": "listings 200",
+                "path": "::listings 200",
+                "id": "652fb154c94172cafd553ce1c9624550"
+            },
+            "listings has items": {
+                "name": "listings has items",
+                "path": "::listings has items",
+                "id": "d92e059a91a15d06bbc2383dfd67faf9",
+                "passes": 15184,
+                "fails": 0
+            },
+            "trends 200": {
+                "name": "trends 200",
+                "path": "::trends 200",
+                "id": "466372da88bf077ae825efb6f7b04f2e",
+                "passes": 15184,
+                "fails": 0
+            },
+            "trends has points": {
+                "id": "536439c663f62b850e18ef7eab2c8ae1",
+                "passes": 15184,
+                "fails": 0,
+                "name": "trends has points",
+                "path": "::trends has points"
+            },
+            "centres 200": {
+                "fails": 0,
+                "name": "centres 200",
+                "path": "::centres 200",
+                "id": "1eded7550c22b796e95c993908ac9c8f",
+                "passes": 15184
+            },
+            "login 200": {
+                "path": "::login 200",
+                "id": "48b06dc5cde7f6ebb606ad7da726a2a5",
+                "passes": 590,
+                "fails": 0,
+                "name": "login 200"
+            },
+            "login returns token": {
+                "name": "login returns token",
+                "path": "::login returns token",
+                "id": "78c4c109214e8b5bb2cd4dc9ec3b7320",
+                "passes": 590,
+                "fails": 0
+            },
+            "order answered 201/409/400, never 5xx": {
+                "fails": 0,
+                "name": "order answered 201/409/400, never 5xx",
+                "path": "::order answered 201/409/400, never 5xx",
+                "id": "8b51e11f3491018cd1c1d01297fc4905",
+                "passes": 60
+            }
+        },
+        "name": "",
+        "path": ""
+    }
+}

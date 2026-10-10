@@ -1,0 +1,5 @@
+A11Y-01-login: 100  PASS  
+A11Y-02-farmer-dashboard: 93  PASS  color-contrast, heading-order, label-content-name-mismatch
+A11Y-03-buyer-dashboard: 93  PASS  color-contrast, heading-order, label-content-name-mismatch
+A11Y-04-price-trends: 100  PASS  
+A11Y-05-ai-scheduling: 100  PASS  

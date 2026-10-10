@@ -1,0 +1,23 @@
+00:00 +0: loading D:/campus/Y3S1/project/AgriConnect/mobile/test/api_service_test.dart
+00:00 +0: D:/campus/Y3S1/project/AgriConnect/mobile/test/api_service_test.dart: MOB-U-01 – API client parses listing fields from a valid response
+00:00 +1: D:/campus/Y3S1/project/AgriConnect/mobile/test/api_service_test.dart: MOB-U-02 – missing listing fields use safe defaults without crashing
+00:00 +2: D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart: MOB-W-03 – listing card shows crop, price, grade, and quantity
+00:01 +3: D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart: MOB-W-03 – listing card shows crop, price, grade, and quantity
+00:01 +4: D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart: shows a card per crop with the price range and a summary
+00:02 +5: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 – -5 price blocks listing submission
+00:02 +6: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 – -5 price blocks listing submission
+00:02 +7: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 – -5 price blocks listing submission
+00:02 +8: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart: MOB-W-02 – -5 price blocks listing submission
+00:02 +9: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:03 +10: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:03 +11: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:03 +12: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:03 +13: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:03 +14: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:04 +15: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: signed-out users see the landing page with sign-in and register
+00:04 +16: D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart: tapping a card opens the reasoning
+00:04 +17: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: a farmer lands on Home and gets five role-specific tabs
+00:05 +18: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: a buyer gets Market and Centres tabs and can sign out
+00:06 +19: D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart: officers are pointed to the web console instead of the mobile app
+00:07 +20: All tests passed!
+exit 0

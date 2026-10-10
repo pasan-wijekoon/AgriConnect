@@ -78,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(height: 28),
                     TextFormField(
+                      key: const ValueKey('email_field'),
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.email],
@@ -91,6 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      key: const ValueKey('password_field'),
                       controller: _passwordController,
                       obscureText: _obscure,
                       autofillHints: const [AutofillHints.password],
@@ -120,6 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                     const SizedBox(height: 24),
                     FilledButton(
+                      key: const ValueKey('login_button'),
                       onPressed: _isLoading ? null : _submit,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,

@@ -1,27 +1,27 @@
 using System.Text;
-using System.Text.Json.Serialization;
 using AgriConnect.Api.Config;
 using AgriConnect.Api.Services;
+using AgriConnect.Api.Services.Agents;
 using AgriConnect.Api.Services.Analytics;
 using AgriConnect.Api.Services.Reports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Enums serialize/deserialize as their string names (e.g. "Pickup", not 0), matching
-// the enum-as-string convention already used for the DB layer (plan §0.2). Also
-// registers Component D's validation-error-key convention (dateRangeEnd, not
-// DateRangeEnd) on the same AddControllers() call. (Component A's AddControllers() set
-// PropertyNamingPolicy = CamelCase explicitly — already ASP.NET Core's own default for
-// AddControllers(), so nothing was lost by not repeating it here.)
-builder.Services.AddControllers(options =>
-        options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider()))
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddControllers();
+var connectionString = builder.Configuration.GetConnectionString("Default");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "ConnectionStrings:Default is not configured. Set ConnectionStrings__Default in the hosting environment.");
+}
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 // Every error response is RFC 7807 ProblemDetails.
 builder.Services.AddProblemDetails();
@@ -29,7 +29,7 @@ builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 // PostgreSQL via EF Core.
 builder.Services.AddDbContext<AgriConnectDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(connectionString));
 
 // ---- Authentication (integration decision, 2026-09-27, updated same day when
 // Component A's real auth was merged in) ----
@@ -52,10 +52,13 @@ builder.Services.AddDbContext<AgriConnectDbContext>(options =>
 // needing a full register-then-login round trip per test — a deliberate scope decision,
 // not an oversight; see PROGRESS.md. DevAuthenticationHandler.cs is left in the repo,
 // unregistered — superseded, not deleted.
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException(
-        "Jwt:Key is not configured. Set it via appsettings.Development.json, " +
-        "an environment variable (Jwt__Key), or `dotnet user-secrets`.");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey)
+    || (builder.Environment.IsProduction() && jwtKey == "dev-secret-key-change-in-production"))
+{
+    throw new InvalidOperationException(
+        "Jwt:Key is not configured with a production-safe value. Set Jwt__Key in the hosting environment.");
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -81,6 +84,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<AgenticAiService>();
 builder.Services.AddScoped<TodayPriceCatalogService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<LoginAttemptTracker>(); // SEC-06: throttles repeated failed sign-ins (state is per instance)
 builder.Services.AddScoped<ListingService>();
 
 // ---- Component D — Market Price Analytics & Reporting ----
@@ -187,7 +191,7 @@ builder.Services.AddHttpClient<AgriConnect.Api.Services.Agents.LogisticsAgentCli
 // per Component A's own reasoning (AllowAnyOrigin()+credentials is a CSRF risk) —
 // harmless here since AllowAnyOrigin() was never used, just explicit defense.
 const string WebClientCorsPolicy = "WebClient";
-var allowedOrigins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://localhost:5000")
+var allowedOrigins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://localhost:5000,https://agriconnect-wheat.vercel.app")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(options =>
 {
@@ -218,16 +222,40 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// ---- Deployment: apply EF Core migrations at startup ----
-// A fresh hosted database (e.g. Render PostgreSQL) has no schema, and nothing else in the
-// deployment path runs `dotnet ef database update`. Opt-in via Database__MigrateOnStartup=true
-// so local/dev and test runs keep their current behaviour.
-if (builder.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+// Apply schema changes before any seed operation or request is allowed to run.
+// EF Core's PostgreSQL migration lock makes this safe when multiple instances
+// start during a deployment; the deployment workflow still applies migrations
+// ahead of Railway as the normal path.
+using (var migrationScope = app.Services.CreateScope())
 {
-    using var migrateScope = app.Services.CreateScope();
-    var migrateDb = migrateScope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-    await migrateDb.Database.MigrateAsync();
-    Console.WriteLine("[Startup] Database: migrations applied");
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+    await migrationDb.Database.MigrateAsync();
+}
+
+// Development and explicit seed runs need the same deterministic fixtures used by
+// the integration suite. Production remains data-only unless a caller explicitly
+// supplies --seed or --seed-only (for example, the deployment workflow).
+if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only"))
+{
+    using var seedScope = app.Services.CreateScope();
+    var seedDb = seedScope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
+    var seedLogger = seedScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    var shared = await SharedReferenceSeeder.SeedAsync(seedDb, seedLogger);
+    var logistics = await DataSeeder.SeedAsync(seedDb, seedLogger);
+    var analytics = AnalyticsFixtures.Seed(seedDb);
+
+    Console.WriteLine(
+        $"[Seed] Shared: {shared.UsersAdded} users; " +
+        $"Logistics: {logistics.CollectionCentresAdded} centres, {logistics.OrdersAdded} orders; " +
+        $"Analytics: {analytics.SnapshotsAdded} snapshots, {analytics.AnomalyFlagsAdded} flags, " +
+        $"{analytics.SupplyEventsAdded} events.");
+}
+
+if (args.Contains("--seed-only"))
+{
+    Console.WriteLine("Seeding completed. Exiting (--seed-only flag specified).");
+    return;
 }
 
 // ---- Startup diagnostics: print DB connectivity + server status to the terminal ----
@@ -253,9 +281,17 @@ app.Lifetime.ApplicationStarted.Register(() =>
     Console.WriteLine($"[Startup] Backend: RUNNING on {urls}");
 });
 
+// ZAP 10021: stop browsers from MIME-sniffing API responses (e.g. an uploaded file served as script).
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    await next();
+});
 app.UseExceptionHandler();
 // Gives empty 401/403/404 responses a ProblemDetails body too.
 app.UseStatusCodePages();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -264,124 +300,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors(WebClientCorsPolicy);
-
-// Serves generated reports from wwwroot/reports.
-app.UseStaticFiles();
-
-app.UseAuthentication();
-
-// A signed JWT must not keep an account alive after an administrator deactivates it.
-// Claims remain valid cryptographically, so check the current account state before
-// every protected request. This also prevents stale tokens from accessing data.
-app.Use(async (context, next) =>
+app.MapControllers();      
+app.MapGet("/health", async (AgriConnectDbContext db, CancellationToken cancellationToken) =>
 {
-    if (context.User.Identity?.IsAuthenticated == true &&
-        Guid.TryParse(context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var userId))
+    try
     {
-        await using var scope = app.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-        var active = await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && u.IsActive);
-        if (!active)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new ProblemDetails
-            {
-                Status = StatusCodes.Status401Unauthorized,
-                Title = "Authentication required",
-                Detail = "This account is inactive or no longer exists."
-            });
-            return;
-        }
+        var connected = await db.Database.CanConnectAsync(cancellationToken);
+        return connected
+            ? Results.Ok(new { status = "ok", database = "connected" })
+            : Results.Json(new { status = "unhealthy", database = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
     }
-    await next();
+    catch (Exception)
+    {
+        return Results.Json(new { status = "unhealthy", database = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
 });
-
-app.UseAuthorization();
-
-if (app.Environment.IsDevelopment() || args.Contains("--seed") || args.Contains("--seed-only")
-    || builder.Configuration.GetValue<bool>("Database:SeedOnStartup"))
-{
-    // ---- Shared Reference Tables — seed crops, regions, and dev users ----
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        var sharedResult = await SharedReferenceSeeder.SeedAsync(db, logger);
-        Console.WriteLine($"[Shared] Seeded: {sharedResult.CropsAdded} crops, {sharedResult.RegionsAdded} regions, {sharedResult.UsersAdded} users.");
-
-        // Photos uploaded before images moved into the database are copied in once (idempotent).
-        var uploadsDir = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "uploads");
-        var importedImages = await UploadedImageImporter.ImportAsync(db, uploadsDir, logger);
-        if (importedImages > 0) Console.WriteLine($"[Shared] Imported {importedImages} existing photo(s) from wwwroot/uploads into the database.");
-    }
-
-    // ---- Component D — demo price history, anomaly flags and supply events ----
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-        var result = AnalyticsFixtures.Seed(db);
-        Console.WriteLine($"[Component D] Seeded: {result.SnapshotsAdded} snapshots, {result.AnomalyFlagsAdded} anomalies, {result.SupplyEventsAdded} supply events.");
-    }
-
-    // ---- Component B — Seed collection centres & demo order fixtures ----
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        var result = await DataSeeder.SeedAsync(db, logger);
-        Console.WriteLine($"[Component B] Seeded: {result.CollectionCentresAdded} collection centres, {result.ListingsAdded} listings, {result.OrdersAdded} orders, {result.ReservationsAdded} reservations, {result.SchedulesAdded} schedules.");
-    }
-}
-
-// Support running with --verify-seed to inspect database counts and sample values
-if (args.Contains("--verify-seed"))
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AgriConnectDbContext>();
-
-        var centreCount = await db.CollectionCentres.CountAsync();
-        var orderCount = await db.Orders.CountAsync();
-        var reservationCount = await db.StockReservations.CountAsync();
-        var scheduleCount = await db.PickupSchedules.CountAsync();
-        Console.WriteLine($"[VERIFY] CollectionCentres: {centreCount}");
-        Console.WriteLine($"[VERIFY] Orders: {orderCount}");
-        Console.WriteLine($"[VERIFY] StockReservations: {reservationCount}");
-        Console.WriteLine($"[VERIFY] PickupSchedules: {scheduleCount}");
-
-        var sampleOrder = await db.Orders.FirstAsync();
-        Console.WriteLine($"[VERIFY] Sample Order: Status={sampleOrder.Status}, Quantity={sampleOrder.Quantity}, DeliveryPreference={sampleOrder.DeliveryPreference}");
-
-        var snapshotCount = await db.PriceTrendSnapshots.CountAsync();
-        var anomalyCount = await db.PriceAnomalyFlags.CountAsync();
-        var eventCount = await db.ShortageOversupplyEvents.CountAsync();
-        var reportCount = await db.ReportExports.CountAsync();
-        Console.WriteLine($"[VERIFY] PriceTrendSnapshots: {snapshotCount}");
-        Console.WriteLine($"[VERIFY] PriceAnomalyFlags: {anomalyCount}");
-        Console.WriteLine($"[VERIFY] ShortageOversupplyEvents: {eventCount}");
-        Console.WriteLine($"[VERIFY] ReportExports: {reportCount}");
-
-        var sampleSnapshot = await db.PriceTrendSnapshots.FirstAsync();
-        Console.WriteLine($"[VERIFY] Sample Snapshot: Period={sampleSnapshot.Period}, AvgPrice={sampleSnapshot.AvgPrice}, MinPrice={sampleSnapshot.MinPrice}, MaxPrice={sampleSnapshot.MaxPrice}, SampleCount={sampleSnapshot.SampleCount}");
-    }
-    return;
-}
-
-// Support running with --seed-only to seed and terminate cleanly (for CI/scripts)
-if (args.Contains("--seed-only"))
-{
-    Console.WriteLine("Seeding completed. Exiting (--seed-only flag specified).");
-    return;
-}
-
-app.MapControllers();
-
-// Unauthenticated liveness endpoint used by Render and CI/CD deployment checks.
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.Run();
-
-// Exposes the top-level-statements Program class (implicitly `internal`) to
-// backend.Tests' WebApplicationFactory<Program>-based integration tests
-// (Phase 12, plan §13's "API/integration" row).
-public partial class Program;

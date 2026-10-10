@@ -1,0 +1,9 @@
+00:00 +0: loading C:/Users/Ruwan/Desktop/pasan/Projects/Academic Assignments/SEF/AgriConnect/mobile/integration_test/server_down_test.dart
+Running Gradle task 'assembleDebug'...                            112.8s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...           6.0s
+00:00 +0: unreachable backend shows a friendly marketplace error
+Error fetching crops: ClientException with SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = localhost, port = 40728, uri=http://localhost:5999/api/crops
+Error fetching regions: ClientException with SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = localhost, port = 40736, uri=http://localhost:5999/api/regions
+00:06 +1: (tearDownAll)
+00:07 +1: All tests passed!

@@ -26,7 +26,8 @@ Testing covers every category and tool listed in the Finalized Tools Table (§5)
 - **Web application testing** — component-level correctness (Vitest) and full browser-driven end-to-end flows within the web app (Playwright).
 - **Mobile application testing** — widget-level correctness (`flutter_test`) and on-device/emulator integration and end-to-end flows (`integration_test`).
 - **Cross-platform integration testing** — complete workflows that cross the UI → API → database boundary, on both the web (Playwright) and mobile (Appium) clients.
-- **Non-functional testing** — performance/load/stress (k6), accessibility (Lighthouse), cross-browser compatibility (Playwright), and security vulnerability scanning (OWASP ZAP).
+- **Agentic AI testing and evaluation** — deterministic pytest cases for task completion, structured-output validation, business rules, prompt injection, approval enforcement and failure recovery of the Logistics Scheduling and Buyer-Farmer Matching agents (added to match the assignment's testing areas).
+- **Non-functional testing** — performance/load/stress (k6), accessibility (Lighthouse), cross-browser compatibility (Playwright), and security vulnerability scanning (OWASP ZAP) plus scripted security checks.
 
 ### 2.2 Out of Scope
 
@@ -75,12 +76,13 @@ Each row of the Finalized Tools Table (§5) is treated as one testing area with 
 | 7 | Accessibility | Confirm the React web application meets a baseline level of WCAG compliance so it is usable by farmers and buyers using assistive technology. |
 | 8 | Compatibility | Confirm the web application behaves consistently across the major browser engines (Chromium, Firefox, WebKit/Edge) rather than being implicitly tested on only one. |
 | 9 | Security | Confirm the API's exposed endpoints are free of common vulnerability classes (OWASP Top 10) via automated scanning, complementing the manual authorization/IDOR checks already covered under Backend and Cross-Platform testing. |
+| 10 | Agentic AI | Confirm the AI agents only propose, validate every model output, resist prompt injection and fail safely (pytest, deterministic cases with a mock LLM). |
 
 ---
 
 ## 5. Tools and Frameworks
 
-The following tools are finalized for this project. No substitutions or additions are made outside this table.
+The following tools were planned for this project. The deviations that were actually made are listed in section 5.1.
 
 | Category | Type | Tools | Scope |
 |---|---|---|---|
@@ -92,7 +94,23 @@ The following tools are finalized for this project. No substitutions or addition
 | Non-Functional Testing | Performance/Load/Stress Testing | k6 | Response time, throughput, behavior under normal and heavy concurrent load |
 | Non-Functional Testing | Accessibility | Lighthouse | WCAG compliance on React web app |
 | Non-Functional Testing | Compatibility | Playwright | Run same test across Chromium, Firefox, Edge |
-| Non-Functional Testing | Security | OWASP ZAP | Vulnerability scanning on API endpoints |
+| Non-Functional Testing | Security | OWASP ZAP, scripted checks (Python + httpx) | Vulnerability scanning on API endpoints; injection, IDOR, brute-force, error leakage, CORS, price tampering |
+| Functional Testing | Agentic AI Testing | pytest (+ pytest-cov), fake chat models | Task completion, schema validation, business rules, prompt injection, approval enforcement, failure recovery |
+
+### 5.1 Tools actually used, and deviations from the plan
+
+| Planned | Actually used | Reason |
+|---|---|---|
+| Newman (API integration) | xUnit with `WebApplicationFactory` (real routing, auth, validation, PostgreSQL) | Already in the repository; no extra Postman collection to maintain |
+| Testcontainers for .NET | A real PostgreSQL instance (local, dedicated `agriconnect_perf` database) | Docker/Testcontainers not needed; the concurrency and constraint behaviour is still verified on real PostgreSQL |
+| Appium (mobile cross-platform) | Not run | No emulator or device available in the test window |
+| Mobile `integration_test` | Not run | No `integration_test` suite exists and no emulator was available |
+| Playwright on Chromium, Firefox, WebKit, Edge | Chromium only | Browser downloads failed because the system drive was full |
+| k6 at 50 VUs for 5 min and 50 to 300 VUs | 20 VUs for 30 s, ramp to 200 VUs, login at 10 VUs, order race at 30 VUs | Time and a single developer machine; thresholds kept (p95 < 500 ms, error rate < 1%) |
+| OWASP ZAP full scan | ZAP API scan from the OpenAPI spec (active, authenticated as an officer) plus a passive re-scan after fixes | Officer role only; Administrator-only endpoints return 403 and were not scanned with admin rights |
+| (not planned) Agentic AI area | pytest, 89 tests (including 6 safety cases) | Listed in the assignment |
+
+Performance and security tests were run only against a local, disposable database. A first k6 run against the configured cloud database showed a connection-limit problem (DEF-P-02) and must not be repeated there.
 
 ---
 
@@ -203,14 +221,12 @@ Each member is responsible for the test code, execution, results, and defects of
 
 | Phase | Date | Activity | Areas Covered |
 |---|---|---|---|
-| 1 | 3 Oct | Environment setup, tool installation, fixture/test-data preparation | All |
-| 2 | 3 Oct | Backend unit + API integration testing; database testing | Backend Testing, Database Testing |
-| 3 | 3 Oct | Web component + E2E testing | Web Testing |
-| 4 | 3 Oct | Mobile widget + integration testing | Mobile Testing |
-| 5 | 4 Oct (AM) | Cross-platform integration testing (web + mobile, full stack) | Cross-Platform Integration Testing |
-| 6 | 4 Oct (AM) | Non-functional testing pass | Performance, Accessibility, Compatibility, Security |
-| 7 | 4 Oct (PM) | Defect triage, fixes, retest, sign-off, evidence collection | All |
-| 8 | 5 Oct | Test Execution Summary, Software Testing Report (PDF), final commit, CourseWeb submission | All |
+| 1 | 3 Oct | Plan and test cases drafted; first k6 smoke run; earlier Component D defects fixed | Planning, Performance |
+| 2 | 3-6 Oct | Backend, web and mobile test code written by the team; backend report of 6 Oct (364 tests) | Backend, Web, Mobile |
+| 3 | 7 Oct | Full re-run of every suite; fixes to test infrastructure; k6 (3 runs), ZAP active and passive scans, scripted security checks, Lighthouse, integrated workflow, Agentic AI safety cases | All |
+| 4 | 7 Oct | Defects fixed and retested (DEF-P-01, DEF-S-01, DEF-S-02, DEF-W-01, DEF-T-01..04) | Backend, Security, Web |
+| 5 | 7-8 Oct | Test Case Document, Defect Report, Software Testing Report (PDF), AI-use declaration, final commit, CourseWeb submission (deadline 8 Oct) | All |
+
 
 ---
 
@@ -223,7 +239,8 @@ Each member is responsible for the test code, execution, results, and defects of
 | Cross-component integration defects (a component's UI silently drifting from another component's API contract after independent development) go undetected until late | High | High | Prioritise Cross-Platform Integration Testing early rather than leaving it to the end; treat it as equally mandatory as unit testing, not a "nice to have" final pass. |
 | Load testing against a resource-constrained developer machine produces misleading performance numbers | Medium | Medium | Run k6 load tests from a separate CI runner/dedicated machine, sized comparably to the intended deployment target; otherwise record machine specs with the results. |
 | Security scanning (OWASP ZAP) is accidentally pointed at a production or shared environment | Low | Critical | Restrict ZAP scans to a dedicated, isolated test deployment; never scan production. |
-| Very short remaining schedule before the 5 Oct deadline | High | High | Members work in parallel on their own areas; prioritise one complete E2E workflow, k6, and ZAP first. |
+| Very short remaining schedule before the 8 Oct deadline | High | High | Members work in parallel on their own areas; prioritise one complete E2E workflow, k6, and ZAP first. |
+| Realised: the system drive filled up (browser and Docker image downloads failed) and the configured database was a shared cloud database | High | High | Used a local disposable PostgreSQL for load and security tests; Chromium only; recorded as limitations |
 | A member cannot explain or reproduce AI-assisted tests in the viva | Medium | High | Every member verifies, runs, and understands their own tests; AI usage is declared per the module requirements and CLEAR framework. |
 
 ---

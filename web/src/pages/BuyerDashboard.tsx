@@ -191,6 +191,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
           {/* Region Filter */}
           <select
             className="form-select"
+            aria-label="Filter by region"
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
           >
@@ -205,6 +206,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
           {/* Grade Filter */}
           <select
             className="form-select"
+            aria-label="Filter by grade"
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
           >
@@ -217,6 +219,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onOpenTodayPrice
           {/* Sort Control */}
           <select
             className="form-select"
+            aria-label="Sort listings"
             value={`${sortBy}:${sortDir}`}
             onChange={(e) => {
               const [sb, sd] = e.target.value.split(':');

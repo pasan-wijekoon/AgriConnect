@@ -1,11 +1,15 @@
-import { render, screen } from '@testing-library/react'
+import { render as rtlRender, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { login, register } = vi.hoisted(() => ({ login: vi.fn(), register: vi.fn() }))
 vi.mock('../../src/context/AuthContext', () => ({ useAuth: () => ({ login, register }) }))
 
 import { LoginPage } from '../../src/pages/LoginPage'
+
+// LoginPage calls useNavigate(), so it must render inside a router.
+const render = (ui: React.ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
 
 beforeEach(() => {
   login.mockReset()
@@ -14,9 +18,9 @@ beforeEach(() => {
 
 const emailInput = () => screen.getByPlaceholderText('name@agriconnect.lk') as HTMLInputElement
 const passwordInput = () => document.querySelector('input[type="password"]') as HTMLInputElement
-// "Sign In" is both the tab and the submit button; the submit one is type=submit.
-const submit = () =>
-  screen.getAllByRole('button', { name: 'Sign In' }).find((b) => (b as HTMLButtonElement).type === 'submit')!
+// "Sign In" is both the tab and the submit button. The tab has no type attribute (so the DOM
+// reports type=submit for it too); the real submit button is the one inside the form.
+const submit = () => screen.getAllByRole('button', { name: 'Sign In' }).find((b) => b.closest('form'))!
 
 describe('Login form (WEB-C-01, WEB-C-02)', () => {
   it('WEB-C-01 blocks an empty submit and marks both fields as missing', async () => {

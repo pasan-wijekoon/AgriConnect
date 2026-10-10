@@ -40,12 +40,17 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
-  IMAGE_NAME: agriconnect-agentic-ai
+  LLM_PROVIDER: mock
+  CONTAINER_PORT: "8000"
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-agentic-ai
 
 jobs:
-  # ---------------------------------------------------------------- CI
+
+  # =========================================================
+  # 1. LINT + TEST (mock LLM, no network, no secrets)
+  # =========================================================
   test:
-    name: Install & test (Python)
+    name: Lint & test (uv)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -59,134 +64,201 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up uv and Python
-        uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
-          cache-dependency-glob: |
-            agentic-ai/uv.lock
-            agentic-ai/pyproject.toml
+          cache-dependency-glob: agentic-ai/uv.lock
 
+      # --locked fails if uv.lock is out of date with pyproject.toml.
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --locked
 
-      - name: Import check
-        run: uv run python -c "import src.app.main"
-
-      - name: Run tests
+      - name: Lint (only if ruff is configured)
         run: |
-          if [ -d tests ] || find . -name 'test_*.py' -not -path './.venv/*' | grep -q .; then
-            uv run pytest -q
+          if grep -q "\[tool.ruff" pyproject.toml; then
+            uv run --with ruff ruff check .
           else
-            echo "No tests found - skipping."
+            echo "No [tool.ruff] config in pyproject.toml - skipping lint."
           fi
 
-  # ---------------------------------------------------------------- CD: image
+      - name: Import check (app boots with mock provider)
+        run: uv run python -c "import src.app.main"
+
+      - name: Test
+        run: |
+          if [ -z "$(find . -path ./.venv -prune -o \( -name 'test_*.py' -o -name '*_test.py' \) -print -quit)" ]; then
+            echo "No tests found - skipping."
+            exit 0
+          fi
+          # Long-term fix: `uv add --dev pytest pytest-asyncio`, commit
+          # pyproject.toml + uv.lock, then use plain `uv run pytest -q`.
+          uv run --with pytest --with pytest-asyncio pytest -q
+
+  # =========================================================
+  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH TO GHCR (main only)
+  # =========================================================
   docker:
-    name: Build & push Docker image
+    name: Docker build, smoke test & publish
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: read
       packages: write
+
     env:
-      PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    outputs:
-      image: ${{ steps.image.outputs.image }}
+      SHOULD_PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compute image reference
-        id: image
-        run: |
-          OWNER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
-          echo "image=ghcr.io/${OWNER}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
-
       - uses: docker/setup-buildx-action@v3
 
+      - name: Build image for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/agentic-ai/Dockerfile
+          load: true
+          push: false
+          platforms: linux/amd64
+          tags: agriconnect-agentic-ai:ci
+          cache-from: type=gha,scope=agentic-ai
+          cache-to: type=gha,scope=agentic-ai,mode=max
+
+      # FastAPI always serves /openapi.json, so no custom health route is needed.
+      - name: Smoke test container
+        run: |
+          docker run -d --name agent \
+            -p ${{ env.CONTAINER_PORT }}:${{ env.CONTAINER_PORT }} \
+            -e LLM_PROVIDER=mock \
+            agriconnect-agentic-ai:ci
+
+          for i in $(seq 1 30); do
+            if curl -fsS "http://localhost:${{ env.CONTAINER_PORT }}/openapi.json" > /dev/null; then
+              echo "Container is serving requests."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Container did not become ready. Logs:"
+          docker logs agent
+          exit 1
+
       - name: Log in to GHCR
-        if: env.PUSH == 'true'
+        if: env.SHOULD_PUSH == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Generate tags & labels
+        if: env.SHOULD_PUSH == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.GHCR_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      # Layers are cached from the build above, so this step is fast.
+      - name: Push to GHCR
+        if: env.SHOULD_PUSH == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/agentic-ai/Dockerfile
+          push: true
           platforms: linux/amd64
-          push: ${{ env.PUSH == 'true' }}
-          tags: |
-            ${{ steps.image.outputs.image }}:sha-${{ github.sha }}
-            ${{ steps.image.outputs.image }}:latest
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=agentic-ai
-          cache-to: type=gha,scope=agentic-ai,mode=max
 
-  # ---------------------------------------------------------------- CD: deploy
+  # =========================================================
+  # 3. DEPLOY TO RAILWAY
+  #    Pushing an image does not redeploy by itself, so we tell Railway
+  #    to redeploy; it then pulls ghcr.io/<owner>/agriconnect-agentic-ai:latest.
+  #    RAILWAY_TOKEN must be a PROJECT token (scoped to one environment).
+  # =========================================================
   deploy:
     name: Deploy to Railway
     needs: docker
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     environment: production
+
     concurrency:
-      group: deploy-agentic-ai-production
+      group: railway-deploy-agentic-ai
       cancel-in-progress: false
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_AGENTIC_AI_TOKEN }}
-      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_AGENTIC_AI_PROJECT_ID }}
-      RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_AGENTIC_AI_SERVICE_ID }}
+
     steps:
-      - name: Check deployment secrets
-        run: |
-          for v in RAILWAY_TOKEN RAILWAY_PROJECT_ID RAILWAY_SERVICE_ID; do
-            if [ -z "${!v}" ]; then echo "::error::Secret for $v is not set"; exit 1; fi
-          done
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Railway CLI
-        run: npm install --global @railway/cli
-
-      - name: Redeploy service
-        run: |
-          railway redeploy \
-            --project "$RAILWAY_PROJECT_ID" \
-            --service "$RAILWAY_SERVICE_ID" \
-            --yes
-
-      - name: Wait for health endpoint
+      - name: Redeploy Railway service
         env:
-          URL: ${{ vars.AGENTIC_AI_HEALTH_URL }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
         run: |
-          if [ -z "$URL" ]; then echo "Health URL not configured; deploy triggered."; exit 0; fi
-          for i in $(seq 1 40); do
-            if curl --fail --silent --max-time 20 "$URL" > /dev/null; then
-              echo "Healthy."
-              exit 0
-            fi
-            sleep 15
-          done
-          echo "::error::Agentic AI health check failed"
-          exit 1
+          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE" ]; then
+            echo "RAILWAY_TOKEN secret and RAILWAY_SERVICE variable are required."
+            exit 1
+          fi
+          npx -y @railway/cli@latest redeploy --service "$RAILWAY_SERVICE" --yes
 
-      - name: Deployment summary
+      - name: Summary
         run: |
           {
-            echo "## Agentic AI deployment"
+            echo "## Agentic AI deployed to Railway"
             echo ""
-            echo "- Platform: Railway"
-            echo "- Image: \`${{ needs.docker.outputs.image }}:sha-${{ github.sha }}\`"
-            echo "- Commit: \`${{ github.sha }}\`"
+            echo "**Commit:** \`${{ github.sha }}\`"
+            echo ""
+            echo "Tests and smoke test passed, image published, Railway redeploy triggered."
+            echo ""
+            echo "Image:"
+            echo "- \`${{ env.GHCR_IMAGE }}:latest\`"
+            echo "- \`${{ env.GHCR_IMAGE }}:sha-${{ github.sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # =========================================================
+  # 4. HEALTH CHECK (skipped unless AGENT_HEALTH_URL is set)
+  #    Skip it if the service has no public domain (private networking).
+  # =========================================================
+  verify:
+    name: Health check
+    needs: deploy
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Wait for service to respond
+        env:
+          HEALTH_URL: ${{ vars.AGENT_HEALTH_URL }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "AGENT_HEALTH_URL not set - skipping."
+            exit 0
+          fi
+
+          # Give Railway time to pull the image and swap containers.
+          sleep 45
+
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
+            echo "Attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "Service is healthy."
+              exit 0
+            fi
+            sleep 20
+          done
+
+          echo "Service did not become healthy in time."
+          exit 1

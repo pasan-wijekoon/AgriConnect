@@ -69,6 +69,8 @@ cmake-build-*/
 .env
 .env.*
 !.env.example
+file.txt
+credentials
 *.pem
 *.key
 *.cert

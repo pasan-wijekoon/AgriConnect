@@ -1,0 +1,45 @@
+XP-W-01 integrated workflow evidence (Playwright UI -> API -> PostgreSQL -> Agentic AI)
+
+Final order: {"id": "fad18bb4-f419-4386-8b77-32cec71953f9", "status": "Completed", "quantity": 5.0, "cropName": "Carrots", "collectionCentreName": "Kandy Central Collection Centre"}
+
+Agentic AI service log (call made by the API when the officer approved the order):
+INFO:     127.0.0.1:64680 - "POST /agents/logistics/schedule HTTP/1.1" 200 OK
+
+Order activity trail (audit log as returned by GET /api/orders/{id}/activity):
+[
+  {
+    "timestamp": "2026-10-07T10:12:42.983142+00:00",
+    "action": "OrderCreated",
+    "summary": "Order placed.",
+    "actorName": "Nihal Fernando",
+    "explanation": null
+  },
+  {
+    "timestamp": "2026-10-07T10:12:47.010533+00:00",
+    "action": "OrderStatusChanged",
+    "summary": "Order approved.",
+    "actorName": "Officer Demo",
+    "explanation": null
+  },
+  {
+    "timestamp": "2026-10-07T10:12:49.312248+00:00",
+    "action": "SchedulePropose",
+    "summary": "Pickup slot proposed for 8 Oct, 10:12 UTC.",
+    "actorName": "Officer Demo",
+    "explanation": null
+  },
+  {
+    "timestamp": "2026-10-07T10:12:49.597851+00:00",
+    "action": "ScheduleDecision",
+    "summary": "Pickup slot confirmed.",
+    "actorName": "Officer Demo",
+    "explanation": null
+  },
+  {
+    "timestamp": "2026-10-07T10:12:49.799244+00:00",
+    "action": "OrderStatusChanged",
+    "summary": "Order status changed from Scheduled to Completed.",
+    "actorName": "Officer Demo",
+    "explanation": null
+  }
+]
