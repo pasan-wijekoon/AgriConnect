@@ -1,21 +1,6 @@
 name: Agentic AI - CI/CD
 
-# AgriConnect agentic-ai service: Python 3.12, uv, FastAPI + LangGraph.
-#
-# Pull request : test -> build image + smoke test (nothing is pushed or deployed)
-# Push to main : test -> build + smoke test -> push to GHCR -> deploy to AWS EC2 (SSH)
-#
-# Deploy order for a fresh environment: THIS pipeline runs first (the agent has no
-# dependency on the backend), then the backend pipeline.
-#
-# No real LLM key is used in CI. The service ships with LLM_PROVIDER=mock, so tests
-# and the container smoke test run deterministically and for free. The production
-# provider and keys live in AWS SSM Parameter Store, not in GitHub.
-#
-# One-time setup (Settings -> Secrets and variables -> Actions):
-#   secrets  : EC2_HOST, EC2_SSH_KEY, INTERNAL_API_SECRET   (+ GEMINI_API_KEY only if LLM_PROVIDER=gemini)
-#   variables: LLM_PROVIDER (optional, default mock), EC2_USER (optional, default ec2-user)
-# GHCR uses the built-in GITHUB_TOKEN, so no personal access token is needed.
+
 
 on:
   pull_request:
