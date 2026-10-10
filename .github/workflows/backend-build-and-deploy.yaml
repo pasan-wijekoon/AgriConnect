@@ -1,9 +1,10 @@
 name: Backend - CI/CD
 
 # AgriConnect backend: ASP.NET Core (.NET 10) + Supabase PostgreSQL, hosted on AWS EC2.
+# Images are published to Docker Hub.
 #
 # Pull request : build + test (throwaway Postgres) -> Docker build + smoke test
-# Push to main : build + test -> Docker build + smoke test -> push image to GHCR
+# Push to main : build + test -> Docker build + smoke test -> push image to Docker Hub
 #                -> apply EF Core migrations to Supabase -> deploy to AWS -> verify
 #
 # The migration runs only after the image has been built, smoke-tested and published,
@@ -11,12 +12,13 @@ name: Backend - CI/CD
 # the old version keeps serving traffic.
 #
 # One-time setup (Settings -> Secrets and variables -> Actions):
-#   secrets  : EC2_HOST, EC2_SSH_KEY, INTERNAL_API_SECRET, JWT_KEY, SUPABASE_CONNECTION_STRING
-#              CI_DB_PASSWORD (optional: password for the throwaway test database, letters/digits only)
-#   variables: API_DOMAIN (e.g. api.example.com or 13-124-1-2.sslip.io), ALLOWED_ORIGINS (your Vercel URL),
+#   secrets  : DOCKERHUB_TOKEN (Docker Hub access token, Read & Write), EC2_HOST, EC2_SSH_KEY,
+#              INTERNAL_API_SECRET, JWT_KEY, SUPABASE_CONNECTION_STRING
+#   variables: DOCKERHUB_USERNAME (must be a variable, NOT a secret: secrets are masked and
+#              GitHub drops job outputs that contain them),
+#              API_DOMAIN (e.g. api.example.com or 13-124-1-2.sslip.io), ALLOWED_ORIGINS (your Vercel URL),
 #              EC2_USER (optional, default ec2-user)
 # INTERNAL_API_SECRET is one repo secret shared with the agentic-ai pipeline.
-# GHCR uses the built-in GITHUB_TOKEN, so no personal access token is needed.
 
 on:
   pull_request:
@@ -41,24 +43,22 @@ concurrency:
   group: backend-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# NOTE: keys MUST be lowercase. `Packages: write` is silently ignored.
+# NOTE: keys MUST be lowercase.
 permissions:
   contents: read
-  packages: write
 
 env:
   DOTNET_VERSION: "10.0.x"
   DOTNET_NOLOGO: "true"
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-backend
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/agriconnect-backend
 
 jobs:
 
   # 1. BUILD & TEST ----------------------------------------------------------
   # Integration tests need a real PostgreSQL. A disposable container is started
-  # for the job and destroyed afterwards. Its password comes from the optional secret
-  # CI_DB_PASSWORD and falls back to 'postgres' when unset (fork PRs cannot read
-  # secrets, so they use the fallback). It is NOT your Supabase password.
+  # for the job and destroyed afterwards. Its password is hardcoded to 'postgres'; this
+  # database only exists inside the CI runner. It is NOT your Supabase password.
   build-test:
     name: Build & test (.NET)
     runs-on: ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD || 'postgres' }}
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: agriconnect_test
         ports:
           - 5432:5432
@@ -78,7 +78,7 @@ jobs:
           --health-timeout 5s
           --health-retries 12
     env:
-      ConnectionStrings__Default: "Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=${{ secrets.CI_DB_PASSWORD || 'postgres' }}"
+      ConnectionStrings__Default: "Host=127.0.0.1;Port=5432;Database=agriconnect_test;Username=postgres;Password=postgres"
     steps:
       - uses: actions/checkout@v4
 
@@ -110,16 +110,14 @@ jobs:
           if [ ${#projects[@]} -eq 0 ]; then echo "No test projects."; exit 0; fi
           for p in "${projects[@]}"; do dotnet test "$p" -c Release; done
 
-  # 2. BUILD, SMOKE TEST, AND PUBLISH TO GHCR --------------------------------
+  # 2. BUILD, SMOKE TEST, AND PUBLISH TO DOCKER HUB --------------------------
   docker:
     name: Docker build, smoke test & publish
     needs: build-test
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Explicit at job level too, in case the top-level block is ever changed.
     permissions:
       contents: read
-      packages: write
     outputs:
       image: ${{ steps.ref.outputs.image }}
     steps:
@@ -140,7 +138,7 @@ jobs:
       - name: Smoke test backend container
         shell: bash
         env:
-          CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD || 'postgres' }}
+          CI_DB_PASSWORD: postgres
         run: |
           set -euo pipefail
           docker network create agriconnect-ci
@@ -174,25 +172,24 @@ jobs:
           echo "::error::Backend container did not become healthy."
           exit 1
 
-      - name: Log in to GHCR
+      - name: Log in to Docker Hub
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Generate GHCR tags and labels
+      - name: Generate Docker Hub tags and labels
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.GHCR_IMAGE }}
+          images: ${{ env.DOCKERHUB_IMAGE }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
 
-      - name: Push backend image to GHCR
+      - name: Push backend image to Docker Hub
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
@@ -207,7 +204,7 @@ jobs:
       - name: Compute deployable image reference
         id: ref
         run: |
-          image="$(echo "${GHCR_IMAGE}" | tr '[:upper:]' '[:lower:]'):sha-${GITHUB_SHA}"
+          image="$(echo "${DOCKERHUB_IMAGE}" | tr '[:upper:]' '[:lower:]'):sha-${GITHUB_SHA}"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
 
   # 3. MIGRATE SUPABASE ------------------------------------------------------
@@ -270,8 +267,8 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ vars.EC2_USER || 'ec2-user' }}
           IMAGE: ${{ needs.docker.outputs.image }}
-          GHCR_USER: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKERHUB_USER: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
           ConnectionStrings__Default: ${{ secrets.SUPABASE_CONNECTION_STRING }}
           Jwt__Key: ${{ secrets.JWT_KEY }}
@@ -284,7 +281,7 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           {
-            for v in IMAGE GHCR_USER GHCR_TOKEN INTERNAL_API_SECRET ConnectionStrings__Default Jwt__Key ALLOWED_ORIGINS API_DOMAIN; do
+            for v in IMAGE DOCKERHUB_USER DOCKERHUB_TOKEN INTERNAL_API_SECRET ConnectionStrings__Default Jwt__Key ALLOWED_ORIGINS API_DOMAIN; do
               printf 'export %s=%q\n' "$v" "${!v:-}"
             done
             cat <<'REMOTE'
@@ -298,7 +295,7 @@ jobs:
             echo '/swapfile none swap sw 0 0' >> /etc/fstab
           fi
           docker network inspect agriconnect >/dev/null 2>&1 || docker network create agriconnect >/dev/null
-          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin >/dev/null
           docker pull "$IMAGE"
           export AgenticAi__ApiKey="$INTERNAL_API_SECRET"
           export AgenticAi__InternalApiSecret="$INTERNAL_API_SECRET"
@@ -331,7 +328,7 @@ jobs:
           start "$IMAGE"
           if healthy; then
             echo "backend is healthy on $IMAGE"
-            docker logout ghcr.io >/dev/null 2>&1 || true
+            docker logout >/dev/null 2>&1 || true
             docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
             exit 0
           fi
