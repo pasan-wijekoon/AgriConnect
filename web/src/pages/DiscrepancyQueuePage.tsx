@@ -60,7 +60,7 @@ export function DiscrepancyQueuePage() {
     <div>
       <PageHeader
         title="Grade Discrepancies"
-        description="Claimed-vs-confirmed grade mismatches that must be resolved before publishing (FR14)."
+        description="Claimed-vs-confirmed grade mismatches that must be resolved before publishing."
       />
 
       {actionError && <ErrorState message={actionError} />}

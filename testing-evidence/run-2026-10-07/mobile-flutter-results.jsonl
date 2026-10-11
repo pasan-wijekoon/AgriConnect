@@ -1,0 +1,85 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":33488,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"D:/campus/Y3S1/project/AgriConnect/mobile/test/api_service_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading D:/campus/Y3S1/project/AgriConnect/mobile/test/api_service_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":1}
+{"suite":{"id":2,"platform":"vm","path":"D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart"},"type":"suite","time":4}
+{"test":{"id":3,"name":"loading D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart","suiteID":2,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":4}
+{"suite":{"id":4,"platform":"vm","path":"D:/campus/Y3S1/project/AgriConnect/mobile/test/price_trends_screen_test.dart"},"type":"suite","time":4}
+{"test":{"id":5,"name":"loading D:/campus/Y3S1/project/AgriConnect/mobile/test/price_trends_screen_test.dart","suiteID":4,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":4}
+{"suite":{"id":6,"platform":"vm","path":"D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart"},"type":"suite","time":5}
+{"test":{"id":7,"name":"loading D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart","suiteID":6,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":5}
+{"suite":{"id":8,"platform":"vm","path":"D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart"},"type":"suite","time":5}
+{"test":{"id":9,"name":"loading D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart","suiteID":8,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":5}
+{"suite":{"id":10,"platform":"vm","path":"D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/login_form_test.dart"},"type":"suite","time":5}
+{"test":{"id":11,"name":"loading D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/login_form_test.dart","suiteID":10,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":6}
+{"count":7,"time":6,"type":"allSuites"}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":4411}
+{"group":{"id":12,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":null,"column":null,"url":null},"type":"group","time":4415}
+{"test":{"id":13,"name":"MOB-U-01 – API client parses listing fields from a valid response","suiteID":0,"groupIDs":[12],"metadata":{"skip":false,"skipReason":null},"line":9,"column":3,"url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/api_service_test.dart"},"type":"testStart","time":4416}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":4469}
+{"test":{"id":14,"name":"MOB-U-02 – missing listing fields use safe defaults without crashing","suiteID":0,"groupIDs":[12],"metadata":{"skip":false,"skipReason":null},"line":53,"column":3,"url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/api_service_test.dart"},"type":"testStart","time":4470}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":4479}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":3,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":4511}
+{"group":{"id":15,"suiteID":2,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":5,"line":null,"column":null,"url":null},"type":"group","time":4511}
+{"test":{"id":16,"name":"MOB-W-03 – listing card shows crop, price, grade, and quantity","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":35,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart"},"type":"testStart","time":4512}
+{"suite":{"id":17,"platform":"vm","path":"D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart"},"type":"suite","time":4536}
+{"test":{"id":18,"name":"loading D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart","suiteID":17,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":4536}
+{"testID":5,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":4648}
+{"group":{"id":19,"suiteID":4,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":null,"column":null,"url":null},"type":"group","time":4649}
+{"test":{"id":20,"name":"price trends screen loads without crashing","suiteID":4,"groupIDs":[19],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":6,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/price_trends_screen_test.dart"},"type":"testStart","time":4649}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":7,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":4893}
+{"group":{"id":21,"suiteID":6,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":5,"line":null,"column":null,"url":null},"type":"group","time":4894}
+{"test":{"id":22,"name":"shows a card per crop with the price range and a summary","suiteID":6,"groupIDs":[21],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":49,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart"},"type":"testStart","time":4894}
+{"testID":9,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":5038}
+{"group":{"id":23,"suiteID":8,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":null,"column":null,"url":null},"type":"group","time":5039}
+{"test":{"id":24,"name":"MOB-W-02 – -5 price blocks listing submission","suiteID":8,"groupIDs":[23],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":19,"root_column":5,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart"},"type":"testStart","time":5039}
+{"testID":11,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":5186}
+{"group":{"id":25,"suiteID":10,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":null,"column":null,"url":null},"type":"group","time":5187}
+{"test":{"id":26,"name":"MOB-W-01 – empty fields show validation errors","suiteID":10,"groupIDs":[25],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":6,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/login_form_test.dart"},"type":"testStart","time":5187}
+{"testID":18,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":5497}
+{"group":{"id":27,"suiteID":17,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":null,"column":null,"url":null},"type":"group","time":5498}
+{"test":{"id":28,"name":"signed-out users see the landing page with sign-in and register","suiteID":17,"groupIDs":[27],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":34,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart"},"type":"testStart","time":5498}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":5572}
+{"test":{"id":29,"name":"MOB-W-04 – tapping a listing opens its detail screen","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":54,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart"},"type":"testStart","time":5576}
+{"testID":20,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":5584}
+{"testID":29,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7069}
+{"test":{"id":30,"name":"MOB-W-05 – loading completes into the empty state","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":69,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart"},"type":"testStart","time":7070}
+{"testID":22,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7153}
+{"test":{"id":31,"name":"category chip filters the list without another request","suiteID":6,"groupIDs":[21],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":66,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart"},"type":"testStart","time":7153}
+{"testID":26,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7194}
+{"testID":30,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7280}
+{"test":{"id":32,"name":"MOB-W-05 – an empty response displays the empty state","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":85,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart"},"type":"testStart","time":7280}
+{"testID":32,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7467}
+{"test":{"id":33,"name":"MOB-W-05 – API failure shows an error and refresh retries","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":94,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/listings_widgets_test.dart"},"type":"testStart","time":7467}
+{"testID":24,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7487}
+{"test":{"id":34,"name":"MOB-W-02 – abc price blocks listing submission","suiteID":8,"groupIDs":[23],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":19,"root_column":5,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/widget/listing_form_test.dart"},"type":"testStart","time":7488}
+{"testID":31,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7745}
+{"test":{"id":35,"name":"grade B refetches with the grade query","suiteID":6,"groupIDs":[21],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":81,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart"},"type":"testStart","time":7745}
+{"testID":28,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7756}
+{"test":{"id":36,"name":"a farmer lands on Home and gets five role-specific tabs","suiteID":17,"groupIDs":[27],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":50,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart"},"type":"testStart","time":7757}
+{"testID":33,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7813}
+{"testID":34,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7883}
+{"testID":35,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8148}
+{"test":{"id":37,"name":"shows the API problem and retries","suiteID":6,"groupIDs":[21],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":94,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart"},"type":"testStart","time":8148}
+{"testID":37,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8404}
+{"test":{"id":38,"name":"tapping a card opens the reasoning","suiteID":6,"groupIDs":[21],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":112,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/today_prices_screen_test.dart"},"type":"testStart","time":8404}
+{"testID":38,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8670}
+{"testID":36,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8735}
+{"test":{"id":39,"name":"a buyer gets Market and Centres tabs and can sign out","suiteID":17,"groupIDs":[27],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":79,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart"},"type":"testStart","time":8736}
+{"testID":39,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":9328}
+{"test":{"id":40,"name":"officers are pointed to the web console instead of the mobile app","suiteID":17,"groupIDs":[27],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":102,"root_column":3,"root_url":"file:///D:/campus/Y3S1/project/AgriConnect/mobile/test/widget_test.dart"},"type":"testStart","time":9328}
+{"testID":40,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":9396}
+{"success":true,"type":"done","time":9432}

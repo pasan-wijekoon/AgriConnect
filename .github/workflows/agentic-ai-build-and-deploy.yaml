@@ -1,14 +1,12 @@
 name: Agentic AI - CI/CD
 
-# AgriConnect agentic-ai service: Python 3.12, uv, FastAPI + LangGraph.
-#
-# Pull request : test -> build image + smoke test (nothing is pushed)
-# Push to main : test -> build + smoke test -> push to GHCR
-#                -> redeploy the Railway service (it pulls the new image)
-#                -> health check
-#
-# No real LLM key is used in CI. The service ships with LLM_PROVIDER=mock,
-# so tests and the container smoke test run deterministically and for free.
+# Images are published to Docker Hub.
+# One-time setup (Settings -> Secrets and variables -> Actions):
+#   secrets  : DOCKERHUB_TOKEN (Docker Hub access token, Read & Write), EC2_HOST, EC2_SSH_KEY,
+#              INTERNAL_API_SECRET, GEMINI_API_KEY
+#   variables: DOCKERHUB_USERNAME (must be a variable, NOT a secret: secrets are masked and
+#              GitHub drops job outputs that contain them), EC2_USER (optional), LLM_PROVIDER (optional),
+#              DEFAULT_MODEL (optional)
 
 on:
   pull_request:
@@ -31,6 +29,7 @@ concurrency:
   group: agentic-ai-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# NOTE: keys here MUST be lowercase.
 permissions:
   contents: read
 
@@ -38,7 +37,7 @@ env:
   PYTHON_VERSION: "3.12"
   LLM_PROVIDER: mock
   CONTAINER_PORT: "8000"
-  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/agriconnect-agentic-ai
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/agriconnect-agentic-ai
 
 jobs:
 
@@ -66,7 +65,6 @@ jobs:
           enable-cache: true
           cache-dependency-glob: agentic-ai/uv.lock
 
-      # --locked fails if uv.lock is out of date with pyproject.toml.
       - name: Install dependencies
         run: uv sync --locked
 
@@ -87,24 +85,25 @@ jobs:
             echo "No tests found - skipping."
             exit 0
           fi
-          # Long-term fix: `uv add --dev pytest pytest-asyncio`, commit
-          # pyproject.toml + uv.lock, then use plain `uv run pytest -q`.
           uv run --with pytest --with pytest-asyncio pytest -q
 
   # =========================================================
-  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH TO GHCR (main only)
+  # 2. BUILD IMAGE, SMOKE TEST IT, THEN PUSH TO DOCKER HUB (main only)
   # =========================================================
   docker:
     name: Docker build, smoke test & publish
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 25
+
     permissions:
       contents: read
-      packages: write
 
     env:
       SHOULD_PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+
+    outputs:
+      image: ${{ steps.ref.outputs.image }}
 
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +122,6 @@ jobs:
           cache-from: type=gha,scope=agentic-ai
           cache-to: type=gha,scope=agentic-ai,mode=max
 
-      # FastAPI always serves /openapi.json, so no custom health route is needed.
       - name: Smoke test container
         run: |
           docker run -d --name agent \
@@ -131,9 +129,9 @@ jobs:
             -e LLM_PROVIDER=mock \
             agriconnect-agentic-ai:ci
 
-          for i in $(seq 1 30); do
-            if curl -fsS "http://localhost:${{ env.CONTAINER_PORT }}/openapi.json" > /dev/null; then
-              echo "Container is serving requests."
+          for _ in $(seq 1 30); do
+            if curl -fsS "http://localhost:${{ env.CONTAINER_PORT }}/health" > /dev/null; then
+              echo "Container is serving /health."
               exit 0
             fi
             sleep 2
@@ -143,26 +141,24 @@ jobs:
           docker logs agent
           exit 1
 
-      - name: Log in to GHCR
+      - name: Log in to Docker Hub
         if: env.SHOULD_PUSH == 'true'
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.AGRICONNECT_PAT }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Generate tags & labels
         if: env.SHOULD_PUSH == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.GHCR_IMAGE }}
+          images: ${{ env.DOCKERHUB_IMAGE }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
 
-      # Layers are cached from the build above, so this step is fast.
-      - name: Push to GHCR
+      - name: Push to Docker Hub
         if: env.SHOULD_PUSH == 'true'
         uses: docker/build-push-action@v6
         with:
@@ -174,83 +170,107 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=agentic-ai
 
+      - name: Compute deployable image reference
+        id: ref
+        run: |
+          image="$(echo "${DOCKERHUB_IMAGE}" | tr '[:upper:]' '[:lower:]'):sha-${GITHUB_SHA}"
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+
   # =========================================================
-  # 3. DEPLOY TO RAILWAY
-  #    Pushing an image does not redeploy by itself, so we tell Railway
-  #    to redeploy; it then pulls ghcr.io/<owner>/agriconnect-agentic-ai:latest.
-  #    RAILWAY_TOKEN must be a PROJECT token (scoped to one environment).
+  # 3. DEPLOY TO AWS EC2 over SSH
   # =========================================================
   deploy:
-    name: Deploy to Railway
+    name: Deploy to AWS
     needs: docker
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: production
-
     concurrency:
-      group: railway-deploy-agentic-ai
+      group: aws-deploy
       cancel-in-progress: false
 
     steps:
-      - name: Redeploy Railway service
+      - name: Deploy over SSH
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ vars.EC2_USER || 'ec2-user' }}
+          IMAGE: ${{ needs.docker.outputs.image }}
+          DOCKERHUB_USER: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
+          LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'mock' }}
+          DEFAULT_MODEL: ${{ vars.DEFAULT_MODEL || 'gemini-2.5-flash' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE" ]; then
-            echo "RAILWAY_TOKEN secret and RAILWAY_SERVICE variable are required."
-            exit 1
-          fi
-          npx -y @railway/cli@latest redeploy --service "$RAILWAY_SERVICE" --yes
-
-      - name: Summary
-        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           {
-            echo "## Agentic AI deployed to Railway"
+            for v in IMAGE DOCKERHUB_USER DOCKERHUB_TOKEN INTERNAL_API_SECRET LLM_PROVIDER DEFAULT_MODEL GEMINI_API_KEY; do
+              printf 'export %s=%q\n' "$v" "${!v:-}"
+            done
+            cat <<'REMOTE'
+          set -euo pipefail
+          if ! command -v docker >/dev/null; then
+            dnf install -y docker
+            systemctl enable --now docker
+          fi
+          if ! swapon --show | grep -q .; then
+            fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
+            echo '/swapfile none swap sw 0 0' >> /etc/fstab
+          fi
+          docker network inspect agriconnect >/dev/null 2>&1 || docker network create agriconnect >/dev/null
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin >/dev/null
+          docker pull "$IMAGE"
+          PREV="$(docker inspect -f '{{.Config.Image}}' agentic-ai 2>/dev/null || true)"
+
+          start() {
+            docker rm -f agentic-ai >/dev/null 2>&1 || true
+            docker run -d --name agentic-ai --network agriconnect --restart unless-stopped --memory 768m \
+              -e HOST=0.0.0.0 -e PORT=8000 -e ENVIRONMENT=production -e TOOLS_MODE=mock \
+              -e BACKEND_API_BASE_URL=http://backend:5000 \
+              -e LLM_PROVIDER -e DEFAULT_MODEL -e GEMINI_API_KEY -e INTERNAL_API_SECRET \
+              "$1" >/dev/null
+          }
+          healthy() {
+            for _ in $(seq 1 45); do
+              docker exec agentic-ai curl -fsS http://localhost:8000/health >/dev/null 2>&1 </dev/null && return 0
+              sleep 2
+            done
+            return 1
+          }
+
+          start "$IMAGE"
+          if healthy; then
+            echo "agentic-ai is healthy on $IMAGE"
+            docker logout >/dev/null 2>&1 || true
+            docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
+            exit 0
+          fi
+          echo "agentic-ai did NOT become healthy. Last logs:" >&2
+          docker logs --tail 60 agentic-ai >&2 || true
+          if [ -n "$PREV" ] && [ "$PREV" != "$IMAGE" ]; then echo "Rolling back to $PREV" >&2; start "$PREV" || true; fi
+          exit 1
+          REMOTE
+          } | ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$EC2_USER@$EC2_HOST" 'sudo bash -s'
+
+      - name: Show service URL
+        run: |
+          echo "Agentic AI (private) : http://agentic-ai:8000"
+          {
+            echo "## Agentic AI deployed to AWS"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---|---|"
+            echo "| Agentic AI (private) | \`http://agentic-ai:8000\` |"
+            echo ""
+            echo "This service is **deliberately not public**. It has no internet address; the backend reaches it at the URL above on the server's private Docker network."
             echo ""
             echo "**Commit:** \`${{ github.sha }}\`"
             echo ""
-            echo "Tests and smoke test passed, image published, Railway redeploy triggered."
-            echo ""
-            echo "Image:"
-            echo "- \`${{ env.GHCR_IMAGE }}:latest\`"
-            echo "- \`${{ env.GHCR_IMAGE }}:sha-${{ github.sha }}\`"
+            echo "Image: \`${{ needs.docker.outputs.image }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
-
-  # =========================================================
-  # 4. HEALTH CHECK (skipped unless AGENT_HEALTH_URL is set)
-  #    Skip it if the service has no public domain (private networking).
-  # =========================================================
-  verify:
-    name: Health check
-    needs: deploy
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Wait for service to respond
-        env:
-          HEALTH_URL: ${{ vars.AGENT_HEALTH_URL }}
-        run: |
-          if [ -z "$HEALTH_URL" ]; then
-            echo "AGENT_HEALTH_URL not set - skipping."
-            exit 0
-          fi
-
-          # Give Railway time to pull the image and swap containers.
-          sleep 45
-
-          for i in $(seq 1 20); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HEALTH_URL" || true)
-            echo "Attempt $i: HTTP $code"
-            if [ "$code" = "200" ]; then
-              echo "Service is healthy."
-              exit 0
-            fi
-            sleep 20
-          done
-
-          echo "Service did not become healthy in time."
-          exit 1

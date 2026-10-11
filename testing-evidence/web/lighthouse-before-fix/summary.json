@@ -1,0 +1,47 @@
+[
+  {
+    "id": "A11Y-01-login",
+    "url": "http://localhost:3000/",
+    "score": 100,
+    "pass": true,
+    "failedAudits": []
+  },
+  {
+    "id": "A11Y-02-farmer-dashboard",
+    "url": "http://localhost:3000/",
+    "score": 89,
+    "pass": false,
+    "failedAudits": [
+      "color-contrast",
+      "heading-order",
+      "label-content-name-mismatch",
+      "select-name"
+    ]
+  },
+  {
+    "id": "A11Y-03-buyer-dashboard",
+    "url": "http://localhost:3000/",
+    "score": 89,
+    "pass": false,
+    "failedAudits": [
+      "color-contrast",
+      "heading-order",
+      "label-content-name-mismatch",
+      "select-name"
+    ]
+  },
+  {
+    "id": "A11Y-04-price-trends",
+    "url": "http://localhost:3000/analytics/price-trends",
+    "score": 100,
+    "pass": true,
+    "failedAudits": []
+  },
+  {
+    "id": "A11Y-05-ai-scheduling",
+    "url": "http://localhost:3000/analytics/ai-scheduling",
+    "score": 100,
+    "pass": true,
+    "failedAudits": []
+  }
+]

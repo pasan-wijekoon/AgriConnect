@@ -1,0 +1,41 @@
+PASS  SEC-A1  No token on a protected endpoint
+      expected: 401
+      actual:   401
+PASS  SEC-A2  Tampered JWT signature
+      expected: 401
+      actual:   401
+PASS  SEC-A3  Farmer places an order (Buyer-only action)
+      expected: 403
+      actual:   403
+PASS  SEC-A4  Buyer reads officer analytics queue
+      expected: 403
+      actual:   403
+PASS  SEC-A5  IDOR: farmer2 reads another farmer's buyer order by id
+      expected: 403 or 404, no order data
+      actual:   404
+PASS  SEC-A6  IDOR: unrelated farmer cancels the buyer's order
+      expected: 403 or 404
+      actual:   403
+PASS  SEC-03  SQL injection payloads in the search parameter
+      expected: no 5xx, no SQL text, no extra rows
+      actual:   clean
+PASS  SEC-03b  SQL injection in sortBy
+      expected: no 5xx / no SQL text
+      actual:   200
+PASS  SEC-05a  Malformed JSON body
+      expected: 400 and no stack trace
+      actual:   400
+PASS  SEC-05b  Malformed id in route
+      expected: 4xx and no stack trace
+      actual:   404
+PASS  SEC-05c  CORS does not allow an arbitrary origin
+      expected: no Access-Control-Allow-Origin for evil.example
+      actual:   None
+PASS  SEC-07  Client-supplied price/status fields on order creation
+      expected: 201, status Pending, client price ignored
+      actual:   201 Pending
+FAIL  SEC-06  40 failed logins in a row for one account
+      expected: throttled/locked (429/423) at some point
+      actual:   [401] (throttled=False)
+
+12 passed, 1 failed

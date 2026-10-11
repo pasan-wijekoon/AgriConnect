@@ -2,17 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 import '../models/listing.dart';
 import '../models/listing_inspection_status.dart';
 
 class ApiService {
-  // Default URL depends on platform: Android emulator uses 10.0.2.2, otherwise localhost
-  static String get defaultBaseUrl {
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:5000/api';
-    }
-    return 'http://localhost:5000/api';
-  }
+  static String get defaultBaseUrl => '$apiBaseUrl/api';
 
   final String baseUrl;
   final http.Client? client;
@@ -25,20 +20,31 @@ class ApiService {
   final String? Function() getToken;
 
   ApiService({String? baseUrl, String? Function()? getToken, this.client})
-      : baseUrl = baseUrl ?? defaultBaseUrl,
-        getToken = getToken ?? (() => null);
+    : baseUrl = baseUrl ?? defaultBaseUrl,
+      getToken = getToken ?? (() => null);
 
   Future<http.Response> _get(Uri uri, {Map<String, String>? headers}) =>
       client?.get(uri, headers: headers) ?? http.get(uri, headers: headers);
 
-  Future<http.Response> _post(Uri uri, {Map<String, String>? headers, Object? body}) =>
-      client?.post(uri, headers: headers, body: body) ?? http.post(uri, headers: headers, body: body);
+  Future<http.Response> _post(
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+  }) =>
+      client?.post(uri, headers: headers, body: body) ??
+      http.post(uri, headers: headers, body: body);
 
-  Future<http.Response> _put(Uri uri, {Map<String, String>? headers, Object? body}) =>
-      client?.put(uri, headers: headers, body: body) ?? http.put(uri, headers: headers, body: body);
+  Future<http.Response> _put(
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+  }) =>
+      client?.put(uri, headers: headers, body: body) ??
+      http.put(uri, headers: headers, body: body);
 
   Future<http.Response> _delete(Uri uri, {Map<String, String>? headers}) =>
-      client?.delete(uri, headers: headers) ?? http.delete(uri, headers: headers);
+      client?.delete(uri, headers: headers) ??
+      http.delete(uri, headers: headers);
 
   Map<String, String> get _headers {
     final headers = {
@@ -58,7 +64,9 @@ class ApiService {
       final res = await _get(Uri.parse('$baseUrl/crops'), headers: _headers);
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
-        return data.map((item) => Crop.fromJson(item as Map<String, dynamic>)).toList();
+        return data
+            .map((item) => Crop.fromJson(item as Map<String, dynamic>))
+            .toList();
       }
       return _fallbackCrops();
     } catch (e) {
@@ -72,7 +80,9 @@ class ApiService {
       final res = await _get(Uri.parse('$baseUrl/regions'), headers: _headers);
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
-        return data.map((item) => Region.fromJson(item as Map<String, dynamic>)).toList();
+        return data
+            .map((item) => Region.fromJson(item as Map<String, dynamic>))
+            .toList();
       }
       return _fallbackRegions();
     } catch (e) {
@@ -103,14 +113,17 @@ class ApiService {
     };
 
     if (cropId != null && cropId.isNotEmpty) queryParams['cropId'] = cropId;
-    if (regionId != null && regionId.isNotEmpty) queryParams['regionId'] = regionId;
+    if (regionId != null && regionId.isNotEmpty)
+      queryParams['regionId'] = regionId;
     if (grade != null && grade.isNotEmpty) queryParams['grade'] = grade;
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
     if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
-    final uri = Uri.parse('$baseUrl/listings').replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      '$baseUrl/listings',
+    ).replace(queryParameters: queryParams);
     final res = await _get(uri, headers: _headers);
 
     if (res.statusCode == 200) {
@@ -121,7 +134,10 @@ class ApiService {
   }
 
   Future<Listing> getListingById(String id) async {
-    final res = await _get(Uri.parse('$baseUrl/listings/$id'), headers: _headers);
+    final res = await _get(
+      Uri.parse('$baseUrl/listings/$id'),
+      headers: _headers,
+    );
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       return Listing.fromJson(data);
@@ -133,12 +149,18 @@ class ApiService {
   // Joined client-side against getListings()'s results by listing id — see
   // models/listing_inspection_status.dart for why this isn't folded into the
   // Listing model itself.
-  Future<Map<String, ListingInspectionStatus>> getMyListingsInspectionStatus() async {
-    final res = await _get(Uri.parse('$baseUrl/listings/my-listings'), headers: _headers);
+  Future<Map<String, ListingInspectionStatus>>
+  getMyListingsInspectionStatus() async {
+    final res = await _get(
+      Uri.parse('$baseUrl/listings/my-listings'),
+      headers: _headers,
+    );
     if (res.statusCode == 200) {
       final List<dynamic> data = jsonDecode(res.body);
       final entries = data.map((item) {
-        final status = ListingInspectionStatus.fromJson(item as Map<String, dynamic>);
+        final status = ListingInspectionStatus.fromJson(
+          item as Map<String, dynamic>,
+        );
         return MapEntry(status.listingId, status);
       });
       return Map.fromEntries(entries);
@@ -146,11 +168,21 @@ class ApiService {
     return {};
   }
 
-  Future<List<ListingInspectionRecord>> getListingInspections(String listingId) async {
-    final res = await _get(Uri.parse('$baseUrl/listings/$listingId/inspections'), headers: _headers);
+  Future<List<ListingInspectionRecord>> getListingInspections(
+    String listingId,
+  ) async {
+    final res = await _get(
+      Uri.parse('$baseUrl/listings/$listingId/inspections'),
+      headers: _headers,
+    );
     if (res.statusCode == 200) {
       final List<dynamic> data = jsonDecode(res.body);
-      return data.map((item) => ListingInspectionRecord.fromJson(item as Map<String, dynamic>)).toList();
+      return data
+          .map(
+            (item) =>
+                ListingInspectionRecord.fromJson(item as Map<String, dynamic>),
+          )
+          .toList();
     }
     return [];
   }
@@ -210,8 +242,10 @@ class ApiService {
       if (quantity != null) 'quantity': quantity,
       if (unit != null) 'unit': unit,
       if (claimedGrade != null) 'claimedGrade': claimedGrade,
-      if (pickupWindowStart != null) 'pickupWindowStart': pickupWindowStart.toUtc().toIso8601String(),
-      if (pickupWindowEnd != null) 'pickupWindowEnd': pickupWindowEnd.toUtc().toIso8601String(),
+      if (pickupWindowStart != null)
+        'pickupWindowStart': pickupWindowStart.toUtc().toIso8601String(),
+      if (pickupWindowEnd != null)
+        'pickupWindowEnd': pickupWindowEnd.toUtc().toIso8601String(),
       if (minPrice != null) 'minPrice': minPrice,
     });
 
@@ -255,7 +289,10 @@ class ApiService {
   // ── Upload Photo from Device or Camera ────────────────────
   Future<String> uploadPhoto(String filePath) async {
     try {
-      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/upload'));
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/upload'),
+      );
       final token = getToken();
       if (token != null && token.isNotEmpty) {
         request.headers['Authorization'] = 'Bearer $token';
@@ -307,7 +344,9 @@ class ApiService {
       if (cropName != null) queryParams['cropName'] = cropName;
       if (regionName != null) queryParams['regionName'] = regionName;
 
-      final uri = Uri.parse('$baseUrl/prices/estimate').replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        '$baseUrl/prices/estimate',
+      ).replace(queryParameters: queryParams);
       final res = await _get(uri, headers: _headers);
 
       if (res.statusCode == 200) {
@@ -323,24 +362,48 @@ class ApiService {
       'suggestedPriceMax': 260.0,
       'averagePrice': 240.0,
       'confidence': 0.88,
-      'reasoningSummary': 'Estimated from wholesale baseline price corridor.'
+      'reasoningSummary': 'Estimated from wholesale baseline price corridor.',
     };
   }
 
   // Safe fallback mock reference data when API server isn't running yet
   List<Crop> _fallbackCrops() => [
-        Crop(id: 'c0000001-0000-0000-0000-000000000001', name: 'Carrot', category: 'Vegetable'),
-        Crop(id: 'c0000001-0000-0000-0000-000000000002', name: 'Tomato', category: 'Vegetable'),
-        Crop(id: 'c0000001-0000-0000-0000-000000000003', name: 'Leek', category: 'Vegetable'),
-        Crop(id: 'c0000001-0000-0000-0000-000000000004', name: 'Cabbage', category: 'Vegetable'),
-        Crop(id: 'c0000001-0000-0000-0000-000000000005', name: 'Green Chili', category: 'Spices'),
-        Crop(id: 'c0000001-0000-0000-0000-000000000006', name: 'Red Onion', category: 'Vegetable'),
-      ];
+    Crop(
+      id: 'c0000001-0000-0000-0000-000000000001',
+      name: 'Carrot',
+      category: 'Vegetable',
+    ),
+    Crop(
+      id: 'c0000001-0000-0000-0000-000000000002',
+      name: 'Tomato',
+      category: 'Vegetable',
+    ),
+    Crop(
+      id: 'c0000001-0000-0000-0000-000000000003',
+      name: 'Leek',
+      category: 'Vegetable',
+    ),
+    Crop(
+      id: 'c0000001-0000-0000-0000-000000000004',
+      name: 'Cabbage',
+      category: 'Vegetable',
+    ),
+    Crop(
+      id: 'c0000001-0000-0000-0000-000000000005',
+      name: 'Green Chili',
+      category: 'Spices',
+    ),
+    Crop(
+      id: 'c0000001-0000-0000-0000-000000000006',
+      name: 'Red Onion',
+      category: 'Vegetable',
+    ),
+  ];
 
   List<Region> _fallbackRegions() => [
-        Region(id: 'r0000001-0000-0000-0000-000000000001', name: 'Nuwara Eliya'),
-        Region(id: 'r0000001-0000-0000-0000-000000000002', name: 'Dambulla'),
-        Region(id: 'r0000001-0000-0000-0000-000000000003', name: 'Jaffna'),
-        Region(id: 'r0000001-0000-0000-0000-000000000004', name: 'Embilipitiya'),
-      ];
+    Region(id: 'r0000001-0000-0000-0000-000000000001', name: 'Nuwara Eliya'),
+    Region(id: 'r0000001-0000-0000-0000-000000000002', name: 'Dambulla'),
+    Region(id: 'r0000001-0000-0000-0000-000000000003', name: 'Jaffna'),
+    Region(id: 'r0000001-0000-0000-0000-000000000004', name: 'Embilipitiya'),
+  ];
 }

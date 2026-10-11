@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  backend -> D:\campus\Y3S1\project\AgriConnect\backend\bin\Debug\net10.0\backend.dll
+  backend.Tests -> D:\campus\Y3S1\project\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll
+Test run for D:\campus\Y3S1\project\AgriConnect\backend.Tests\bin\Debug\net10.0\backend.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: D:\campus\Y3S1\project\AgriConnect\testing-evidence\run-2026-10-07\full-suite-after-fixes.trx
+
+Passed!  - Failed:     0, Passed:   378, Skipped:     0, Total:   378, Duration: 31 s - backend.Tests.dll (net10.0)

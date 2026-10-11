@@ -104,6 +104,7 @@ const SIDEBAR_NAV: NavSection[] = [
         label: 'Orders',
         icon: ShoppingBag,
         roles: ['Officer', 'Administrator'],
+        end: true,
       },
       {
         to: '/orders/schedule',
@@ -131,7 +132,7 @@ const SIDEBAR_NAV: NavSection[] = [
       },
       {
         to: '/analytics/anomalies',
-        label: 'Anomaly Queue',
+        label: 'Prices to check',
         icon: Sparkles,
         roles: ['Officer', 'Administrator'],
       },

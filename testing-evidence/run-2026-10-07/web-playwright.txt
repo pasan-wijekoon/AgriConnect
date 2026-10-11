@@ -1,0 +1,17 @@
+
+Running 12 tests using 1 worker
+
+  ok  1 [chromium] › tests\e2e\analytics.spec.ts:12:3 › Market price analytics (back office) › COMP-02 Price Trends opens on a crop that has prices and draws the chart (4.1s)
+  ok  2 [chromium] › tests\e2e\analytics.spec.ts:23:3 › Market price analytics (back office) › COMP-03 crops without price history are labelled in the filter (3.2s)
+  ok  3 [chromium] › tests\e2e\analytics.spec.ts:33:3 › Market price analytics (back office) › COMP-04 switching to a crop with no data shows an empty state, not a broken chart (3.4s)
+  ok  4 [chromium] › tests\e2e\analytics.spec.ts:45:3 › Market price analytics (back office) › COMP-05 the back-office sidebar reaches the other analytics pages (3.3s)
+  ok  5 [chromium] › tests\e2e\auth.spec.ts:6:3 › Sign in and sessions › WEB-E-03 a wrong password shows an error and stays on the login page (3.1s)
+  ok  6 [chromium] › tests\e2e\auth.spec.ts:14:3 › Sign in and sessions › COMP-01 a farmer can sign in and sees the farmer workspace (3.5s)
+  ok  7 [chromium] › tests\e2e\auth.spec.ts:22:3 › Sign in and sessions › WEB-E-04 removing the session sends the user back to the login page (3.1s)
+  ok  8 [chromium] › tests\e2e\auth.spec.ts:32:3 › Sign in and sessions › WEB-E-04b the session survives a reload while signed in (3.1s)
+  ok  9 [chromium] › tests\e2e\auth.spec.ts:44:3 › Role isolation (XP-W-05) › a buyer never sees officer tools or the back-office link (3.5s)
+  ok 10 [chromium] › tests\e2e\auth.spec.ts:52:3 › Role isolation (XP-W-05) › an officer is offered the back office and can open it (2.9s)
+  ok 11 [chromium] › tests\e2e\workflow.spec.ts:18:1 › XP-W-01 buyer orders, officer approves and confirms the AI-proposed slot, order completes (10.8s)
+  ok 12 [chromium] › tests\e2e\workflow.spec.ts:76:1 › XP-W-03 a buyer cannot open the officer order page by URL (3.3s)
+
+  12 passed (50.6s)

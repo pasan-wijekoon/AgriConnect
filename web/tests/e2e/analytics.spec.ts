@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test'
+import { ACCOUNTS, signIn } from './helpers'
 
 // Component D back-office pages, run on every browser project (COMP-01..05).
 test.describe('Market price analytics (back office)', () => {
+  // The back office is officer/admin only, so every test starts from a signed-in officer session.
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, ACCOUNTS.officer)
+    await expect(page.getByPlaceholder('name@agriconnect.lk')).toBeHidden()
+  })
+
   test('COMP-02 Price Trends opens on a crop that has prices and draws the chart', async ({ page }) => {
     await page.goto('/analytics/price-trends')
 
@@ -9,7 +16,8 @@ test.describe('Market price analytics (back office)', () => {
     await expect(crop).toHaveValue(/.+/)
     await expect(crop.locator('option:checked')).not.toContainText('no data yet')
     await expect(page.getByText('Current average')).toBeVisible()
-    await expect(page.locator('svg path').first()).toBeVisible()
+    // The chart is the role="img" SVG; a bare `svg path` also matches the sidebar icons.
+    await expect(page.locator('svg[role="img"] path[stroke-width="2"]').first()).toBeVisible()
   })
 
   test('COMP-03 crops without price history are labelled in the filter', async ({ page }) => {
@@ -40,7 +48,7 @@ test.describe('Market price analytics (back office)', () => {
     await page.getByRole('link', { name: 'AI Scheduling' }).click()
     await expect(page).toHaveURL(/\/analytics\/ai-scheduling$/)
 
-    await page.getByRole('link', { name: 'Marketplace' }).click()
-    await expect(page).toHaveURL(/\/$/)
+    await page.getByRole('link', { name: 'Dashboard' }).click()
+    await expect(page).toHaveURL(/\/dashboard$/)
   })
 })

@@ -1,12 +1,35 @@
-name: Frontend - Build & Deploy
+name: Frontend - CI/CD
+
+# Pipeline overview
+#   verify       : type-check, lint, build, web helper tests    (every PR and every push)
+#   docker-check : builds the web Docker image, not pushed      (after verify)
+#   deploy       : Vercel production (push to main)
+#                  Vercel preview    (non-fork PRs, push to development / integration)
+#
+# One-time setup
+#   Settings > Secrets and variables > Actions
+#     Variable : VITE_API_BASE_URL   backend base URL baked into the build
+#     Secrets  : VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+#   Settings > Environments: create `production` and `preview`
+#     (add required reviewers on `production` if you want a manual gate)
+#
+# If Vercel's Git integration is also enabled for this repo, turn it off
+# (or set "git.deploymentEnabled": false in web/vercel.json) to avoid double deploys.
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [main, development, integration, test-oder]
     paths:
       - "web/**"
       - "docker/web/**"
       - ".github/workflows/frontend-build-and-deploy.yaml"
+  pull_request:
+    branches: [main, development, integration]
+    paths:
+      - "web/**"
+      - "docker/web/**"
+      - ".github/workflows/frontend-build-and-deploy.yaml"
+  workflow_dispatch:
 
 concurrency:
   group: frontend-${{ github.ref }}
@@ -17,12 +40,11 @@ permissions:
 
 env:
   NODE_VERSION: "22"
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
-  build:
-    name: Lint & build (Vite)
+  # ---------------------------------------------------------------- CI
+  verify:
+    name: Type-check, lint, build & test
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -37,25 +59,41 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      - name: Install
+      - name: Install dependencies
         run: npm ci
+
+      - name: Type-check
+        run: npx tsc -b
 
       - name: Lint
         run: npm run lint
 
-      - name: Type-check & build
+      - name: Build
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'http://localhost:5000' }}
         run: npm run build
+
+      - name: Run web helper tests
+        run: npm test
+
+      - name: Upload production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+          if-no-files-found: error
+          retention-days: 7
 
   docker-check:
     name: Docker image build check
-    needs: build
+    needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - uses: docker/setup-buildx-action@v3
+
       - name: Build web image (not pushed)
         uses: docker/build-push-action@v6
         with:
@@ -65,27 +103,37 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
 
+  # ---------------------------------------------------------------- CD
   deploy:
     name: Deploy to Vercel
-    needs: [build, docker-check]
+    needs: [verify, docker-check]
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Skip previews for fork PRs, which cannot access secrets.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Deploy main (production), development/integration (preview) and same-repo PRs (preview).
+    # Fork PRs are skipped because they cannot access secrets.
+    if: >
+      (github.event_name == 'push' &&
+        (github.ref == 'refs/heads/main' ||
+         github.ref == 'refs/heads/development' ||
+         github.ref == 'refs/heads/integration')) ||
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository)
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
       - name: Check Vercel secrets
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           for v in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "${!v}" ]; then echo "::error::Secret $v is not set"; exit 1; fi
@@ -93,18 +141,14 @@ jobs:
 
       - name: Production deploy (main)
         if: github.ref == 'refs/heads/main'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
           vercel build --prod --token="$VERCEL_TOKEN"
           URL="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
           echo "Production: $URL" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Preview deploy (pull request)
+      - name: Preview deploy
         if: github.ref != 'refs/heads/main'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
           vercel build --token="$VERCEL_TOKEN"

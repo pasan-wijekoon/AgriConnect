@@ -3,6 +3,8 @@
 // localStorage, so we sign in once in a persistent profile and Lighthouse reuses it.
 // Usage (inside the Playwright container, see tests/e2e/README.md):  node tests/a11y/lighthouse.mjs
 import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import lighthouse from 'lighthouse'
 import { chromium } from '@playwright/test'
 
@@ -10,20 +12,24 @@ const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
 const OUT = process.env.OUT_DIR ?? '../testing-evidence/web/lighthouse'
 const PORT = 9333
 const THRESHOLD = 90
+// Optional: reuse an already-downloaded Chromium (same idea as CHROMIUM_PATH in playwright.config.ts).
+const executablePath = process.env.CHROMIUM_PATH || undefined
 
 const pages = [
   { id: 'A11Y-01-login', path: '/', as: null },
   { id: 'A11Y-02-farmer-dashboard', path: '/', as: 'farmer@agriconnect.lk' },
   { id: 'A11Y-03-buyer-dashboard', path: '/', as: 'buyer@agriconnect.lk' },
-  { id: 'A11Y-04-price-trends', path: '/analytics/price-trends', as: null },
-  { id: 'A11Y-05-ai-scheduling', path: '/analytics/ai-scheduling', as: null },
+  // The back office is officer-only, so these must be audited from a signed-in officer session.
+  { id: 'A11Y-04-price-trends', path: '/analytics/price-trends', as: 'officer@agriconnect.lk' },
+  { id: 'A11Y-05-ai-scheduling', path: '/analytics/ai-scheduling', as: 'officer@agriconnect.lk' },
 ]
 
 fs.mkdirSync(OUT, { recursive: true })
 const summary = []
 
 for (const target of pages) {
-  const context = await chromium.launchPersistentContext(`/tmp/lh-${target.id}`, {
+  const context = await chromium.launchPersistentContext(path.join(os.tmpdir(), `lh-${target.id}`), {
+    executablePath,
     args: [`--remote-debugging-port=${PORT}`, '--no-sandbox'],
   })
   const page = context.pages()[0] ?? (await context.newPage())

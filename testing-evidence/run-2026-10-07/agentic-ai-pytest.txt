@@ -1,0 +1,146 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- D:\campus\Y3S1\project\AgriConnect\agentic-ai\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\campus\Y3S1\project\AgriConnect\agentic-ai
+configfile: pyproject.toml
+plugins: anyio-4.15.1, langsmith-0.14.0, asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 89 items
+
+tests/test_ai_safety.py::test_ai_safe_01_instruction_hidden_in_a_data_field_is_not_obeyed PASSED [  1%]
+tests/test_ai_safety.py::test_ai_safe_02_a_model_that_obeys_an_injected_instruction_is_caught_by_validation PASSED [  2%]
+tests/test_ai_safety.py::test_ai_safe_03_the_schedule_contract_has_no_way_to_commit PASSED [  3%]
+tests/test_ai_safety.py::test_ai_safe_04_matching_result_has_no_way_to_commit PASSED [  4%]
+tests/test_ai_safety.py::test_ai_safe_05_matching_ignores_an_injected_centre_name_and_an_obedient_model PASSED [  5%]
+tests/test_ai_safety.py::test_ai_safe_06_when_the_model_is_down_the_agent_still_answers_safely PASSED [  6%]
+tests/test_buyer_farmer_matching_agent.py::test_match_with_no_candidates_returns_no_match PASSED [  7%]
+tests/test_buyer_farmer_matching_agent.py::test_match_picks_the_closest_centre_with_capacity PASSED [  8%]
+tests/test_buyer_farmer_matching_agent.py::test_match_skips_centres_at_full_capacity PASSED [ 10%]
+tests/test_buyer_farmer_matching_agent.py::test_match_when_all_centres_full_returns_no_match_with_explanatory_notes PASSED [ 11%]
+tests/test_buyer_farmer_matching_agent.py::test_match_confidence_is_within_bounds_and_decreases_with_distance PASSED [ 12%]
+tests/test_buyer_farmer_matching_agent.py::test_match_propagates_degraded_flag_from_distance_tool PASSED [ 13%]
+tests/test_buyer_farmer_matching_agent.py::test_explanation_without_an_llm_is_the_deterministic_notes PASSED [ 14%]
+tests/test_buyer_farmer_matching_agent.py::test_explanation_uses_the_llm_text_but_never_changes_the_match PASSED [ 15%]
+tests/test_buyer_farmer_matching_agent.py::test_llm_failure_falls_back_to_the_notes PASSED [ 16%]
+tests/test_buyer_farmer_matching_agent.py::test_llm_text_naming_a_centre_that_was_not_a_candidate_is_discarded PASSED [ 17%]
+tests/test_buyer_farmer_matching_agent.py::test_llm_text_not_mentioning_the_matched_centre_is_discarded PASSED [ 19%]
+tests/test_buyer_farmer_matching_agent.py::test_llm_is_not_called_when_no_centre_has_capacity PASSED [ 20%]
+tests/test_centre_capacity_tool.py::test_check_with_room_reports_has_capacity_true PASSED [ 21%]
+tests/test_centre_capacity_tool.py::test_check_at_full_capacity_reports_has_capacity_false PASSED [ 22%]
+tests/test_centre_capacity_tool.py::test_check_over_capacity_does_not_go_negative PASSED [ 23%]
+tests/test_distance_lookup_tool.py::test_haversine_distance_km_same_point_is_zero PASSED [ 24%]
+tests/test_distance_lookup_tool.py::test_haversine_distance_km_kandy_to_colombo_is_roughly_correct PASSED [ 25%]
+tests/test_distance_lookup_tool.py::test_get_distance_without_api_key_still_calls_the_live_api PASSED [ 26%]
+tests/test_distance_lookup_tool.py::test_get_distance_with_successful_api_response_is_not_degraded PASSED [ 28%]
+tests/test_distance_lookup_tool.py::test_get_distance_when_api_always_fails_retries_then_falls_back PASSED [ 29%]
+tests/test_distance_lookup_tool.py::test_get_distance_with_malformed_response_falls_back PASSED [ 30%]
+tests/test_logistics_agent.py::test_golden_1_no_conflicts_proposes_start_of_window PASSED [ 31%]
+tests/test_logistics_agent.py::test_golden_2_centre_at_capacity_moves_to_next_day PASSED [ 32%]
+tests/test_logistics_agent.py::test_golden_3_partial_conflicts_shift_past_last_booking PASSED [ 33%]
+tests/test_logistics_agent.py::test_golden_4_missing_order_id_raises_validation_error PASSED [ 34%]
+tests/test_logistics_agent.py::test_chained_conflicts_include_calendar_bookings PASSED [ 35%]
+tests/test_logistics_agent.py::test_overlapping_input_bookings_are_skipped_in_one_step PASSED [ 37%]
+tests/test_logistics_agent.py::test_no_slot_in_window_on_any_day_raises PASSED [ 38%]
+tests/test_logistics_agent.py::test_slot_found_on_last_allowed_day PASSED [ 39%]
+tests/test_logistics_agent.py::test_utc_input_is_answered_in_the_callers_timezone PASSED [ 40%]
+tests/test_logistics_agent.py::test_invalid_window_raises_validation_error[2026-10-01T08:00:00-2026-10-01T12:00:00-timezone] PASSED [ 41%]
+tests/test_logistics_agent.py::test_invalid_window_raises_validation_error[2026-10-01T12:00:00+05:30-2026-10-01T08:00:00+05:30-end must be after start] PASSED [ 42%]
+tests/test_logistics_agent.py::test_unknown_input_field_is_rejected PASSED [ 43%]
+tests/test_logistics_agent.py::test_llm_reasoning_is_used_when_valid PASSED [ 44%]
+tests/test_logistics_agent.py::test_llm_reply_wrapped_in_code_fence_is_accepted PASSED [ 46%]
+tests/test_logistics_agent.py::test_llm_restating_same_instant_in_utc_keeps_callers_timezone PASSED [ 47%]
+tests/test_logistics_agent.py::test_malformed_llm_output_raises_validation_error[prose instead of JSON] PASSED [ 48%]
+tests/test_logistics_agent.py::test_malformed_llm_output_raises_validation_error[truncated JSON] PASSED [ 49%]
+tests/test_logistics_agent.py::test_malformed_llm_output_raises_validation_error[LLM moved the slot] PASSED [ 50%]
+tests/test_logistics_agent.py::test_malformed_llm_output_raises_validation_error[LLM picked the lunch booking] PASSED [ 51%]
+tests/test_logistics_agent.py::test_malformed_llm_output_raises_validation_error[conflictChecked false] PASSED [ 52%]
+tests/test_logistics_agent.py::test_malformed_llm_output_raises_validation_error[empty reasoning] PASSED [ 53%]
+tests/test_logistics_agent.py::test_malformed_llm_output_raises_validation_error[unexpected key] PASSED [ 55%]
+tests/test_logistics_agent.py::test_llm_call_failure_raises_llm_unavailable PASSED [ 56%]
+tests/test_logistics_agent.py::test_real_calendar_tool_rejects_malformed_bookings PASSED [ 57%]
+tests/test_logistics_agent.py::test_real_calendar_tool_wraps_http_errors PASSED [ 58%]
+tests/test_logistics_agent.py::test_llm_provider_is_read_from_environment PASSED [ 59%]
+tests/test_logistics_agent.py::test_tools_mode_defaults_to_llm_provider_and_can_be_overridden[mock-None-True] PASSED [ 60%]
+tests/test_logistics_agent.py::test_tools_mode_defaults_to_llm_provider_and_can_be_overridden[gemini-None-False] PASSED [ 61%]
+tests/test_logistics_agent.py::test_tools_mode_defaults_to_llm_provider_and_can_be_overridden[gemini-mock-True] PASSED [ 62%]
+tests/test_logistics_agent.py::test_tools_mode_defaults_to_llm_provider_and_can_be_overridden[mock-api-False] PASSED [ 64%]
+tests/test_logistics_agent.py::test_real_provider_without_api_key_fails_fast PASSED [ 65%]
+tests/test_logistics_agent.py::test_endpoint_returns_proposal PASSED     [ 66%]
+tests/test_logistics_agent.py::test_endpoint_rejects_missing_order_id PASSED [ 67%]
+tests/test_logistics_agent.py::test_endpoint_returns_409_when_no_slot PASSED [ 68%]
+tests/test_logistics_agent.py::test_endpoint_hides_invalid_llm_output PASSED [ 69%]
+tests/test_logistics_agent.py::test_real_capacity_tool_reads_and_validates_api_response PASSED [ 70%]
+tests/test_logistics_agent.py::test_openai_provider_uses_custom_base_url PASSED [ 71%]
+tests/test_logistics_agent.py::test_real_provider_builds_its_chat_model[gemini-gemini_api_key-ChatGoogleGenerativeAI] PASSED [ 73%]
+tests/test_logistics_agent.py::test_real_provider_builds_its_chat_model[openai-openai_api_key-ChatOpenAI] PASSED [ 74%]
+tests/test_logistics_agent.py::test_endpoint_returns_502_when_llm_unavailable PASSED [ 75%]
+tests/test_matching_api.py::test_match_endpoint_returns_a_match PASSED   [ 76%]
+tests/test_matching_api.py::test_match_endpoint_with_no_candidates_returns_no_match PASSED [ 77%]
+tests/test_matching_api.py::test_match_endpoint_rejects_invalid_quantity PASSED [ 78%]
+tests/test_matching_api.py::test_match_endpoint_requires_correct_internal_api_key_when_configured PASSED [ 79%]
+tests/test_matching_api.py::test_match_endpoint_accepts_correct_internal_api_key PASSED [ 80%]
+tests/test_matching_validation.py::test_valid_response_passes PASSED     [ 82%]
+tests/test_matching_validation.py::test_confidence_out_of_range_raises PASSED [ 83%]
+tests/test_matching_validation.py::test_confidence_negative_raises PASSED [ 84%]
+tests/test_matching_validation.py::test_matched_centre_not_in_candidates_raises PASSED [ 85%]
+tests/test_matching_validation.py::test_no_match_with_nonzero_confidence_raises PASSED [ 86%]
+tests/test_matching_validation.py::test_no_match_with_zero_confidence_passes PASSED [ 87%]
+tests/test_matching_validation.py::test_empty_notes_raises PASSED        [ 88%]
+tests/test_matching_validation.py::test_notes_too_long_raises PASSED     [ 89%]
+tests/test_matching_validation.py::test_explanation_naming_the_chosen_and_another_candidate_passes PASSED [ 91%]
+tests/test_matching_validation.py::test_explanation_must_not_be_blank PASSED [ 92%]
+tests/test_matching_validation.py::test_explanation_must_name_the_chosen_centre PASSED [ 93%]
+tests/test_matching_validation.py::test_explanation_must_not_name_unknown_centres PASSED [ 94%]
+tests/test_matching_validation.py::test_explanation_length_is_capped PASSED [ 95%]
+tests/test_quality_agent.py::test_grade_rules_tool PASSED                [ 96%]
+tests/test_quality_agent.py::test_discrepancy_check_tool PASSED          [ 97%]
+tests/test_quality_agent.py::test_price_volume_tool PASSED               [ 98%]
+tests/test_quality_agent.py::test_quality_compliance_agent_evaluation PASSED [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\campus\Y3S1\project\AgriConnect\agentic-ai\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.14-final-0 _______________
+
+Name                                            Stmts   Miss  Cover
+-------------------------------------------------------------------
+src\__init__.py                                     2      1    50%
+src\app\__init__.py                                 0      0   100%
+src\app\agents\__init__.py                          2      0   100%
+src\app\agents\buyer_farmer_matching_agent.py      95      4    96%
+src\app\agents\fair_price_agent.py                 54     44    19%
+src\app\agents\llm_reasoning.py                    43     36    16%
+src\app\agents\logistics_scheduling_agent.py      161      1    99%
+src\app\agents\quality_compliance_agent.py        106     28    74%
+src\app\api\__init__.py                             2      0   100%
+src\app\api\logistics.py                           28      3    89%
+src\app\api\matching.py                            47      2    96%
+src\app\api\quality_routes.py                      35     10    71%
+src\app\api\routes.py                              58     25    57%
+src\app\config.py                                  22      0   100%
+src\app\main.py                                    30      6    80%
+src\app\orchestration\__init__.py                   2      0   100%
+src\app\orchestration\coordinator.py              114     67    41%
+src\app\orchestration\llm_provider.py              15      1    93%
+src\app\orchestration\quality_graph.py             27      3    89%
+src\app\tools\__init__.py                           3      0   100%
+src\app\tools\_http.py                             13      0   100%
+src\app\tools\booking_calendar_tool.py             18      0   100%
+src\app\tools\centre_capacity_tool.py              24      0   100%
+src\app\tools\dambulla_source.py                  125     91    27%
+src\app\tools\distance_lookup_tool.py              52      0   100%
+src\app\tools\errors.py                             1      0   100%
+src\app\tools\historical_trend_tool.py             63     52    17%
+src\app\tools\market_price_tool.py                 50     40    20%
+src\app\tools\quality_tools.py                     45      6    87%
+src\app\validation\__init__.py                      2      0   100%
+src\app\validation\logistics_schemas.py            76      4    95%
+src\app\validation\matching_validation.py          29      0   100%
+src\app\validation\price_bounds_validator.py       34     30    12%
+-------------------------------------------------------------------
+TOTAL                                            1378    454    67%
+======================= 89 passed, 1 warning in 22.08s ========================

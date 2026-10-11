@@ -41,7 +41,7 @@ export function InspectionHistoryPage() {
 
   return (
     <div>
-      <PageHeader title="Inspection History" description="Every quality inspection recorded, searchable and filterable (FR13)." />
+      <PageHeader title="Inspection History" description="Every quality inspection recorded, searchable and filterable." />
 
       <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
         <input

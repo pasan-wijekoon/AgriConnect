@@ -10,10 +10,12 @@ namespace AgriConnect.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
+    private readonly LoginAttemptTracker _loginAttempts;
 
-    public AuthController(AuthService authService)
+    public AuthController(AuthService authService, LoginAttemptTracker loginAttempts)
     {
         _authService = authService;
+        _loginAttempts = loginAttempts;
     }
 
     /// <summary>
@@ -22,13 +24,23 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
+        var client = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        if (_loginAttempts.RetryAfter(dto.Email, client) is { } wait)
+        {
+            Response.Headers.RetryAfter = ((int)Math.Ceiling(wait.TotalSeconds)).ToString();
+            return StatusCode(StatusCodes.Status429TooManyRequests,
+                new { error = "Too many failed sign-in attempts. Please try again later." });
+        }
+
         try
         {
             var result = await _authService.Login(dto);
+            _loginAttempts.Reset(dto.Email, client);
             return Ok(result);
         }
         catch (UnauthorizedAccessException ex)
         {
+            _loginAttempts.RecordFailure(dto.Email, client);
             return Unauthorized(new { error = ex.Message });
         }
     }

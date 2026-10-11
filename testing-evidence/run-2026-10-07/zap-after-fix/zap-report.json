@@ -1,0 +1,919 @@
+{
+	"@programName": "ZAP",
+	"@version": "2.17.0",
+	"@generated": "Wed, 7 Oct 2026 09:58:39",
+	"created": "2026-10-07T09:58:39.873070054Z",
+	"insights":[
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.code.2xx",
+			"description": "Percentage of responses with status code 2xx",
+			"statistic": "20"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.code.4xx",
+			"description": "Percentage of responses with status code 4xx",
+			"statistic": "79"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.ctype.application/json",
+			"description": "Percentage of endpoints with content type application/json",
+			"statistic": "20"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.ctype.application/problem+json",
+			"description": "Percentage of endpoints with content type application/problem+json",
+			"statistic": "77"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.method.DELETE",
+			"description": "Percentage of endpoints with method DELETE",
+			"statistic": "2"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.method.GET",
+			"description": "Percentage of endpoints with method GET",
+			"statistic": "52"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.method.PATCH",
+			"description": "Percentage of endpoints with method PATCH",
+			"statistic": "9"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.method.POST",
+			"description": "Percentage of endpoints with method POST",
+			"statistic": "25"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.method.PUT",
+			"description": "Percentage of endpoints with method PUT",
+			"statistic": "9"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.endpoint.total",
+			"description": "Count of total endpoints",
+			"statistic": "72"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:5000",
+			"key": "insight.response.slow",
+			"description": "Percentage of slow responses",
+			"statistic": "5"
+		}
+	],
+	"site":[ 
+		{
+			"@name": "http://host.docker.internal:5000",
+			"@host": "host.docker.internal",
+			"@port": "5000",
+			"@ssl": "false",
+			"alerts": [ 
+				{
+					"pluginid": "90004",
+					"alertRef": "90004-1",
+					"alert": "Cross-Origin-Resource-Policy Header Missing or Invalid",
+					"name": "Cross-Origin-Resource-Policy Header Missing or Invalid",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>Cross-Origin-Resource-Policy header is an opt-in header designed to counter side-channels attacks like Spectre. Resource should be specifically set as shareable amongst different origins.</p>",
+					"instances":[ 
+						{
+							"id": "66",
+							"uri": "http://host.docker.internal:5000/api/Inspections/discrepancies?onlyUnresolved=true",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/Inspections\/discrepancies (onlyUnresolved)",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "53",
+							"uri": "http://host.docker.internal:5000/api/analytics/filters",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/filters",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "60",
+							"uri": "http://host.docker.internal:5000/api/auth/me",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/auth\/me",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "64",
+							"uri": "http://host.docker.internal:5000/api/collection-centres",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/collection-centres",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "65",
+							"uri": "http://host.docker.internal:5000/swagger/v1/swagger.json",
+							"nodeName": "http:\/\/host.docker.internal:5000\/swagger\/v1\/swagger.json",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "5",
+					"systemic": true,
+					"solution": "<p>Ensure that the application/web server sets the Cross-Origin-Resource-Policy header appropriately, and that it sets the Cross-Origin-Resource-Policy header to 'same-origin' for all web pages.</p><p>'same-site' is considered as less secured and should be avoided.</p><p>If resources must be shared, set the header to 'cross-origin'.</p><p>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Resource-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-resource-policy).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy</p>",
+					"cweid": "693",
+					"wascid": "14",
+					"sourceid": "39"
+				},
+				{
+					"pluginid": "10096",
+					"alertRef": "10096",
+					"alert": "Timestamp Disclosure - Unix",
+					"name": "Timestamp Disclosure - Unix",
+					"riskcode": "1",
+					"confidence": "1",
+					"riskdesc": "Low (Low)",
+					"desc": "<p>A timestamp was disclosed by the application/web server. - Unix</p>",
+					"instances":[ 
+						{
+							"id": "84",
+							"uri": "http://host.docker.internal:5000/api/prices/today?region=region&grade=A",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/prices\/today (grade,region)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "1544376798",
+							"otherinfo": "1544376798, which evaluates to: 2018-12-09 17:33:18."
+						},
+						{
+							"id": "85",
+							"uri": "http://host.docker.internal:5000/api/prices/today?region=region&grade=A",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/prices\/today (grade,region)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "1553279768",
+							"otherinfo": "1553279768, which evaluates to: 2019-03-22 18:36:08."
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>Manually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.</p>",
+					"otherinfo": "<p>1544376798, which evaluates to: 2018-12-09 17:33:18.</p>",
+					"reference": "<p>https://cwe.mitre.org/data/definitions/200.html</p>",
+					"cweid": "497",
+					"wascid": "13",
+					"sourceid": "84"
+				},
+				{
+					"pluginid": "100000",
+					"alertRef": "100000-1",
+					"alert": "A Client Error response code was returned by the server",
+					"name": "A Client Error response code was returned by the server",
+					"riskcode": "0",
+					"confidence": "3",
+					"riskdesc": "Informational (High)",
+					"desc": "<p>A response code of 403 was returned by the server.</p><p>This may indicate that the application is failing to handle unexpected input correctly.</p><p>Raised by the 'Alert on HTTP Response Code Error' script</p>",
+					"instances":[ 
+						{
+							"id": "80",
+							"uri": "http://host.docker.internal:5000/api/admin/today-prices-catalog/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/today-prices-catalog\/id",
+							"method": "DELETE",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "25",
+							"uri": "http://host.docker.internal:5000/api/listings/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id",
+							"method": "DELETE",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "15",
+							"uri": "http://host.docker.internal:5000/api/Inspections?Search=ZAP&Grade=Grade&CropId=CropId&RegionId=RegionId&FromDate=FromDate&ToDate=ToDate&Page=10&PageSize=10",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/Inspections (CropId,FromDate,Grade,Page,PageSize,RegionId,Search,ToDate)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "17",
+							"uri": "http://host.docker.internal:5000/api/Inspections/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/Inspections\/id",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "77",
+							"uri": "http://host.docker.internal:5000/api/admin/today-prices-catalog",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/today-prices-catalog",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "0",
+							"uri": "http://host.docker.internal:5000/api/admin/users?search=ZAP&role=role&page=1&size=20",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users (page,role,search,size)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "6",
+							"uri": "http://host.docker.internal:5000/api/analytics/anomalies?status=status&cropId=cropId&page=1&size=20",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/anomalies (cropId,page,size,status)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "7",
+							"uri": "http://host.docker.internal:5000/api/analytics/anomalies/listingId/investigate",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/anomalies\/listingId\/investigate",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "5",
+							"uri": "http://host.docker.internal:5000/api/analytics/price-trends?cropId=cropId&regionId=regionId&from=from&to=to&bucket=week",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/price-trends (bucket,cropId,from,regionId,to)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "9",
+							"uri": "http://host.docker.internal:5000/api/analytics/shortages?cropId=cropId&regionId=regionId&type=type&severity=severity",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/shortages (cropId,regionId,severity,type)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "14",
+							"uri": "http://host.docker.internal:5000/api/collection-centres/centreId/schedules",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/collection-centres\/centreId\/schedules",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "13",
+							"uri": "http://host.docker.internal:5000/api/collection-centres/nearest?lat=1.2&lng=1.2&regionId=regionId",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/collection-centres\/nearest (lat,lng,regionId)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "20",
+							"uri": "http://host.docker.internal:5000/api/listings?CropId=CropId&RegionId=RegionId&ExcludeFarmerId=ExcludeFarmerId&Status=Status&Grade=Grade&MinPrice=1.2&MaxPrice=1.2&Search=ZAP&SortBy=SortBy&SortDir=SortDir&Page=10&PageSize=10",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings (CropId,ExcludeFarmerId,Grade,MaxPrice,MinPrice,Page,PageSize,RegionId,Search,SortBy,SortDir,Status)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "23",
+							"uri": "http://host.docker.internal:5000/api/listings/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "33",
+							"uri": "http://host.docker.internal:5000/api/listings/id/agent-workflow",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/agent-workflow",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "34",
+							"uri": "http://host.docker.internal:5000/api/listings/id/inspections",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/inspections",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "31",
+							"uri": "http://host.docker.internal:5000/api/listings/id/price-suggestion",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/price-suggestion",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "22",
+							"uri": "http://host.docker.internal:5000/api/listings/my?CropId=CropId&RegionId=RegionId&ExcludeFarmerId=ExcludeFarmerId&Status=Status&Grade=Grade&MinPrice=1.2&MaxPrice=1.2&Search=ZAP&SortBy=SortBy&SortDir=SortDir&Page=10&PageSize=10",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/my (CropId,ExcludeFarmerId,Grade,MaxPrice,MinPrice,Page,PageSize,RegionId,Search,SortBy,SortDir,Status)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "38",
+							"uri": "http://host.docker.internal:5000/api/listings/my-listings",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/my-listings",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "45",
+							"uri": "http://host.docker.internal:5000/api/orders/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "46",
+							"uri": "http://host.docker.internal:5000/api/orders/id/activity",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id\/activity",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "59",
+							"uri": "http://host.docker.internal:5000/api/orders/id/schedule",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id\/schedule",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "62",
+							"uri": "http://host.docker.internal:5000/api/orders/id/schedule/alternatives",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id\/schedule\/alternatives",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "73",
+							"uri": "http://host.docker.internal:5000/api/reports?page=1&size=20",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/reports (page,size)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "75",
+							"uri": "http://host.docker.internal:5000/api/reports/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/reports\/id",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "82",
+							"uri": "http://host.docker.internal:5000/uploads/fileName",
+							"nodeName": "http:\/\/host.docker.internal:5000\/uploads\/fileName",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "2",
+							"uri": "http://host.docker.internal:5000/api/admin/users/id/role",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users\/id\/role ()({role,collectionCentreId})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3",
+							"uri": "http://host.docker.internal:5000/api/admin/users/id/status",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users\/id\/status ()({isActive})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "8",
+							"uri": "http://host.docker.internal:5000/api/analytics/anomalies/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/anomalies\/id ()({status})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "27",
+							"uri": "http://host.docker.internal:5000/api/listings/id/price-suggestion/approve",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/price-suggestion\/approve",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "28",
+							"uri": "http://host.docker.internal:5000/api/listings/id/price-suggestion/reject",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/price-suggestion\/reject ()({officerNote})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "29",
+							"uri": "http://host.docker.internal:5000/api/listings/id/price-suggestion/revise",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/price-suggestion\/revise ()({revisedPriceMin,revisedPriceMax,officerNote})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "26",
+							"uri": "http://host.docker.internal:5000/api/listings/id/reject",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/reject",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "16",
+							"uri": "http://host.docker.internal:5000/api/Inspections",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/Inspections ()({listingId,confirmedGrade,notes,photoUrls:[]})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "19",
+							"uri": "http://host.docker.internal:5000/api/Inspections/discrepancies/id/resolve",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/Inspections\/discrepancies\/id\/resolve ()({resolutionNotes})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "81",
+							"uri": "http://host.docker.internal:5000/api/Upload",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/Upload ()(multipart:file)",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "78",
+							"uri": "http://host.docker.internal:5000/api/admin/today-prices-catalog",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/today-prices-catalog ()({name,category,unit,defaultRegion,imageUrl,displayOrder})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "1",
+							"uri": "http://host.docker.internal:5000/api/admin/users",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users ()({fullName,email,password,role,phone,region,collectionCentreId})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "4",
+							"uri": "http://host.docker.internal:5000/api/admin/users/id/reset-credentials",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users\/id\/reset-credentials ()({newPassword})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "76",
+							"uri": "http://host.docker.internal:5000/api/analytics/scheduling-preview",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/scheduling-preview ()({centreId,preferredWindow:{start,end},existingBookings:[{slotStart,slotEnd}]})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "10",
+							"uri": "http://host.docker.internal:5000/api/analytics/snapshots/refresh",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/snapshots\/refresh",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "11",
+							"uri": "http://host.docker.internal:5000/api/auth/login",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/auth\/login ()({email,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "12",
+							"uri": "http://host.docker.internal:5000/api/auth/register",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/auth\/register ()({fullName,email,password,role,phone,region})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "21",
+							"uri": "http://host.docker.internal:5000/api/listings",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings ()({cropId,regionId,quantity,unit,claimedGrade,pickupWindowStart,pickupWindowEnd,minPrice,description,photoUrls:[]})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "32",
+							"uri": "http://host.docker.internal:5000/api/listings/id/evaluate-compliance",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/evaluate-compliance",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "30",
+							"uri": "http://host.docker.internal:5000/api/listings/id/photos",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/photos ()({photoUrls:[]})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "35",
+							"uri": "http://host.docker.internal:5000/api/listings/id/publish",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id\/publish",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "43",
+							"uri": "http://host.docker.internal:5000/api/orders",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders ()({listingId,quantity,deliveryPreference,buyerLat,buyerLng})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "56",
+							"uri": "http://host.docker.internal:5000/api/orders/id/cancel",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id\/cancel ()({reason})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "61",
+							"uri": "http://host.docker.internal:5000/api/orders/id/schedule",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id\/schedule ()({collectionCentreId,preferredWindow:{start,end},buyerLocation:{lat,lng}})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "74",
+							"uri": "http://host.docker.internal:5000/api/reports/export",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/reports\/export ()({type,dateRangeStart,dateRangeEnd})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "18",
+							"uri": "http://host.docker.internal:5000/api/Inspections/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/Inspections\/id ()({confirmedGrade,notes,photoUrls:[],reasonForAmendment})",
+							"method": "PUT",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "79",
+							"uri": "http://host.docker.internal:5000/api/admin/today-prices-catalog/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/today-prices-catalog\/id ()({name,category,unit,defaultRegion,imageUrl,displayOrder,isActive})",
+							"method": "PUT",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "24",
+							"uri": "http://host.docker.internal:5000/api/listings/id",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/listings\/id ()({cropId,regionId,quantity,unit,claimedGrade,pickupWindowStart,pickupWindowEnd,minPrice,description,photoUrls:[]})",
+							"method": "PUT",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "41",
+							"uri": "http://host.docker.internal:5000/api/notifications/id/read",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/notifications\/id\/read",
+							"method": "PUT",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "63",
+							"uri": "http://host.docker.internal:5000/api/orders/id/schedule/decision",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id\/schedule\/decision ()({decision,reason,preferredWindow:{start,end}})",
+							"method": "PUT",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "49",
+							"uri": "http://host.docker.internal:5000/api/orders/id/status",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/orders\/id\/status ()({status})",
+							"method": "PUT",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						}
+					],
+					"count": "57",
+					"systemic": false,
+					"solution": "",
+					"otherinfo": "",
+					"reference": "",
+					"cweid": "388",
+					"wascid": "20",
+					"sourceid": "98"
+				},
+				{
+					"pluginid": "10111",
+					"alertRef": "10111",
+					"alert": "Authentication Request Identified",
+					"name": "Authentication Request Identified",
+					"riskcode": "0",
+					"confidence": "1",
+					"riskdesc": "Informational (Low)",
+					"desc": "<p>The given request has been identified as an authentication request. The 'Other Info' field contains a set of key=value lines which identify any relevant fields. If the request is in a context which has an Authentication Method set to \"Auto-Detect\" then this rule will change the authentication to match the request identified.</p>",
+					"instances":[ 
+						{
+							"id": "36",
+							"uri": "http://host.docker.internal:5000/api/admin/users",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users ()({fullName,email,password,role,phone,region,collectionCentreId})",
+							"method": "POST",
+							"param": "email",
+							"attack": "",
+							"evidence": "password",
+							"otherinfo": "userParam=email\nuserValue=zaproxy@example.com\npasswordParam=password"
+						},
+						{
+							"id": "40",
+							"uri": "http://host.docker.internal:5000/api/auth/login",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/auth\/login ()({email,password})",
+							"method": "POST",
+							"param": "email",
+							"attack": "",
+							"evidence": "password",
+							"otherinfo": "userParam=email\nuserValue=zaproxy@example.com\npasswordParam=password"
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>This is an informational alert rather than a vulnerability and so there is nothing to fix.</p>",
+					"otherinfo": "<p>userParam=email</p><p>userValue=zaproxy@example.com</p><p>passwordParam=password</p>",
+					"reference": "<p>https://www.zaproxy.org/docs/desktop/addons/authentication-helper/auth-req-id/</p>",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "8"
+				},
+				{
+					"pluginid": "10049",
+					"alertRef": "10049-1",
+					"alert": "Non-Storable Content",
+					"name": "Non-Storable Content",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.</p>",
+					"instances":[ 
+						{
+							"id": "47",
+							"uri": "http://host.docker.internal:5000/api/analytics/anomalies?status=status&cropId=cropId&page=1&size=20",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/anomalies (cropId,page,size,status)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						},
+						{
+							"id": "42",
+							"uri": "http://host.docker.internal:5000/api/analytics/price-trends?cropId=cropId&regionId=regionId&from=from&to=to&bucket=week",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/analytics\/price-trends (bucket,cropId,from,regionId,to)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						},
+						{
+							"id": "39",
+							"uri": "http://host.docker.internal:5000/api/admin/users/id/role",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users\/id\/role ()({role,collectionCentreId})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "PATCH ",
+							"otherinfo": ""
+						},
+						{
+							"id": "44",
+							"uri": "http://host.docker.internal:5000/api/admin/users",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users ()({fullName,email,password,role,phone,region,collectionCentreId})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						},
+						{
+							"id": "37",
+							"uri": "http://host.docker.internal:5000/api/admin/users/id/reset-credentials",
+							"nodeName": "http:\/\/host.docker.internal:5000\/api\/admin\/users\/id\/reset-credentials ()({newPassword})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						}
+					],
+					"count": "5",
+					"systemic": true,
+					"solution": "<p>The content may be marked as storable by ensuring that the following conditions are satisfied:</p><p>The request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)</p><p>The response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)</p><p>The \"no-store\" cache directive must not appear in the request or response header fields</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)</p><p>In addition to the conditions above, at least one of the following conditions must also be satisfied by the response:</p><p>It must contain an \"Expires\" header field</p><p>It must contain a \"max-age\" response directive</p><p>For \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive</p><p>It must contain a \"Cache Control Extension\" that allows it to be cached</p><p>It must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://datatracker.ietf.org/doc/html/rfc7234</p><p>https://datatracker.ietf.org/doc/html/rfc7231</p><p>https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html</p>",
+					"cweid": "524",
+					"wascid": "13",
+					"sourceid": "17"
+				}
+			]
+		}
+	],
+	"sequences":[
+	]
+
+}

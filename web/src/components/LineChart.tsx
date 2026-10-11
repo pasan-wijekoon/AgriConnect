@@ -130,7 +130,15 @@ export function LineChart({
     setActive((i) => move(i ?? n - 1))
   }
 
-  const tooltipLeft = active === null ? 0 : Math.min(Math.max(x(active), 90), width - 90)
+  const tooltipHalfWidth = 112
+  const tooltipLeft = active === null ? 0 : x(active)
+  const tooltipTransform = active === null
+    ? undefined
+    : x(active) < tooltipHalfWidth
+      ? 'translateX(0)'
+      : x(active) > width - tooltipHalfWidth
+        ? 'translateX(-100%)'
+        : 'translateX(-50%)'
 
   return (
     <div className="chart" ref={containerRef}>
@@ -217,7 +225,7 @@ export function LineChart({
       </svg>
 
       {active !== null && (
-        <div className="tooltip" style={{ left: tooltipLeft }} role="status">
+        <div className="tooltip" style={{ left: tooltipLeft, transform: tooltipTransform }} role="status">
           <div className="tooltip-title">{formatTooltipPeriod(periods[active])}</div>
           {series.map((s) => (
             <div key={s.id} className="tooltip-row">

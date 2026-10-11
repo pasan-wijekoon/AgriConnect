@@ -1,0 +1,93 @@
+[
+  {
+    "id": "SEC-A1",
+    "title": "No token on a protected endpoint",
+    "expected": "401",
+    "actual": 401,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-A2",
+    "title": "Tampered JWT signature",
+    "expected": "401",
+    "actual": 401,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-A3",
+    "title": "Farmer places an order (Buyer-only action)",
+    "expected": "403",
+    "actual": 403,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-A4",
+    "title": "Buyer reads officer analytics queue",
+    "expected": "403",
+    "actual": 403,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-A5",
+    "title": "IDOR: farmer2 reads another farmer's buyer order by id",
+    "expected": "403 or 404, no order data",
+    "actual": 404,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-A6",
+    "title": "IDOR: unrelated farmer cancels the buyer's order",
+    "expected": "403 or 404",
+    "actual": 403,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-03",
+    "title": "SQL injection payloads in the search parameter",
+    "expected": "no 5xx, no SQL text, no extra rows",
+    "actual": "clean",
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-03b",
+    "title": "SQL injection in sortBy",
+    "expected": "no 5xx / no SQL text",
+    "actual": 200,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-05a",
+    "title": "Malformed JSON body",
+    "expected": "400 and no stack trace",
+    "actual": 400,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-05b",
+    "title": "Malformed id in route",
+    "expected": "4xx and no stack trace",
+    "actual": 404,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-05c",
+    "title": "CORS does not allow an arbitrary origin",
+    "expected": "no Access-Control-Allow-Origin for evil.example",
+    "actual": null,
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-07",
+    "title": "Client-supplied price/status fields on order creation",
+    "expected": "201, status Pending, client price ignored",
+    "actual": "201 Pending",
+    "status": "Passed"
+  },
+  {
+    "id": "SEC-06",
+    "title": "40 failed logins in a row for one account",
+    "expected": "throttled/locked (429/423) at some point",
+    "actual": "[401, 429] (throttled=True)",
+    "status": "Passed"
+  }
+]

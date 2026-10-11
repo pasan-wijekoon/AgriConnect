@@ -169,6 +169,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                   style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               TextFormField(
+                key: const ValueKey('order_quantity_field'),
                 controller: _quantityController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
@@ -265,6 +266,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
               ],
               const SizedBox(height: 20),
               ElevatedButton(
+                key: const ValueKey('place_order_button'),
                 onPressed: submitting ? null : _submit,
                 child: submitting
                     ? const SizedBox(

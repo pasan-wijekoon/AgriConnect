@@ -3,17 +3,16 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { getRegions, getListings } = vi.hoisted(() => ({ getRegions: vi.fn(), getListings: vi.fn() }))
+const { getRegions, getListings, getMe } = vi.hoisted(() => ({ getRegions: vi.fn(), getListings: vi.fn(), getMe: vi.fn() }))
 vi.mock('../../src/utils/marketApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../src/utils/marketApi')>()),
-  api: { getRegions, getListings },
+  api: { getRegions, getListings, getMe },
 }))
 
 import App from '../../src/App'
 import { BuyerDashboard } from '../../src/pages/BuyerDashboard'
 import { ProductDetailModal } from '../../src/components/ProductDetailModal'
 import { AuthProvider } from '../../src/context/AuthContext'
-import { DevIdentityProvider } from '../../src/context/DevIdentityContext'
 
 const listing = {
   id: 'l1', farmerId: 'f1', cropName: 'Tomatoes', cropCategory: 'Vegetables', regionName: 'Nuwara Eliya',
@@ -23,6 +22,8 @@ const listing = {
 }
 
 beforeEach(() => {
+  // AuthContext re-validates a saved session through api.getMe(); echo the saved user back.
+  getMe.mockReset().mockImplementation(async () => JSON.parse(localStorage.getItem('agriconnect_user') ?? '{}'))
   getRegions.mockReset().mockResolvedValue([])
   getListings.mockReset().mockResolvedValue({ items: [listing], totalCount: 1, page: 1, pageSize: 50 })
 })
@@ -35,9 +36,7 @@ function renderApp(path = '/') {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <AuthProvider>
-        <DevIdentityProvider>
-          <App />
-        </DevIdentityProvider>
+        <App />
       </AuthProvider>
     </MemoryRouter>,
   )
@@ -57,15 +56,15 @@ describe('Protected routes (WEB-C-05, WEB-C-06)', () => {
     renderApp('/')
 
     expect(await screen.findByText(/available wholesale batches/)).toBeInTheDocument()
-    expect(screen.queryByText('Officer tools')).not.toBeInTheDocument()
+    expect(screen.queryByText('Inspection Queue')).not.toBeInTheDocument() // back-office nav is officer/admin only
   })
 
-  it('WEB-C-06b an officer gets the officer landing page, not a marketplace dashboard', async () => {
+  it('WEB-C-06b an officer gets the back-office navigation, not a marketplace dashboard', async () => {
     signedInAs('Officer')
     renderApp('/')
 
-    expect(await screen.findByText('Officer tools')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Open the back office' })).toHaveAttribute('href', '/orders')
+    expect(await screen.findByText('Inspection Queue')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Schedule/ })).toHaveAttribute('href', '/orders/schedule')
     expect(getListings).not.toHaveBeenCalled()
   })
 
@@ -83,7 +82,7 @@ describe('Buyer listing states (WEB-C-07, WEB-C-08, WEB-C-09)', () => {
   it('WEB-C-07 shows a loading message, then the listings', async () => {
     let release!: (v: unknown) => void
     getListings.mockReturnValue(new Promise((resolve) => { release = resolve }))
-    render(<BuyerDashboard />)
+    render(<AuthProvider><BuyerDashboard /></AuthProvider>)
 
     expect(screen.getByText(/Loading published produce/)).toBeInTheDocument()
     release({ items: [listing], totalCount: 1, page: 1, pageSize: 50 })
@@ -94,7 +93,7 @@ describe('Buyer listing states (WEB-C-07, WEB-C-08, WEB-C-09)', () => {
 
   it('WEB-C-08 shows a friendly empty state when nothing is published', async () => {
     getListings.mockResolvedValue({ items: [], totalCount: 0, page: 1, pageSize: 50 })
-    render(<BuyerDashboard />)
+    render(<AuthProvider><BuyerDashboard /></AuthProvider>)
 
     expect(await screen.findByText('No produce matches your filters')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reset All Filters' })).toBeInTheDocument()
@@ -103,9 +102,9 @@ describe('Buyer listing states (WEB-C-07, WEB-C-08, WEB-C-09)', () => {
   it('WEB-C-09 tells the buyer when the API fails, instead of pretending nothing matched', async () => {
     getListings.mockRejectedValue(new Error('API error 500'))
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    render(<BuyerDashboard />)
+    render(<AuthProvider><BuyerDashboard /></AuthProvider>)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/could not load|failed to load|try again/i)
+    expect(await screen.findByRole('alert')).toHaveTextContent(/couldn.t load produce/i)
     expect(screen.queryByText('No produce matches your filters')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /try again|retry/i })).toBeInTheDocument()
   })
@@ -120,7 +119,8 @@ describe('Order form (WEB-C-10, WEB-C-11)', () => {
       </AuthProvider>,
     )
     await userEvent.click(await screen.findByRole('button', { name: /Request Wholesale Order/ }))
-    return screen.getByDisplayValue('100') as HTMLInputElement // default quantity
+    // The form pre-fills the quantity with the available stock (capped at 100): 5 for this listing.
+    return screen.getByDisplayValue('5') as HTMLInputElement
   }
 
   it('WEB-C-10 quantity boundaries against stock of 5: 0 and 6 rejected, 1 and 5 accepted', async () => {

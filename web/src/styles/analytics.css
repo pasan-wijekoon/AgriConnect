@@ -283,6 +283,10 @@ color: var(--text);
 .footnote {
   margin: 0;
   font-size: 13px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--series-1);
+  border-radius: 0 6px 6px 0;
+  background: var(--hover);
 }
 
 .stack {
@@ -297,6 +301,23 @@ color: var(--text);
   opacity: 0.55;
   transition: opacity 150ms;
   pointer-events: none;
+}
+
+.inline-loading {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.inline-loading::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--series-1);
 }
 
 /* ---- Stats ------------------------------------------------------------------------ */
@@ -342,6 +363,25 @@ color: var(--text);
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.change-up { color: var(--good-text); }
+.change-down { color: var(--critical-text); }
+
+.btn-table-toggle {
+  min-height: 36px;
+  padding-inline: 12px;
+  border-color: var(--border);
+  background: var(--hover);
+  color: var(--text);
+  font-weight: 650;
+}
+
+.btn-table-toggle:hover:not(:disabled),
+.btn-table-toggle[aria-pressed='true'] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
 }
 
 /* ---- Buttons, badges, notices ----------------------------------------------------------- */
@@ -645,6 +685,9 @@ td.notes {
   top: 28px;
   transform: translateX(-50%);
   min-width: 170px;
+  max-width: min(230px, calc(100% - 24px));
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
   padding: 10px 12px;
   border-radius: 8px;
   background: var(--surface-raised);
@@ -1232,3 +1275,102 @@ ul.field-error {
 }
 
 } /* end .analytics-scope */
+
+/* ---- Usability refinements --------------------------------------------------------- */
+.analytics-scope .analytics-filter-panel {
+  align-items: end;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.analytics-scope .filter-reset {
+  min-height: 38px;
+  color: var(--text-secondary);
+}
+
+.analytics-scope .filter-reset:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.analytics-scope .trend-card,
+.analytics-scope .heatmap-card,
+.analytics-scope .event-card,
+.analytics-scope .anomaly-card {
+  box-shadow: var(--shadow);
+}
+
+.analytics-scope .change {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.analytics-scope .heat-cell:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.analytics-scope .heatmap-card .table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.analytics-scope .anomaly-card tbody tr:hover {
+  background: var(--brand-soft);
+}
+
+.marketplace-dashboard {
+  container-type: inline-size;
+}
+
+@container (max-width: 720px) {
+  .marketplace-dashboard {
+    padding: 1rem !important;
+  }
+
+  .marketplace-dashboard h1 {
+    font-size: 1.65rem !important;
+  }
+
+  .marketplace-dashboard .glass-card {
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .analytics-scope .analytics-filter-panel {
+    align-items: stretch;
+  }
+
+  .analytics-scope .analytics-filter-panel .field,
+  .analytics-scope .analytics-filter-panel .filter-reset {
+    width: 100%;
+  }
+
+  .analytics-scope .heatmap-card .table-wrap {
+    margin-inline: -4px;
+  }
+
+  .analytics-scope .heatmap {
+    min-width: 820px;
+  }
+
+  .analytics-scope .heatmap thead th {
+    height: 96px;
+  }
+
+  .analytics-scope .pager {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .analytics-scope .pager span {
+    width: 100%;
+    margin-right: 0;
+  }
+}
