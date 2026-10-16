@@ -1,7 +1,7 @@
 /// Component C — Quality Grading & Inspection (FR12–FR14). A lightweight
 /// projection of `ListingSummaryDto`'s inspection-status fields, keyed by
 /// listing id and joined client-side against the existing `Listing` model
-/// (from `GET /api/listings/my`) rather than replacing it — the two DTOs
+/// (from `GET /api/listings/my-listings`) rather than replacing it — the two DTOs
 /// don't share a shape (this one's `listingPhotos` is a list of URL strings,
 /// not the full `Photo` objects `Listing` uses), so merging them into one
 /// model would mean forcing an awkward common shape onto both call sites.

@@ -185,7 +185,7 @@ class ApiService {
           )
           .toList();
     }
-    return [];
+    throw Exception('Failed to load inspections: ${res.statusCode} ${res.body}');
   }
 
   Future<Listing> createListing({

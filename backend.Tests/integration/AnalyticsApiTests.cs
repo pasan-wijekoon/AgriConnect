@@ -145,13 +145,29 @@ public class AnalyticsApiTests : IClassFixture<ApiTestFactory>
     [Fact] // TC-D-36
     public async Task Filters_FlagWhichCropsHavePriceHistory()
     {
+        // The suite runs against a shared dev database, so we can't assume any crop lacks
+        // history (other data may already cover every crop). Instead of depending on that,
+        // check the flag against Component D's own price-trends endpoint: a crop is flagged
+        // true exactly when it returns points.
         using var client = _factory.CreateAuthedClient(Roles.Farmer);
 
         var body = await JsonBody(await client.GetAsync("/api/analytics/filters"));
-
         var crops = body.GetProperty("crops").EnumerateArray().ToList();
+
         Assert.Contains(crops, c => c.GetProperty("hasPriceHistory").GetBoolean());
-        Assert.Contains(crops, c => !c.GetProperty("hasPriceHistory").GetBoolean());
+
+        foreach (var crop in crops)
+        {
+            var id = crop.GetProperty("id").GetGuid();
+            var flagged = crop.GetProperty("hasPriceHistory").GetBoolean();
+
+            var trends = await JsonBody(await client.GetAsync(
+                $"/api/analytics/price-trends?cropId={id}&from=2000-01-01&to=2100-12-31"));
+            var hasPoints = trends.GetProperty("points").GetArrayLength() > 0;
+
+            Assert.True(flagged == hasPoints,
+                $"Crop {crop.GetProperty("name").GetString()}: hasPriceHistory={flagged} but price-trends returned points={hasPoints}.");
+        }
     }
 
     [Fact] // TC-D-37

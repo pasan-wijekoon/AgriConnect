@@ -30,14 +30,37 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   // Component C — Quality Grading & Inspection (FR13): this listing's
   // inspection history, shown below the specifications card.
   List<ListingInspectionRecord> _inspections = [];
+  bool _inspectionsLoading = true;
+  bool _inspectionsFailed = false;
 
   @override
   void initState() {
     super.initState();
     _loadListing();
-    widget.apiService.getListingInspections(widget.listingId).then((inspections) {
-      if (mounted) setState(() => _inspections = inspections);
+    _loadInspections();
+  }
+
+  Future<void> _loadInspections() async {
+    setState(() {
+      _inspectionsLoading = true;
+      _inspectionsFailed = false;
     });
+    try {
+      final inspections = await widget.apiService.getListingInspections(widget.listingId);
+      if (mounted) {
+        setState(() {
+          _inspections = inspections;
+          _inspectionsLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _inspectionsFailed = true;
+          _inspectionsLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadListing() async {
@@ -514,7 +537,32 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   // Component C — Quality Grading & Inspection (FR13)
                   const Text('Inspection History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  if (_inspections.isEmpty)
+                  if (_inspectionsLoading)
+                    const Center(child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ))
+                  else if (_inspectionsFailed)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Failed to load inspection history.',
+                              style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.refresh, size: 18),
+                              label: const Text('Retry'),
+                              onPressed: _loadInspections,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (_inspections.isEmpty)
                     Text(
                       'This listing has not been inspected by an officer yet.',
                       style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
@@ -548,7 +596,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Grade ${inspection.confirmedGrade}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(inspection.confirmedGrade, style: const TextStyle(fontWeight: FontWeight.bold)),
                 Text(dateFormat.format(inspection.inspectedAt), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
               ],
             ),

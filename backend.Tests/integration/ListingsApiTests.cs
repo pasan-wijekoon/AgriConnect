@@ -119,4 +119,121 @@ public class ListingsApiTests : IClassFixture<ApiTestFactory>
         Assert.All(json.GetProperty("items").EnumerateArray(),
             l => Assert.Equal("Published", l.GetProperty("status").GetString()));
     }
+
+    // ── Component C: GET /api/listings/{id}/inspections authorization ──
+
+    /// <summary>
+    /// Creates a listing as the given farmer and returns its ID.
+    /// </summary>
+    private async Task<Guid> CreateListingAsFarmer(HttpClient farmerClient)
+    {
+        var body = await ListingBodyAsync(farmerClient, Utc(2), Utc(3));
+        var response = await farmerClient.PostAsJsonAsync("/api/listings", body);
+        response.EnsureSuccessStatusCode();
+        var json = await JsonBody(response);
+        return json.GetProperty("id").GetGuid();
+    }
+
+    /// <summary>
+    /// Records an inspection for a listing (requires Officer/Admin).
+    /// </summary>
+    private async Task RecordInspectionAsync(HttpClient officerClient, Guid listingId, string grade = "Grade A")
+    {
+        var body = new
+        {
+            listingId,
+            confirmedGrade = grade,
+            notes = "Test inspection",
+            photoUrls = Array.Empty<string>()
+        };
+        var response = await officerClient.PostAsJsonAsync("/api/inspections", body);
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task GetInspections_OwnerFarmer_Returns200WithInspections()
+    {
+        using var farmer = _factory.CreateAuthedClient(Roles.Farmer);
+        using var officer = _factory.CreateAuthedClient(Roles.Officer);
+
+        var listingId = await CreateListingAsFarmer(farmer);
+        await RecordInspectionAsync(officer, listingId, "Grade A");
+
+        var response = await farmer.GetAsync($"/api/listings/{listingId}/inspections");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await JsonBody(response);
+        var items = json.EnumerateArray().ToList();
+        Assert.Single(items);
+        Assert.Equal("Grade A", items[0].GetProperty("confirmedGrade").GetString());
+    }
+
+    [Fact]
+    public async Task GetInspections_DifferentFarmer_Returns403()
+    {
+        using var farmer1 = _factory.CreateAuthedClient(Roles.Farmer, ApiTestFactory.StableUserId("Farmer1"));
+        using var farmer2 = _factory.CreateAuthedClient(Roles.Farmer, ApiTestFactory.StableUserId("Farmer2"));
+        using var officer = _factory.CreateAuthedClient(Roles.Officer);
+
+        var listingId = await CreateListingAsFarmer(farmer1);
+        await RecordInspectionAsync(officer, listingId);
+
+        var response = await farmer2.GetAsync($"/api/listings/{listingId}/inspections");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetInspections_Officer_Returns200()
+    {
+        using var farmer = _factory.CreateAuthedClient(Roles.Farmer);
+        using var officer = _factory.CreateAuthedClient(Roles.Officer);
+
+        var listingId = await CreateListingAsFarmer(farmer);
+        await RecordInspectionAsync(officer, listingId);
+
+        var response = await officer.GetAsync($"/api/listings/{listingId}/inspections");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await JsonBody(response);
+        Assert.NotEmpty(json.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task GetInspections_Administrator_Returns200()
+    {
+        using var farmer = _factory.CreateAuthedClient(Roles.Farmer);
+        using var admin = _factory.CreateAuthedClient(Roles.Admin);
+        using var officer = _factory.CreateAuthedClient(Roles.Officer);
+
+        var listingId = await CreateListingAsFarmer(farmer);
+        await RecordInspectionAsync(officer, listingId);
+
+        var response = await admin.GetAsync($"/api/listings/{listingId}/inspections");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await JsonBody(response);
+        Assert.NotEmpty(json.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task GetInspections_UnknownListingId_Returns404()
+    {
+        using var farmer = _factory.CreateAuthedClient(Roles.Farmer);
+
+        var unknownId = Guid.NewGuid();
+        var response = await farmer.GetAsync($"/api/listings/{unknownId}/inspections");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetInspections_Unauthenticated_Returns401()
+    {
+        using var client = _factory.CreateClient(); // No auth header
+
+        var response = await client.GetAsync("/api/listings/00000000-0000-0000-0000-000000000001/inspections");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

@@ -1,4 +1,5 @@
 using AgriConnect.Api.Dtos;
+using AgriConnect.Api.Models;
 
 namespace AgriConnect.Api.Services;
 
@@ -15,4 +16,7 @@ public interface IInspectionService
     Task<List<ListingSummaryDto>> GetPendingListingsForInspectionAsync();
     Task<List<ListingSummaryDto>> GetFarmerListingsAsync(Guid farmerId);
     Task<QualityDashboardStatsDto> GetDashboardStatsAsync();
+
+    // For authorization checks: returns listing with FarmerId for ownership validation
+    Task<Listing?> GetListingByIdAsync(Guid listingId);
 }

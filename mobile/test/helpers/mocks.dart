@@ -1,6 +1,7 @@
 import 'package:mocktail/mocktail.dart';
 
 import 'package:agriconnect_mobile/models/listing.dart';
+import 'package:agriconnect_mobile/models/listing_inspection_status.dart';
 import 'package:agriconnect_mobile/services/api_service.dart';
 
 class MockApiService extends Mock implements ApiService {}
@@ -69,4 +70,12 @@ void stubBrowseListings(
       pageSize: any(named: 'pageSize'),
     ),
   ).thenAnswer((_) => response());
+}
+
+void stubListingInspections(
+  MockApiService api,
+  String listingId,
+  Future<List<ListingInspectionRecord>> Function() response,
+) {
+  when(() => api.getListingInspections(listingId)).thenAnswer((_) => response());
 }

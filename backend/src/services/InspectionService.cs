@@ -453,6 +453,16 @@ public class InspectionService(AgriConnectDbContext context, AuditLogService aud
         return listings.Select(ToSummaryDto).ToList();
     }
 
+    /// <summary>
+    /// Gets a listing by ID with FarmerId for ownership checks.
+    /// </summary>
+    public async Task<Listing?> GetListingByIdAsync(Guid listingId)
+    {
+        return await context.Listings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == listingId);
+    }
+
     public async Task<QualityDashboardStatsDto> GetDashboardStatsAsync()
     {
         var today = DateTime.UtcNow.Date;

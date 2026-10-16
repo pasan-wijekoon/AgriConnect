@@ -53,11 +53,30 @@ public class ListingsInspectionController(IInspectionService inspectionService, 
 
     /// <summary>
     /// Full inspection history for a listing (FR13).
+    /// Officer/Administrator: can view any listing's inspections.
+    /// Farmer: can only view inspections for their own listings (FarmerId match).
     /// </summary>
-    [Authorize(Roles = Roles.OfficerAdmin)]
+    [Authorize(Roles = Roles.Farmer + "," + Roles.Officer + "," + Roles.Admin)]
     [HttpGet("{id:guid}/inspections")]
     public async Task<ActionResult<List<InspectionResponseDto>>> GetInspectionsForListing(Guid id)
     {
+        var currentUserId = User.GetUserId();
+        var isFarmer = User.IsInRole(Roles.Farmer);
+
+        if (isFarmer)
+        {
+            // Farmer can only see inspections for their own listings
+            var listing = await inspectionService.GetListingByIdAsync(id);
+            if (listing == null)
+            {
+                return NotFound();
+            }
+            if (listing.FarmerId != currentUserId)
+            {
+                return Forbid();
+            }
+        }
+
         var result = await inspectionService.GetInspectionsByListingIdAsync(id);
         return Ok(result);
     }
