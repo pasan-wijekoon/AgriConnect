@@ -17,7 +17,7 @@ String get apiBaseUrl {
   if (override.isNotEmpty) return override;
 
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    return 'http://10.0.2.2:5000';
+    return 'https://16-178-77-2.sslip.io';
   }
-  return 'http://localhost:5000';
+  return 'https://16-178-77-2.sslip.io';
 }

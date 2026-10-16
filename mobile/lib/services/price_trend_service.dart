@@ -34,8 +34,8 @@ class PriceTrendService {
     const configured = String.fromEnvironment('API_BASE_URL');
     if (configured.isNotEmpty) return configured;
     // The Android emulator reaches the host machine through 10.0.2.2, not localhost.
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:5000';
-    return 'http://localhost:5000';
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) return 'https://16-178-77-2.sslip.io';
+    return 'https://16-178-77-2.sslip.io';
   }
 
   Map<String, String> get _headers => {

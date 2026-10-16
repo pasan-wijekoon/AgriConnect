@@ -33,7 +33,7 @@ class WelcomeScreen extends StatelessWidget {
                               color: AppColors.successBg,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.eco, size: 48, color: AppColors.primary),
+                            child: const Icon(Icons.agriculture, size: 48, color: AppColors.primary),
                           ),
                         ),
                         const SizedBox(height: 20),
