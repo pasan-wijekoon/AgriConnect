@@ -139,7 +139,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: grade,
+                    initialValue: grade,
                     decoration: const InputDecoration(
                       labelText: 'Claimed Grade',
                       border: OutlineInputBorder(),
@@ -351,7 +351,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(listing.status).withOpacity(0.15),
+                          color: _getStatusColor(listing.status).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: _getStatusColor(listing.status)),
                         ),

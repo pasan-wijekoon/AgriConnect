@@ -8,7 +8,18 @@ enum DeliveryPreference { pickup, delivery }
 
 enum ScheduleStatus { proposed, confirmed, cancelled }
 
-OrderStatus orderStatusFromJson(String value) => switch (value) {
+OrderStatus orderStatusFromJson(dynamic raw) {
+  // The API may send the enum as its name ("Pending") or as its numeric index (0).
+  if (raw is int) {
+    if (raw < 0 || raw >= OrderStatus.values.length) {
+      throw ArgumentError('Unknown OrderStatus index: $raw');
+    }
+    return OrderStatus.values[raw];
+  }
+  return _orderStatusFromJsonName(raw.toString());
+}
+
+OrderStatus _orderStatusFromJsonName(String value) => switch (value) {
       'Pending' => OrderStatus.pending,
       'Approved' => OrderStatus.approved,
       'Scheduled' => OrderStatus.scheduled,
@@ -25,7 +36,18 @@ String orderStatusToJson(OrderStatus status) => switch (status) {
       OrderStatus.cancelled => 'Cancelled',
     };
 
-DeliveryPreference deliveryPreferenceFromJson(String value) => switch (value) {
+DeliveryPreference deliveryPreferenceFromJson(dynamic raw) {
+  // The API may send the enum as its name ("Pending") or as its numeric index (0).
+  if (raw is int) {
+    if (raw < 0 || raw >= DeliveryPreference.values.length) {
+      throw ArgumentError('Unknown DeliveryPreference index: $raw');
+    }
+    return DeliveryPreference.values[raw];
+  }
+  return _deliveryPreferenceFromJsonName(raw.toString());
+}
+
+DeliveryPreference _deliveryPreferenceFromJsonName(String value) => switch (value) {
       'Pickup' => DeliveryPreference.pickup,
       'Delivery' => DeliveryPreference.delivery,
       _ => throw ArgumentError('Unknown DeliveryPreference: $value'),
@@ -36,7 +58,18 @@ String deliveryPreferenceToJson(DeliveryPreference value) => switch (value) {
       DeliveryPreference.delivery => 'Delivery',
     };
 
-ScheduleStatus scheduleStatusFromJson(String value) => switch (value) {
+ScheduleStatus scheduleStatusFromJson(dynamic raw) {
+  // The API may send the enum as its name ("Pending") or as its numeric index (0).
+  if (raw is int) {
+    if (raw < 0 || raw >= ScheduleStatus.values.length) {
+      throw ArgumentError('Unknown ScheduleStatus index: $raw');
+    }
+    return ScheduleStatus.values[raw];
+  }
+  return _scheduleStatusFromJsonName(raw.toString());
+}
+
+ScheduleStatus _scheduleStatusFromJsonName(String value) => switch (value) {
       'Proposed' => ScheduleStatus.proposed,
       'Confirmed' => ScheduleStatus.confirmed,
       'Cancelled' => ScheduleStatus.cancelled,
@@ -104,9 +137,9 @@ class Order {
         listingId: json['listingId'] as String,
         buyerId: json['buyerId'] as String,
         quantity: (json['quantity'] as num).toDouble(),
-        status: orderStatusFromJson(json['status'] as String),
+        status: orderStatusFromJson(json['status']),
         deliveryPreference:
-            deliveryPreferenceFromJson(json['deliveryPreference'] as String),
+            deliveryPreferenceFromJson(json['deliveryPreference']),
         createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
         updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
         reservationExpiresAt: _date(json['reservationExpiresAt']),
@@ -119,7 +152,7 @@ class Order {
         collectionCentreName: json['collectionCentreName'] as String?,
         scheduleStatus: json['scheduleStatus'] == null
             ? null
-            : scheduleStatusFromJson(json['scheduleStatus'] as String),
+            : scheduleStatusFromJson(json['scheduleStatus']),
         slotStart: _date(json['slotStart']),
         slotEnd: _date(json['slotEnd']),
       );
@@ -177,7 +210,7 @@ class PickupSchedule {
         collectionCentreId: json['collectionCentreId'] as String,
         slotStart: DateTime.parse(json['slotStart'] as String),
         slotEnd: DateTime.parse(json['slotEnd'] as String),
-        status: scheduleStatusFromJson(json['status'] as String),
+        status: scheduleStatusFromJson(json['status']),
         conflictChecked: json['conflictChecked'] as bool,
       );
 }

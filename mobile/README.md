@@ -10,17 +10,18 @@ flutter pub get
 
 ## Run
 
-Start the API first (`backend/`, `dotnet run`), then:
+Run the app; it uses the deployed backend at `https://16-178-77-2.sslip.io` by default.
+To use a local API during development, override the base URL for the current run:
 
 ```bash
-flutter run
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5000
 ```
 
-The app calls `http://localhost:5000`, or `http://10.0.2.2:5000` on the Android emulator (the
-emulator's address for the host machine). Point it elsewhere with:
+For an Android emulator, `10.0.2.2` reaches the development computer. On other platforms,
+use the appropriate local host address. You can point the app at any backend origin with:
 
 ```bash
-flutter run --dart-define=API_BASE_URL=https://api.example.com
+flutter run --dart-define=API_BASE_URL=https://your-api-domain.example
 ```
 
 The app uses the real login (JWT). Sign in with a demo account (password `password`) —

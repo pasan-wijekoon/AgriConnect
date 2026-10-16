@@ -169,74 +169,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     }
   }
 
-  void _showPhotoOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Text(
-                  'Add Produce Photo',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.camera_alt, color: Colors.green.shade700),
-                ),
-                title: const Text('Take Photo', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Use your camera to capture produce'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _takePhoto();
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.photo_library, color: Colors.blue.shade700),
-                ),
-                title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Select photos from your device'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickFromGallery();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _submitListing() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCropId == null || _selectedRegionId == null) {
@@ -353,7 +285,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               const Text('Select Crop', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: _selectedCropId,
+                initialValue: _selectedCropId,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -375,7 +307,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               const Text('Farming Region', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: _selectedRegionId,
+                initialValue: _selectedRegionId,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -432,7 +364,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                         const Text('Unit', style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: _selectedUnit,
+                          initialValue: _selectedUnit,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -458,7 +390,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50.withOpacity(0.7),
+                  color: Colors.green.shade50.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.green.shade200),
                 ),
@@ -565,7 +497,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                         const Text('Claimed Grade', style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: _selectedGrade,
+                          initialValue: _selectedGrade,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

@@ -113,8 +113,9 @@ class ApiService {
     };
 
     if (cropId != null && cropId.isNotEmpty) queryParams['cropId'] = cropId;
-    if (regionId != null && regionId.isNotEmpty)
+    if (regionId != null && regionId.isNotEmpty) {
       queryParams['regionId'] = regionId;
+    }
     if (grade != null && grade.isNotEmpty) queryParams['grade'] = grade;
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
@@ -237,16 +238,16 @@ class ApiService {
     double? minPrice,
   }) async {
     final body = jsonEncode({
-      if (cropId != null) 'cropId': cropId,
-      if (regionId != null) 'regionId': regionId,
-      if (quantity != null) 'quantity': quantity,
-      if (unit != null) 'unit': unit,
-      if (claimedGrade != null) 'claimedGrade': claimedGrade,
+      'cropId': ?cropId,
+      'regionId': ?regionId,
+      'quantity': ?quantity,
+      'unit': ?unit,
+      'claimedGrade': ?claimedGrade,
       if (pickupWindowStart != null)
         'pickupWindowStart': pickupWindowStart.toUtc().toIso8601String(),
       if (pickupWindowEnd != null)
         'pickupWindowEnd': pickupWindowEnd.toUtc().toIso8601String(),
-      if (minPrice != null) 'minPrice': minPrice,
+      'minPrice': ?minPrice,
     });
 
     final res = await _put(
