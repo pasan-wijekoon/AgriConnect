@@ -246,6 +246,7 @@ export const LoginPage: React.FC = () => {
                   className="form-input"
                   style={{ width: '100%', paddingLeft: '38px' }}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
