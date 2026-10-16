@@ -15,13 +15,59 @@ const STAGE_HINT: Record<string, string> = {
   Completed: 'Produce collected',
 }
 
+/**
+ * The backend *sometimes* returns enum values as numbers (0, 1, 2, …) rather than
+ * strings, and TypeScript's `OrderStatus` union can't protect us at runtime. Coerce
+ * whatever we get back onto the union so downstream code can safely call
+ * `.toLowerCase()`, compare against `STAGES`, etc.
+ */
+const STATUS_BY_INDEX: OrderStatus[] = ['Pending', 'Approved', 'Scheduled', 'Completed', 'Cancelled']
+const STATUS_BY_NAME: Record<string, OrderStatus> = {
+  pending: 'Pending',
+  approved: 'Approved',
+  scheduled: 'Scheduled',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  canceled: 'Cancelled',
+}
+
+function normalizeStatus(value: unknown, fallback: OrderStatus = 'Pending'): OrderStatus {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < STATUS_BY_INDEX.length) {
+    return STATUS_BY_INDEX[value]
+  }
+  if (typeof value === 'string') {
+    const named = STATUS_BY_NAME[value.trim().toLowerCase()]
+    if (named) return named
+    const asNum = Number(value)
+    if (Number.isInteger(asNum) && asNum >= 0 && asNum < STATUS_BY_INDEX.length) {
+      return STATUS_BY_INDEX[asNum]
+    }
+  }
+  return fallback
+}
+
+function normalizeOrder(raw: OrderResponse): OrderResponse {
+  const rawStatus = (raw as unknown as { status?: unknown }).status
+  const rawSchedule = (raw as unknown as { scheduleStatus?: unknown }).scheduleStatus
+  return {
+    ...raw,
+    status: normalizeStatus(rawStatus),
+    scheduleStatus:
+      rawSchedule == null || rawSchedule === ''
+        ? undefined
+        : (String(rawSchedule) as OrderResponse['scheduleStatus']),
+  }
+}
+
 const fmtQty = (n: number) => Number(n.toFixed(2)).toString()
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 
-function StatusPill({ status }: { status: OrderStatus }) {
-  return <span className={`mo-pill mo-pill-${status.toLowerCase()}`}>{status}</span>
+function StatusPill({ status }: { status: unknown }) {
+  const label = status == null || status === '' ? 'Unknown' : String(status)
+  const slug = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  return <span className={`mo-pill mo-pill-${slug}`}>{label}</span>
 }
 
 function isActive(s: OrderStatus) {
@@ -50,7 +96,7 @@ export function MyOrdersPage() {
     setError(null)
     ordersApi
       .list({ size: 100 })
-      .then((r) => setOrders(r.items))
+      .then((r) => setOrders(r.items.map(normalizeOrder)))
       .catch((e: unknown) => setError(e instanceof ApiError ? e.message : 'We couldn’t load your orders.'))
       .finally(() => setLoading(false))
   }, [])
@@ -62,7 +108,13 @@ export function MyOrdersPage() {
   const visible = useMemo(
     () =>
       orders.filter((o) =>
-        filter === 'All' ? true : filter === 'Active' ? isActive(o.status) : filter === 'Completed' ? o.status === 'Completed' : o.status === 'Cancelled',
+        filter === 'All'
+          ? true
+          : filter === 'Active'
+            ? isActive(o.status)
+            : filter === 'Completed'
+              ? o.status === 'Completed'
+              : o.status === 'Cancelled',
       ),
     [orders, filter],
   )
@@ -74,7 +126,8 @@ export function MyOrdersPage() {
     setNotice(null)
     try {
       const updated = await ordersApi.cancel(order.id)
-      setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
+      const normalized = normalizeOrder(updated)
+      setOrders((prev) => prev.map((o) => (o.id === normalized.id ? normalized : o)))
     } catch (e) {
       setNotice(e instanceof ApiError ? e.message : 'Could not cancel the order.')
     } finally {
@@ -123,7 +176,9 @@ export function MyOrdersPage() {
         <div className="mo-state">
           <strong>No orders yet</strong>
           <span>
-            {isBuyer ? 'Open a listing in the marketplace and place your first order.' : 'Orders placed on your listings will show up here.'}
+            {isBuyer
+              ? 'Open a listing in the marketplace and place your first order.'
+              : 'Orders placed on your listings will show up here.'}
           </span>
         </div>
       )}
@@ -154,7 +209,7 @@ export function MyOrdersPage() {
                     <div className="mo-slot">
                       📅 {fmtDateTime(o.slotStart)}
                       {o.collectionCentreName ? ` · ${o.collectionCentreName}` : ''}
-                      {o.scheduleStatus === 'Proposed' && <em> (proposed)</em>}
+                      {String(o.scheduleStatus ?? '').toLowerCase() === 'proposed' && <em> (proposed)</em>}
                     </div>
                   ) : (
                     o.status === 'Pending' && <div className="mo-slot mo-waiting">Waiting for an officer to review</div>
@@ -220,10 +275,18 @@ export function MyOrdersPage() {
 
             {selected.slotStart && selected.status !== 'Cancelled' && (
               <div className="mo-schedule">
-                <h3>Pickup schedule {selected.scheduleStatus && <span className={`mo-pill mo-pill-${selected.scheduleStatus.toLowerCase()}`}>{selected.scheduleStatus}</span>}</h3>
-                <p>{fmtDateTime(selected.slotStart)}{selected.slotEnd ? ` – ${new Date(selected.slotEnd).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}` : ''}</p>
+                <h3>
+                  Pickup schedule{' '}
+                  {selected.scheduleStatus && <StatusPill status={selected.scheduleStatus} />}
+                </h3>
+                <p>
+                  {fmtDateTime(selected.slotStart)}
+                  {selected.slotEnd
+                    ? ` – ${new Date(selected.slotEnd).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`
+                    : ''}
+                </p>
                 {selected.collectionCentreName && <p>{selected.collectionCentreName}</p>}
-                {selected.scheduleStatus === 'Proposed' && (
+                {String(selected.scheduleStatus ?? '').toLowerCase() === 'proposed' && (
                   <p className="mo-banner mo-banner-info">This slot is a proposal — it becomes final once the officer confirms it.</p>
                 )}
               </div>
