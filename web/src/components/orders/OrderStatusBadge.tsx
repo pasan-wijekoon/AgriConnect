@@ -12,7 +12,8 @@ const ORDER_STATUS_META: Record<OrderStatus, { tone: BadgeTone; icon: string }> 
 }
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  const meta = ORDER_STATUS_META[status]
+  // Fallback so an unexpected status never crashes the whole page.
+  const meta = ORDER_STATUS_META[status] ?? { tone: 'pending' as BadgeTone, icon: '•' }
   return <Badge tone={meta.tone}>{`${meta.icon} ${status}`}</Badge>
 }
 
@@ -23,6 +24,6 @@ const SCHEDULE_STATUS_META: Record<ScheduleStatus, { tone: BadgeTone; icon: stri
 }
 
 export function ScheduleStatusBadge({ status }: { status: ScheduleStatus }) {
-  const meta = SCHEDULE_STATUS_META[status]
+  const meta = SCHEDULE_STATUS_META[status] ?? { tone: 'proposed' as BadgeTone, icon: '•' }
   return <Badge tone={meta.tone}>{`${meta.icon} ${status}`}</Badge>
 }
