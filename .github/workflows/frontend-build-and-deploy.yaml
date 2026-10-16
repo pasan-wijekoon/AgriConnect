@@ -1,10 +1,11 @@
 name: Frontend - CI/CD
 
 # Pipeline overview
-#   verify       : type-check, lint, build, web helper tests    (every PR and every push)
+#   verify       : type-check, lint, build, web helper tests    (every PR, push and manual run)
 #   docker-check : builds the web Docker image, not pushed      (after verify)
-#   deploy       : Vercel production (push to main)
-#                  Vercel preview    (non-fork PRs, push to development / integration)
+#   deploy       : Vercel production -> runs from main (push or manual run on main)
+#                  Vercel preview    -> same-repo PRs, push to development / integration / test-oder,
+#                                       or a manual run on any other branch
 #
 # One-time setup
 #   Settings > Secrets and variables > Actions
@@ -109,20 +110,24 @@ jobs:
     needs: [verify, docker-check]
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Deploy main (production), development/integration (preview) and same-repo PRs (preview).
-    # Fork PRs are skipped because they cannot access secrets.
+    # Runs for: manual runs, pushes to main/development/integration/test-oder,
+    # and same-repo PRs. Fork PRs are skipped because they cannot read secrets.
     if: >
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' &&
         (github.ref == 'refs/heads/main' ||
          github.ref == 'refs/heads/development' ||
-         github.ref == 'refs/heads/integration')) ||
+         github.ref == 'refs/heads/integration' ||
+         github.ref == 'refs/heads/test-oder')) ||
       (github.event_name == 'pull_request' &&
         github.event.pull_request.head.repo.full_name == github.repository)
+    # main -> production, everything else -> preview
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'http://localhost:5000' }}
     steps:
       - uses: actions/checkout@v4
 
